@@ -1,0 +1,471 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Jost:wght@300;400;500;600;700&family=Playfair+Display:wght@700;800;900&family=Cinzel+Decorative:wght@700;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   HAMPIOUS — ROSÉ BOUDOIR
+   Blush pink, rose gold, soft ivory — feminine luxury
+   ============================================================ */
+
+@layer base {
+  :root {
+    /* ── Core Surfaces ─────────────────────────────────── */
+    --background: 340 80% 98%;          /* #FFF5F8 blush white  */
+    --foreground: 20 15% 12%;           /* #1E1A17 deep charcoal*/
+
+    --card: 0 0% 100%;                  /* #FFFFFF pure white   */
+    --card-foreground: 20 15% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 15% 12%;
+
+    /* ── Primary = Rose Pink ────────────────────────────── */
+    --primary: 338 50% 65%;             /* #D4789A rose         */
+    --primary-foreground: 0 0% 100%;
+
+    /* ── Secondary = Soft Blush ─────────────────────────── */
+    --secondary: 336 55% 94%;           /* #FCEAF1 blush tint   */
+    --secondary-foreground: 20 15% 35%;
+
+    /* ── Muted ──────────────────────────────────────────── */
+    --muted: 330 40% 92%;
+    --muted-foreground: 330 15% 50%;
+
+    /* ── Accent = Deep Rose ─────────────────────────────── */
+    --accent: 338 55% 48%;              /* #B84E78 deep rose    */
+    --accent-foreground: 0 0% 100%;
+
+    /* ── System ─────────────────────────────────────────── */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 330 30% 88%;              /* #EDD6E3 rose border  */
+    --input: 336 40% 95%;
+    --ring: 338 50% 65%;
+
+    --radius: 0.375rem;
+
+    /* ── Raw values for rgba() ──────────────────────────── */
+    --pink-rgb: 212, 120, 154;
+    --rose-rgb: 184, 78, 120;
+    --charcoal-rgb: 30, 26, 23;
+    --blush-rgb: 255, 245, 248;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Jost', system-ui, sans-serif;
+    font-weight: 400;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    letter-spacing: 0.01em;
+    background-color: #FFF5F8;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cormorant', Georgia, serif;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+
+  ::selection {
+    background: rgba(var(--pink-rgb), 0.2);
+    color: hsl(var(--foreground));
+  }
+}
+
+/* ============================================================
+   CUSTOM SCROLLBAR
+   ============================================================ */
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #F9E5EE; }
+::-webkit-scrollbar-thumb { background: rgba(var(--pink-rgb), 0.4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(var(--pink-rgb), 0.7); }
+
+/* ============================================================
+   GRAIN OVERLAY
+   ============================================================ */
+
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.018;
+  mix-blend-mode: multiply;
+}
+
+/* ============================================================
+   NAVBAR — blush pink glass
+   ============================================================ */
+
+.navbar-glass {
+  background: rgba(255, 245, 248, 0.92);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid rgba(var(--pink-rgb), 0.14);
+}
+
+.nav-link {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #5C2D44;
+  transition: color 0.3s ease;
+  position: relative;
+  padding-bottom: 2px;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(var(--pink-rgb), 0.8);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: rgba(var(--pink-rgb), 1);
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  transform: scaleX(1);
+}
+
+/* ============================================================
+   FOOTER — deep plum (contrast anchor)
+   ============================================================ */
+
+.footer-premium {
+  background: #1A0F15;
+  border-top: 1px solid rgba(var(--pink-rgb), 0.18);
+}
+
+.footer-link {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: rgba(255, 245, 248, 0.35);
+  letter-spacing: 0.04em;
+  transition: color 0.3s ease;
+  display: block;
+}
+
+.footer-link:hover {
+  color: rgba(var(--pink-rgb), 0.9);
+}
+
+/* ============================================================
+   PRODUCT CARDS — white with rose hover
+   ============================================================ */
+
+.card-luxury {
+  background: #FFFFFF;
+  border: 1px solid rgba(var(--pink-rgb), 0.12);
+  transition: border-color 0.5s ease, box-shadow 0.5s ease, transform 0.55s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.card-luxury:hover {
+  border-color: rgba(var(--pink-rgb), 0.38);
+  box-shadow:
+    0 0 0 1px rgba(var(--pink-rgb), 0.06),
+    0 20px 50px -12px rgba(var(--charcoal-rgb), 0.1),
+    0 0 30px rgba(var(--pink-rgb), 0.06);
+  transform: translateY(-6px);
+}
+
+/* ============================================================
+   ROSE LINES
+   ============================================================ */
+
+.gold-line {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(var(--pink-rgb), 0.45), transparent);
+}
+
+.gold-line-left {
+  height: 1px;
+  background: linear-gradient(to right, rgba(var(--pink-rgb), 0.55), transparent);
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.btn-gold {
+  background: rgba(var(--pink-rgb), 0.08);
+  border: 1px solid rgba(var(--pink-rgb), 0.55);
+  color: rgba(var(--rose-rgb), 1);
+  font-family: 'Jost', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.75rem 2rem;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  cursor: pointer;
+}
+
+.btn-gold:hover {
+  background: rgba(var(--pink-rgb), 1);
+  border-color: rgba(var(--pink-rgb), 1);
+  color: #FFF5F8;
+  box-shadow: 0 8px 28px rgba(var(--pink-rgb), 0.3);
+}
+
+.btn-dark {
+  background: #1A0F15;
+  border: 1px solid #1A0F15;
+  color: rgba(255, 245, 248, 0.9);
+  font-family: 'Jost', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.75rem 2rem;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  cursor: pointer;
+}
+
+.btn-dark:hover {
+  background: rgba(var(--pink-rgb), 1);
+  border-color: rgba(var(--pink-rgb), 1);
+  color: #FFF5F8;
+  box-shadow: 0 8px 28px rgba(var(--pink-rgb), 0.25);
+}
+
+.btn-ghost-gold {
+  background: transparent;
+  border: 1px solid rgba(var(--charcoal-rgb), 0.15);
+  color: rgba(var(--charcoal-rgb), 0.55);
+  font-family: 'Jost', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 0.75rem 2rem;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  cursor: pointer;
+}
+
+.btn-ghost-gold:hover {
+  border-color: rgba(var(--pink-rgb), 0.55);
+  color: rgba(var(--pink-rgb), 1);
+}
+
+/* ============================================================
+   SECTION BACKGROUNDS
+   ============================================================ */
+
+.section-ivory  { background: #FFF5F8; }
+.section-white  { background: #FFFFFF; }
+.section-sand   { background: #FCEAF1; }
+.section-charcoal { background: #1A0F15; color: #FFF5F8; }
+
+/* ============================================================
+   TEXT UTILITIES
+   ============================================================ */
+
+.text-gold    { color: rgba(var(--pink-rgb), 1); }
+.text-charcoal { color: rgba(var(--charcoal-rgb), 0.88); }
+
+.eyebrow {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: rgba(var(--pink-rgb), 0.9);
+}
+
+/* ============================================================
+   IMAGE ZOOM
+   ============================================================ */
+
+.img-zoom { overflow: hidden; }
+.img-zoom img {
+  transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+  will-change: transform;
+}
+.img-zoom:hover img { transform: scale(1.06); }
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+
+.badge-gold {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(var(--pink-rgb), 0.1);
+  border: 1px solid rgba(var(--pink-rgb), 0.35);
+  color: rgba(var(--rose-rgb), 0.9);
+  padding: 0.2rem 0.55rem;
+  border-radius: 2px;
+}
+
+.badge-discount {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: #B84E78;
+  color: #FFF5F8;
+  padding: 0.22rem 0.55rem;
+  border-radius: 2px;
+}
+
+.badge-new {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: rgba(var(--pink-rgb), 0.9);
+  color: #FFF5F8;
+  padding: 0.22rem 0.55rem;
+  border-radius: 2px;
+}
+
+/* ============================================================
+   OCCASION CARDS
+   ============================================================ */
+
+.occasion-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(var(--pink-rgb), 0.14);
+  border-radius: 2px;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  transition: all 0.45s cubic-bezier(0.19, 1, 0.22, 1);
+  cursor: pointer;
+}
+
+.occasion-card:hover {
+  background: #FFF5F8;
+  border-color: rgba(var(--pink-rgb), 0.42);
+  box-shadow:
+    0 0 0 1px rgba(var(--pink-rgb), 0.07),
+    0 16px 40px rgba(var(--charcoal-rgb), 0.07);
+}
+
+/* ============================================================
+   VALUE CARDS
+   ============================================================ */
+
+.value-card {
+  border: 1px solid rgba(var(--pink-rgb), 0.12);
+  border-radius: 2px;
+  padding: 2.5rem 2rem;
+  background: #FFFFFF;
+  transition: all 0.45s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.value-card:hover {
+  border-color: rgba(var(--pink-rgb), 0.32);
+  box-shadow: 0 8px 30px rgba(var(--charcoal-rgb), 0.05);
+}
+
+.value-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid rgba(var(--pink-rgb), 0.35);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  background: rgba(var(--pink-rgb), 0.06);
+}
+
+/* ============================================================
+   SPINNER
+   ============================================================ */
+
+.spinner-premium {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid rgba(var(--pink-rgb), 0.2);
+  border-top-color: rgba(var(--pink-rgb), 0.8);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+
+@keyframes fadeInUp   { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeInDown { from { opacity:0; transform:translateY(-28px);} to { opacity:1; transform:translateY(0); } }
+@keyframes fadeInLeft { from { opacity:0; transform:translateX(-28px);} to { opacity:1; transform:translateX(0); } }
+@keyframes fadeInRight{ from { opacity:0; transform:translateX(28px); } to { opacity:1; transform:translateX(0); } }
+@keyframes scrollBounce { 0%,100%{transform:translateY(0);opacity:.4;} 50%{transform:translateY(8px);opacity:.9;} }
+@keyframes morphBlob { 0%,100%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%;} 50%{border-radius:30% 60% 70% 40%/50% 60% 30% 60%;} }
+@keyframes shimmer   { 0%{background-position:-200% 0;} 100%{background-position:200% 0;} }
+
+.animate-fade-up    { animation: fadeInUp    0.9s cubic-bezier(0.19,1,0.22,1) forwards; }
+.animate-fade-down  { animation: fadeInDown  0.9s cubic-bezier(0.19,1,0.22,1) forwards; }
+.animate-fade-left  { animation: fadeInLeft  0.9s cubic-bezier(0.19,1,0.22,1) forwards; }
+.animate-fade-right { animation: fadeInRight 0.9s cubic-bezier(0.19,1,0.22,1) forwards; }
+.scroll-indicator   { animation: scrollBounce 2.5s ease-in-out infinite; }
+.animate-morph      { animation: morphBlob 12s ease-in-out infinite; }
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(var(--pink-rgb),0.07), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
+.stagger-1{animation-delay:.08s} .stagger-2{animation-delay:.16s}
+.stagger-3{animation-delay:.24s} .stagger-4{animation-delay:.32s}
+.stagger-5{animation-delay:.40s} .stagger-6{animation-delay:.48s}
+
+/* ============================================================
+   STATUS BADGES
+   ============================================================ */
+
+.status-pending   { background:rgba(217,119,6,.1);  color:#92400E; border:1px solid rgba(217,119,6,.2);  border-radius:2px; font-size:.7rem; letter-spacing:.06em; font-weight:500; padding:.2rem .6rem; }
+.status-confirmed { background:rgba(59,130,246,.08); color:#1D4ED8; border:1px solid rgba(59,130,246,.2); border-radius:2px; font-size:.7rem; letter-spacing:.06em; font-weight:500; padding:.2rem .6rem; }
+.status-shipped   { background:rgba(139,92,246,.08); color:#5B21B6; border:1px solid rgba(139,92,246,.2); border-radius:2px; font-size:.7rem; letter-spacing:.06em; font-weight:500; padding:.2rem .6rem; }
+.status-delivered { background:rgba(var(--pink-rgb),.1); color:rgba(var(--rose-rgb),.9); border:1px solid rgba(var(--pink-rgb),.25); border-radius:2px; font-size:.7rem; letter-spacing:.06em; font-weight:500; padding:.2rem .6rem; }
+.status-cancelled { background:rgba(239,68,68,.08);  color:#DC2626; border:1px solid rgba(239,68,68,.2);  border-radius:2px; font-size:.7rem; letter-spacing:.06em; font-weight:500; padding:.2rem .6rem; }
+
+/* ============================================================
+   INPUT FOCUS
+   ============================================================ */
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: rgba(var(--pink-rgb), 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(var(--pink-rgb), 0.1);
+}
+
+/* ============================================================
+   SHADOWS
+   ============================================================ */
+
+.premium-shadow    { box-shadow: 0 2px 12px rgba(var(--charcoal-rgb),0.05); }
+.premium-shadow-lg { box-shadow: 0 8px 30px rgba(var(--charcoal-rgb),0.08); }
+.premium-shadow-xl { box-shadow: 0 20px 50px rgba(var(--charcoal-rgb),0.12); }
+.cinematic-shadow  { box-shadow: 0 24px 60px rgba(var(--charcoal-rgb),0.14), 0 0 0 1px rgba(var(--pink-rgb),0.08); }
+
+[data-debug-wrapper="true"] { display: contents !important; }

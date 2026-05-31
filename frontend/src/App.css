@@ -1,0 +1,314 @@
+/* ==========================================
+   HAMPIOUS - CINEMATIC APP STYLES
+   Grey + Dusty Pink Premium Theme
+   ========================================== */
+
+/* ==========================================
+   HERO SECTION STYLES
+   ========================================== */
+
+.hero-cinematic {
+  background: linear-gradient(
+    180deg,
+    hsl(220, 10%, 94%) 0%,
+    hsl(350, 25%, 94%) 30%,
+    hsl(350, 35%, 90%) 60%,
+    hsl(220, 10%, 94%) 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-cinematic::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse 100% 60% at 50% 10%, rgba(206, 145, 150, 0.2) 0%, transparent 60%),
+    radial-gradient(circle at 20% 80%, rgba(206, 145, 150, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(206, 145, 150, 0.08) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+/* Animated blobs in hero */
+.hero-blob-1 {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(206, 145, 150, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  top: -200px;
+  right: -200px;
+  animation: floatAnimation 8s ease-in-out infinite, morphBlob 12s ease-in-out infinite;
+}
+
+.hero-blob-2 {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(206, 145, 150, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  bottom: -100px;
+  left: -100px;
+  animation: floatAnimation 10s ease-in-out infinite reverse, morphBlob 15s ease-in-out infinite reverse;
+}
+
+/* ==========================================
+   CTA SECTION GRADIENT
+   ========================================== */
+
+.cta-gradient {
+  background: linear-gradient(
+    135deg,
+    hsl(350, 45%, 55%) 0%,
+    hsl(350, 50%, 60%) 50%,
+    hsl(345, 55%, 65%) 100%
+  );
+  background-size: 200% 200%;
+  animation: rotateGradient 8s ease infinite;
+}
+
+/* ==========================================
+   OCCASION CARD STYLES
+   ========================================== */
+
+.occasion-card {
+  @apply bg-card rounded-3xl p-10 md:p-12 border-2 border-transparent;
+  transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.03),
+    0 2px 4px -2px rgba(0, 0, 0, 0.03);
+}
+
+.occasion-card:hover {
+  @apply border-primary/40;
+  transform: translateY(-16px) scale(1.03) rotateX(5deg);
+  box-shadow: 
+    0 30px 60px -12px rgba(0, 0, 0, 0.12),
+    0 0 40px rgba(206, 145, 150, 0.25);
+}
+
+.occasion-card:hover .occasion-emoji {
+  transform: scale(1.2) rotate(5deg);
+}
+
+.occasion-emoji {
+  transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* ==========================================
+   VALUE PROPOSITION CARDS
+   ========================================== */
+
+.value-card {
+  @apply bg-card/90 backdrop-blur-sm rounded-3xl p-10 text-center border border-border/30;
+  transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.value-card:hover {
+  transform: translateY(-14px) scale(1.02);
+  box-shadow: 
+    0 30px 60px -12px rgba(0, 0, 0, 0.1),
+    0 0 50px rgba(206, 145, 150, 0.2);
+}
+
+.value-icon {
+  @apply w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6;
+  background: linear-gradient(135deg, hsl(350, 45%, 58%) 0%, hsl(350, 50%, 65%) 100%);
+  box-shadow: 0 10px 30px rgba(206, 145, 150, 0.4);
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.value-card:hover .value-icon {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 15px 40px rgba(206, 145, 150, 0.5);
+}
+
+/* ==========================================
+   FEATURED PRODUCTS SECTION
+   ========================================== */
+
+.section-featured {
+  background: linear-gradient(
+    180deg,
+    hsl(220, 10%, 94%) 0%,
+    hsl(220, 10%, 96%) 100%
+  );
+}
+
+/* ==========================================
+   ADMIN DASHBOARD STYLES
+   ========================================== */
+
+.admin-stat-card {
+  @apply bg-card rounded-2xl p-6 border border-border/50;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.admin-stat-card:hover {
+  @apply border-primary/30;
+  transform: translateY(-6px);
+  box-shadow: 0 15px 40px -10px rgba(206, 145, 150, 0.2);
+}
+
+.admin-nav-card {
+  @apply bg-secondary/50 rounded-2xl p-6 border border-transparent;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.admin-nav-card:hover {
+  @apply bg-secondary border-primary/20;
+  transform: translateY(-6px);
+}
+
+/* ==========================================
+   CHECKOUT STYLES
+   ========================================== */
+
+.checkout-card {
+  @apply bg-card rounded-3xl p-8 border border-border/30;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.03),
+    0 2px 4px -2px rgba(0, 0, 0, 0.02);
+}
+
+.checkout-step-indicator {
+  @apply w-12 h-12 rounded-full flex items-center justify-center;
+  background: linear-gradient(135deg, hsl(350, 45%, 58%) 0%, hsl(350, 50%, 65%) 100%);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(206, 145, 150, 0.35);
+}
+
+/* ==========================================
+   FOOTER STYLES
+   ========================================== */
+
+.footer-premium {
+  background: linear-gradient(
+    180deg,
+    hsl(220, 12%, 18%) 0%,
+    hsl(220, 15%, 10%) 100%
+  );
+}
+
+.footer-link {
+  @apply text-sm transition-all duration-300;
+  color: hsl(220, 10%, 55%);
+}
+
+.footer-link:hover {
+  color: hsl(350, 45%, 65%);
+  transform: translateX(4px);
+}
+
+/* ==========================================
+   INPUT PREMIUM
+   ========================================== */
+
+.input-premium {
+  @apply h-12 rounded-xl border-border/50 bg-background;
+  transition: all 0.3s ease;
+}
+
+.input-premium:focus {
+  @apply border-primary/50 ring-2 ring-primary/20;
+}
+
+/* ==========================================
+   PAGE TRANSITIONS
+   ========================================== */
+
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-30px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================
+   HOVER LINK UNDERLINE
+   ========================================== */
+
+.link-underline {
+  position: relative;
+}
+
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: hsl(350, 45%, 60%);
+  transition: width 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.link-underline:hover::after {
+  width: 100%;
+}
+
+/* ==========================================
+   GLASS MORPHISM CARD
+   ========================================== */
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ==========================================
+   TOOLTIP STYLES
+   ========================================== */
+
+.tooltip-premium {
+  @apply bg-foreground text-background px-3 py-2 rounded-lg text-sm;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================
+   MODAL OVERLAY
+   ========================================== */
+
+.modal-overlay {
+  @apply fixed inset-0 bg-foreground/50 backdrop-blur-sm z-50;
+}
+
+.modal-content {
+  @apply bg-card rounded-3xl p-8;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* ==========================================
+   DECORATIVE ELEMENTS
+   ========================================== */
+
+.decorative-line {
+  height: 3px;
+  background: linear-gradient(90deg, transparent, hsl(350, 45%, 60%), transparent);
+}
+
+.decorative-dot {
+  width: 8px;
+  height: 8px;
+  background: hsl(350, 45%, 60%);
+  border-radius: 50%;
+}

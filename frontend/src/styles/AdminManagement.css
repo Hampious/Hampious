@@ -1,0 +1,136 @@
+.management-form {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+.management-form input,
+.management-form textarea,
+.management-form select {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  font-family: 'Manrope', sans-serif;
+  box-sizing: border-box;
+}
+
+.management-form input:focus,
+.management-form textarea:focus,
+.management-form select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+}
+
+.management-form textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.management-form button {
+  padding: 12px;
+  border: none;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.management-form button[type="submit"] {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.management-form button[type="button"] {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.management-form button:hover {
+  transform: translateY(-2px);
+}
+
+.table-container {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.management-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.management-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.management-table th {
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.management-table td {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.management-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+.delete-btn {
+  padding: 8px 12px;
+  background: #ffebee;
+  color: #c33;
+  border: 1px solid #ffcdd2;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.3s;
+  font-weight: 600;
+}
+
+.delete-btn:hover {
+  background: #ffcdd2;
+}
+
+.status-select {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: pointer;
+  background: white;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+@media (max-width: 768px) {
+  .management-table {
+    font-size: 12px;
+  }
+
+  .management-table th,
+  .management-table td {
+    padding: 10px;
+  }
+
+  .delete-btn,
+  .status-select {
+    font-size: 11px;
+  }
+}
