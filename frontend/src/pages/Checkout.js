@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { MapPin, Tag, Package, Loader2, User, CreditCard, Check, ShieldCheck, ArrowRight } from 'lucide-react';
 
-const RAZORPAY_KEY_ID = 'rzp_test_Rt7Jg6xDxmvKSL';
+const RAZORPAY_KEY_ID = 'rzp_live_SwaqpwcGpYEzEj';
 
 // Pincode prefix → { state, city hint }
 // First 3 digits of Indian pincode uniquely identify region
@@ -362,44 +362,76 @@ export default function Checkout() {
     // ── Step 1: Try to load Razorpay ───────────────────────────────────────
     const scriptLoaded = await loadRazorpayScript();
 
-    // ── Step 2: Try to get a Razorpay order from backend ──────────────────
+    // ── Step 2: Create Razorpay order from backend ────────────────────────
+    if (!scriptLoaded) {
+      toast.error('Payment gateway failed to load. Please refresh and try again.');
+      setLoading(false);
+      return;
+    }
+
     let razorpayOrder = null;
-    if (scriptLoaded) {
-      try {
-        const res = await API.post('/payment/create-razorpay-order', { amount: finalAmount });
-        if (res.data?.id) razorpayOrder = res.data;
-      } catch {
-        // Backend not available or route missing — will use mock flow
+    try {
+      const res = await API.post('/payment/create-razorpay-order', { amount: finalAmount });
+      if (res.data?.id) {
+        razorpayOrder = res.data;
+      } else {
+        throw new Error('Invalid order response');
       }
+    } catch (err) {
+      const msg = err.response?.data?.detail || err.message || 'Could not create payment order';
+      toast.error(`Payment error: ${msg}`);
+      setLoading(false);
+      return;
     }
 
     // ── Step 3a: Real Razorpay flow ────────────────────────────────────────
-    if (scriptLoaded && razorpayOrder && !razorpayOrder.mock) {
+    if (scriptLoaded && razorpayOrder) {
       const options = {
         key:         RAZORPAY_KEY_ID,
         amount:      razorpayOrder.amount,
         currency:    'INR',
         order_id:    razorpayOrder.id,
         name:        'Hampious',
-        description: 'Gift Hamper Purchase',
+        description: 'Premium Gift Hamper',
+        image:       `${window.location.origin}/logo.jpg`,
         prefill: {
           name:    customerDetails.fullName,
           email:   customerDetails.email,
-          contact: customerDetails.phone,
+          contact: customerDetails.phone.replace(/\D/g, '').slice(-10),
+        },
+        notes: {
+          address:  shippingInfo.address,
+          order_id: razorpayOrder.id,
         },
         theme: { color: '#D4789A' },
-        modal: { ondismiss: () => setLoading(false) },
+        modal: {
+          ondismiss: () => {
+            setLoading(false);
+            toast.error('Payment cancelled. Your order was not placed.');
+          },
+          animation: true,
+        },
         handler: async (response) => {
           try {
-            await API.post('/payment/verify', {
+            // Verify signature on backend first
+            const verifyRes = await API.post('/payment/verify', {
               payment_id:        response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
               signature:         response.razorpay_signature,
-            }).catch(() => {});
+            });
+
+            if (!verifyRes.data?.verified) {
+              toast.error('Payment verification failed. Contact support with Payment ID: ' + response.razorpay_payment_id);
+              setLoading(false);
+              return;
+            }
+
             await completeOrder(response.razorpay_payment_id);
-          } catch {
+          } catch (err) {
+            console.error('Payment handler error:', err);
             setLoading(false);
-            toast.error('Order processing failed. Please contact support.');
+            // Payment went through but order creation failed — still show payment ID
+            toast.error(`Payment received (${response.razorpay_payment_id}) but order creation failed. Please contact support.`);
           }
         },
       };
@@ -412,16 +444,9 @@ export default function Checkout() {
       return; // wait for handler callback
     }
 
-    // ── Step 3b: Mock / test flow (no Razorpay keys configured) ───────────
-    // Shows a simple confirm dialog instead of Razorpay modal
-    try {
-      const mockPaymentId = `pay_test_${Date.now()}`;
-      await completeOrder(mockPaymentId);
-    } catch (err) {
-      toast.error('Could not place order. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    // Should never reach here with live keys
+    toast.error('Payment could not be initiated. Please try again.');
+    setLoading(false);
   };
 
   const finalAmount = getCartTotal() - discount;
