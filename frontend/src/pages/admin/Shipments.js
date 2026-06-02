@@ -37,124 +37,83 @@ function StatusBadge({ status }) {
 
 // ── Shipment slip printer ─────────────────────────────────────────────────────
 function printShipmentSlip(order, awbCode, courierName, shipmentId) {
-  const addr  = order.shipping_address || {};
-  const items = order.items || [];
-  const total = Number(order.final_amount || order.total || 0);
+  const addr      = order.shipping_address || {};
+  const items     = order.items || [];
+  const total     = Number(order.final_amount || order.total || 0);
   const orderDate = new Date(order.created_at || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Shipment Slip - ${order.id}</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Georgia', serif; background: #fff; color: #1A0F15; }
-    .page { width: 100mm; min-height: 150mm; margin: 0 auto; padding: 8mm; border: 2px solid #D4789A; }
-    .header { background: #1A0F15; color: #D4789A; padding: 8px 12px; text-align: center; border-radius: 4px; margin-bottom: 10px; }
-    .logo { font-size: 20px; font-weight: bold; letter-spacing: 4px; }
-    .tagline { font-size: 8px; letter-spacing: 3px; color: rgba(212,120,154,0.6); text-transform: uppercase; }
-    .awb { text-align: center; background: #FFF5F8; border: 2px dashed #D4789A; border-radius: 6px; padding: 8px; margin: 8px 0; }
-    .awb-num { font-size: 22px; font-weight: bold; color: #1A0F15; font-family: monospace; letter-spacing: 2px; }
-    .awb-label { font-size: 9px; color: #7c5a6a; text-transform: uppercase; letter-spacing: 2px; }
-    .section { margin: 8px 0; }
-    .section-title { font-size: 9px; text-transform: uppercase; letter-spacing: 2px; color: #B84E78; font-weight: bold; border-bottom: 1px solid #f3d0dd; padding-bottom: 3px; margin-bottom: 5px; }
-    .row { display: flex; justify-content: space-between; font-size: 10px; margin: 2px 0; }
-    .val { font-weight: bold; text-align: right; max-width: 60%; }
-    .address { font-size: 11px; line-height: 1.6; font-weight: bold; }
-    .items { font-size: 10px; }
-    .item-row { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #fdeef3; }
-    .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin-top: 5px; color: #B84E78; }
-    .footer { text-align: center; margin-top: 10px; font-size: 9px; color: #7c5a6a; border-top: 1px dashed #f3d0dd; padding-top: 6px; }
-    .divider { border: none; border-top: 1px dashed #f3d0dd; margin: 8px 0; }
-    @media print { body { margin: 0; } .no-print { display: none; } }
-  </style>
-</head>
-<body>
-  <div class="no-print" style="text-align:center;padding:10px;background:#fff;position:sticky;top:0;border-bottom:1px solid #eee">
-    <button onclick="window.print()" style="background:#B84E78;color:#fff;border:none;padding:8px 24px;border-radius:6px;font-size:14px;cursor:pointer;margin-right:10px">🖨️ Print</button>
-    <button onclick="window.close()" style="background:#f3d0dd;color:#1A0F15;border:none;padding:8px 16px;border-radius:6px;font-size:14px;cursor:pointer">✕ Close</button>
-  </div>
-  <div class="page">
-    <!-- Header -->
-    <div class="header">
-      <div class="logo">🎁 HAMPIOUS</div>
-      <div class="tagline">Premium Gift Hampers</div>
-    </div>
+  const itemsHtml = items.map(it => {
+    const name  = it.product_name || it.name || 'Gift Hamper';
+    const qty   = Number(it.quantity || 1);
+    const price = Number(it.price || 0);
+    return `<tr><td style="padding:4px 0;border-bottom:1px solid #fdeef3">${name} x${qty}</td><td style="text-align:right;padding:4px 0;border-bottom:1px solid #fdeef3">Rs.${(price * qty).toLocaleString('en-IN')}</td></tr>`;
+  }).join('');
 
-    <!-- AWB -->
-    <div class="awb">
-      <div class="awb-label">AWB / Tracking Number</div>
-      <div class="awb-num">${awbCode || shipmentId || '—'}</div>
-      <div style="font-size:10px;color:#7c5a6a;margin-top:3px">via ${courierName}</div>
-    </div>
+  const customerAddr = [
+    addr.full_name || order.customer_name || '',
+    addr.address || addr.line1 || '',
+    [addr.city, addr.state].filter(Boolean).join(', ') + (addr.pincode ? ' - ' + addr.pincode : ''),
+    'Ph: ' + (addr.phone || order.customer_phone || ''),
+    order.customer_email || addr.email || '',
+  ].filter(Boolean).join('<br>');
 
-    <!-- From -->
-    <div class="section">
-      <div class="section-title">From (Sender)</div>
-      <div class="address">
-        Hampious<br>
-        team.hampious@gmail.com<br>
-        India
-      </div>
-    </div>
+  const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Shipment Slip</title>' +
+  '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Georgia,serif;background:#fff;color:#1A0F15}' +
+  '.wrap{max-width:400px;margin:20px auto;border:2px solid #D4789A;border-radius:8px;overflow:hidden}' +
+  '.hdr{background:#1A0F15;padding:14px;text-align:center}' +
+  '.logo{font-size:22px;font-weight:bold;color:#D4789A;letter-spacing:5px}' +
+  '.tag{font-size:8px;letter-spacing:3px;color:rgba(212,120,154,0.6);text-transform:uppercase;margin-top:2px}' +
+  '.awb{background:#FFF5F8;border:2px dashed #D4789A;margin:12px;border-radius:6px;padding:10px;text-align:center}' +
+  '.awb-n{font-size:24px;font-weight:bold;font-family:monospace;letter-spacing:3px;color:#1A0F15}' +
+  '.awb-l{font-size:9px;color:#7c5a6a;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px}' +
+  '.sec{margin:0 12px 10px}.sec-t{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#B84E78;font-weight:bold;border-bottom:1px solid #f3d0dd;padding-bottom:3px;margin-bottom:6px}' +
+  '.addr{font-size:12px;line-height:1.8;font-weight:bold}' +
+  'table{width:100%;font-size:11px;border-collapse:collapse}' +
+  '.tot{font-weight:bold;font-size:13px;color:#B84E78;border-top:2px solid #D4789A;padding-top:4px}' +
+  '.ftr{background:#FFF5F8;text-align:center;padding:10px;font-size:9px;color:#7c5a6a;border-top:1px dashed #f3d0dd}' +
+  '.btn-bar{text-align:center;padding:12px;background:#f8f0f4;border-bottom:1px solid #f3d0dd}' +
+  '@media print{.btn-bar{display:none}body{margin:0}.wrap{border:1px solid #D4789A;margin:0;max-width:100%}}' +
+  '</style></head><body>' +
+  '<div class="btn-bar">' +
+  '<button onclick="window.print()" style="background:#B84E78;color:#fff;border:none;padding:9px 28px;border-radius:6px;font-size:14px;cursor:pointer;margin-right:8px;font-family:Georgia,serif">Print Slip</button>' +
+  '<button onclick="window.close()" style="background:#f3d0dd;color:#1A0F15;border:none;padding:9px 18px;border-radius:6px;font-size:14px;cursor:pointer">Close</button>' +
+  '</div>' +
+  '<div class="wrap">' +
+  '<div class="hdr"><div class="logo">HAMPIOUS</div><div class="tag">Premium Gift Hampers</div></div>' +
+  '<div class="awb"><div class="awb-l">AWB / Tracking Number</div>' +
+  '<div class="awb-n">' + (awbCode || shipmentId || '---') + '</div>' +
+  '<div style="font-size:10px;color:#7c5a6a;margin-top:3px">via ' + (courierName || 'Shiprocket') + '</div></div>' +
+  '<div style="display:flex;gap:0;margin:0 12px 10px">' +
+  '<div style="flex:1;padding-right:8px;border-right:1px dashed #f3d0dd">' +
+  '<div class="sec-t" style="font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#B84E78;font-weight:bold;border-bottom:1px solid #f3d0dd;padding-bottom:2px;margin-bottom:5px">From</div>' +
+  '<div class="addr">Hampious<br>India<br>team.hampious@gmail.com</div></div>' +
+  '<div style="flex:1;padding-left:8px">' +
+  '<div class="sec-t" style="font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#B84E78;font-weight:bold;border-bottom:1px solid #f3d0dd;padding-bottom:2px;margin-bottom:5px">To</div>' +
+  '<div class="addr">' + customerAddr + '</div></div></div>' +
+  '<div class="sec"><div class="sec-t">Order Details</div>' +
+  '<table><tr><td>Order ID</td><td style="text-align:right;font-weight:bold">' + String(order.id).toUpperCase() + '</td></tr>' +
+  '<tr><td>Date</td><td style="text-align:right">' + orderDate + '</td></tr>' +
+  '<tr><td>Payment</td><td style="text-align:right;color:green;font-weight:bold">Prepaid</td></tr></table></div>' +
+  '<div class="sec"><div class="sec-t">Items</div>' +
+  '<table>' + itemsHtml + '<tr class="tot"><td>Total Paid</td><td style="text-align:right">Rs.' + total.toLocaleString('en-IN') + '</td></tr></table></div>' +
+  '<div class="ftr"><div style="font-size:13px;margin-bottom:3px">Thank you for choosing Hampious!</div>' +
+  '<div>For queries: team.hampious@gmail.com</div>' +
+  '<div style="margin-top:5px;color:#D4789A;font-size:10px">Premium Gift Hampers - Delivered with Love</div></div>' +
+  '</div></body></html>';
 
-    <hr class="divider">
-
-    <!-- To -->
-    <div class="section">
-      <div class="section-title">To (Recipient)</div>
-      <div class="address">
-        ${addr.full_name || order.customer_name || '—'}<br>
-        ${addr.address || addr.line1 || ''}<br>
-        ${[addr.city, addr.state].filter(Boolean).join(', ')}${addr.pincode ? ' - ' + addr.pincode : ''}<br>
-        📞 ${addr.phone || order.customer_phone || '—'}<br>
-        ✉️ ${order.customer_email || addr.email || '—'}
-      </div>
-    </div>
-
-    <hr class="divider">
-
-    <!-- Order Details -->
-    <div class="section">
-      <div class="section-title">Order Details</div>
-      <div class="row"><span>Order ID</span><span class="val">${order.id}</span></div>
-      <div class="row"><span>Order Date</span><span class="val">${orderDate}</span></div>
-      <div class="row"><span>Payment</span><span class="val">Prepaid ✓</span></div>
-    </div>
-
-    <hr class="divider">
-
-    <!-- Items -->
-    <div class="section">
-      <div class="section-title">Items</div>
-      <div class="items">
-        ${items.map(it => `
-          <div class="item-row">
-            <span>${it.product_name || it.name || 'Gift Hamper'} ×${it.quantity || 1}</span>
-            <span>₹${(Number(it.price || 0) * Number(it.quantity || 1)).toLocaleString('en-IN')}</span>
-          </div>
-        `).join('')}
-        <div class="total-row">
-          <span>Total Paid</span>
-          <span>₹${total.toLocaleString('en-IN')}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="footer">
-      <div>Thank you for choosing Hampious! 💕</div>
-      <div style="margin-top:3px">For queries: team.hampious@gmail.com</div>
-      <div style="margin-top:6px;font-size:8px;color:#D4789A">🎁 Premium Gift Hampers — Delivered with Love</div>
-    </div>
-  </div>
-</body>
-</html>`;
-
-  const win = window.open('', '_blank', 'width=420,height=700');
-  win.document.write(html);
-  win.document.close();
+  // Use Blob URL — works even with popup blockers
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url, '_blank');
+  if (!win) {
+    // Popup blocked — download as HTML file instead
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'shipment-slip-' + String(order.id) + '.html';
+    a.click();
+  }
+  // Clean up blob URL after 60s
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
 // ── Shiprocket credentials (direct API — no backend needed) ──────────────────
