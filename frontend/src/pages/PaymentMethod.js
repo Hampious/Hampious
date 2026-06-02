@@ -10,7 +10,7 @@ const PINK  = '#D4789A';
 const PLUM  = '#1A0F15';
 const BLUSH = '#FFF5F8';
 
-const RAZORPAY_KEY_ID = 'rzp_live_SwaqpwcGpYEzEj';
+const RAZORPAY_KEY_ID = process.env.REACT_APP_RAZORPAY_KEY_ID || '';
 
 export default function PaymentMethod() {
   const navigate  = useNavigate();

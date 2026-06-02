@@ -5,8 +5,8 @@ import axios from 'axios';
 const API = 'http://localhost:8000/api/admin';
 
 // ── Local admin credentials (fallback when backend is offline) ────────────────
-const LOCAL_ADMIN_EMAIL    = 'team.hampious@gmail.com';
-const LOCAL_ADMIN_PASSWORD = 'Hampious@123';
+const LOCAL_ADMIN_EMAIL    = process.env.REACT_APP_ADMIN_EMAIL    || 'team.hampious@gmail.com';
+const LOCAL_ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || 'Hampious@123';
 const LOCAL_TOKEN          = 'local_admin_token';
 
 export default function AdminLogin() {

@@ -117,8 +117,8 @@ function printShipmentSlip(order, awbCode, courierName, shipmentId) {
 }
 
 // ── Shiprocket credentials (direct API — no backend needed) ──────────────────
-const SR_EMAIL    = 'debashisbisoye12@gmail.com';
-const SR_PASSWORD = 'xpe^7Ie1GkREgh$$ZH2a4p2CJX570eKT';
+const SR_EMAIL    = process.env.REACT_APP_SHIPROCKET_EMAIL    || '';
+const SR_PASSWORD = process.env.REACT_APP_SHIPROCKET_PASSWORD || '';
 const SR_BASE     = 'https://apiv2.shiprocket.in/v1/external';
 
 // Cache JWT in sessionStorage so we don't login on every booking

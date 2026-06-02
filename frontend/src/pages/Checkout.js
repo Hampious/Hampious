@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { MapPin, Tag, Package, Loader2, User, CreditCard, Check, ShieldCheck, ArrowRight } from 'lucide-react';
 
-const RAZORPAY_KEY_ID = 'rzp_live_SwaqpwcGpYEzEj';
+const RAZORPAY_KEY_ID = process.env.REACT_APP_RAZORPAY_KEY_ID || '';
 
 // Pincode prefix → { state, city hint }
 // First 3 digits of Indian pincode uniquely identify region

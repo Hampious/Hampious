@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # ── Credentials ───────────────────────────────────────────────────────────────
-SHIPROCKET_EMAIL    = os.environ.get("SHIPROCKET_EMAIL",    "debashisbisoye12@gmail.com")
-SHIPROCKET_PASSWORD = os.environ.get("SHIPROCKET_PASSWORD", "xpe^7Ie1GkREgh$$ZH2a4p2CJX570eKT")
+SHIPROCKET_EMAIL    = os.environ.get("SHIPROCKET_EMAIL",    "")
+SHIPROCKET_PASSWORD = os.environ.get("SHIPROCKET_PASSWORD", "")
 SHIPROCKET_BASE     = "https://apiv2.shiprocket.in/v1/external"
 
 # ── Cached JWT ────────────────────────────────────────────────────────────────

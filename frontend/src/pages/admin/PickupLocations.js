@@ -6,8 +6,8 @@ const PINK  = '#D4789A';
 const ROSE  = '#B84E78';
 const BLUSH = '#FFF5F8';
 
-const SR_EMAIL    = 'debashisbisoye12@gmail.com';
-const SR_PASSWORD = 'xpe^7Ie1GkREgh$$ZH2a4p2CJX570eKT';
+const SR_EMAIL    = process.env.REACT_APP_SHIPROCKET_EMAIL    || '';
+const SR_PASSWORD = process.env.REACT_APP_SHIPROCKET_PASSWORD || '';
 const SR_BASE     = 'https://apiv2.shiprocket.in/v1/external';
 
 async function srLogin() {

@@ -13,8 +13,8 @@ import os
 router = APIRouter()
 
 # ─── Config ──────────────────────────────────────────────────────────────────
-ADMIN_EMAIL    = os.environ.get("ADMIN_EMAIL",    "team.hampious@gmail.com")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Hampious@123")
+ADMIN_EMAIL    = os.environ.get("ADMIN_EMAIL",    "")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
 
 EMAIL_HOST     = os.environ.get("EMAIL_HOST",  "smtp.gmail.com")
 EMAIL_PORT     = int(os.environ.get("EMAIL_PORT", 587))
