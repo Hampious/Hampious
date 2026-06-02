@@ -79,18 +79,44 @@ export default function PickupLocations() {
   const [saveError, setSaveError]   = useState('');
   const [saveSuccess, setSaveSuccess] = useState('');
 
-  useEffect(() => { fetchLocations(); }, []);
+  // ── Local storage helpers (primary source of truth) ─────────────────────
+  const LOCAL_KEY = 'hamp_pickup_locations';
+  const loadLocal  = ()     => { try { return JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]'); } catch { return []; } };
+  const saveLocal  = (list) => { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(list)); } catch {} };
+
+  useEffect(() => {
+    // Show local locations immediately, then try to sync from Shiprocket
+    const local = loadLocal();
+    if (local.length > 0) {
+      setLocations(local);
+      setLoading(false);
+    }
+    fetchLocations();
+  }, []); // eslint-disable-line
 
   const fetchLocations = async () => {
     setLoading(true);
     setError('');
     try {
       const res = await srApi('GET', '/settings/company/pickup');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw new Error(`Shiprocket HTTP ${res.status}`);
       const data = await res.json();
-      setLocations(data?.data?.shipping_address || []);
+      const list = data?.data?.shipping_address || [];
+      if (list.length > 0) {
+        saveLocal(list);
+        setLocations(list);
+      } else {
+        // Shiprocket returned empty — show local ones
+        setLocations(loadLocal());
+      }
+      setError('');
     } catch (e) {
-      setError(`Failed to load pickup locations: ${e.message}`);
+      // Shiprocket unreachable — use locally saved locations
+      const local = loadLocal();
+      setLocations(local);
+      if (local.length === 0) {
+        setError('Could not connect to Shiprocket. Add a pickup location below and it will sync automatically.');
+      }
     } finally {
       setLoading(false);
     }
@@ -101,26 +127,59 @@ export default function PickupLocations() {
     setSaving(true);
     setSaveError('');
     setSaveSuccess('');
+
+    // Always save locally first
+    const newLocation = {
+      pickup_location: form.pickup_location,
+      name:      form.name,
+      email:     form.email,
+      phone:     form.phone,
+      address:   form.address,
+      address_2: form.address_2,
+      city:      form.city,
+      state:     form.state,
+      pin_code:  form.pin_code,
+      country:   'India',
+      status:    1,
+    };
+    const existing = loadLocal();
+    const updated  = [...existing, newLocation];
+    saveLocal(updated);
+    setLocations(updated);
+
+    // Try to also sync to Shiprocket (best effort)
     try {
-      const res = await srApi('POST', '/settings/company/pickup', form);
+      const res  = await srApi('POST', '/settings/company/pickup', form);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || data.detail || `HTTP ${res.status}`);
-      setSaveSuccess('Pickup location added successfully!');
-      setForm(emptyForm);
-      setShowForm(false);
-      fetchLocations();
-    } catch (e) {
-      setSaveError(e.message);
-    } finally {
-      setSaving(false);
+      if (!res.ok) {
+        // Saved locally but Shiprocket failed — show warning
+        setSaveSuccess('Saved locally. Shiprocket sync note: ' + (data.message || 'will retry on next booking'));
+      } else {
+        setSaveSuccess('Pickup location saved and synced to Shiprocket!');
+        // Re-fetch to get Shiprocket's version
+        fetchLocations();
+      }
+    } catch {
+      setSaveSuccess('Saved locally (Shiprocket will sync automatically on next booking).');
     }
+
+    setForm(emptyForm);
+    setShowForm(false);
+    setSaving(false);
   };
 
   const setActive = (name) => {
-    sessionStorage.removeItem('sr_active_pickup');
     sessionStorage.setItem('sr_active_pickup', name);
+    // Also mark in localStorage so it persists across tabs
+    localStorage.setItem('sr_active_pickup', name);
     alert(`✅ "${name}" set as active pickup location for new shipments.`);
   };
+
+  // Load active pickup from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('sr_active_pickup');
+    if (stored) sessionStorage.setItem('sr_active_pickup', stored);
+  }, []);
 
   return (
     <div style={{ padding: '32px 32px 48px', maxWidth: 900, margin: '0 auto', fontFamily: 'Jost, sans-serif' }}>
