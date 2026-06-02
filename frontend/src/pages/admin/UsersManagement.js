@@ -46,34 +46,73 @@ export default function UsersManagement() {
     fetchCustomers();
   }, [navigate]);
 
+  // Build unique customers from hamp_orders localStorage
+  const buildCustomersFromOrders = () => {
+    const orders = JSON.parse(localStorage.getItem('hamp_orders') || '[]');
+    const map = {};
+    orders.forEach(order => {
+      const email = order.customer_email || order.shipping_address?.email || '';
+      if (!email) return;
+      if (!map[email]) {
+        map[email] = {
+          id:           email,
+          email,
+          name:         order.customer_name || order.shipping_address?.full_name || 'Customer',
+          phone:        order.customer_phone || order.shipping_address?.phone || '',
+          total_orders: 0,
+          total_spent:  0,
+          created_at:   order.created_at || new Date().toISOString(),
+        };
+      }
+      map[email].total_orders += 1;
+      map[email].total_spent  += Number(order.final_amount || order.total || 0);
+      // Keep earliest order date
+      if (order.created_at && order.created_at < map[email].created_at) {
+        map[email].created_at = order.created_at;
+      }
+    });
+    return Object.values(map).sort((a, b) => b.total_spent - a.total_spent);
+  };
+
   const fetchCustomers = async () => {
     setLoading(true);
     setError('');
     try {
-      // Try /customers first, then /users as fallback path
-      let res = await adminGet('/customers');
-      if (handleUnauth(res, navigate)) return;
+      // Always start with customers extracted from orders
+      const fromOrders = buildCustomersFromOrders();
 
-      // Some older backends use /users instead
-      if (res.status === 404) {
-        res = await adminGet('/users');
+      // Try backend
+      let backendList = [];
+      try {
+        let res = await adminGet('/customers');
+        if (handleUnauth(res, navigate)) return;
+        if (res.status === 404) res = await adminGet('/users');
+        if (res.ok) {
+          const data = await res.json();
+          backendList = Array.isArray(data) ? data : (data.customers || data.users || []);
+        }
+      } catch {}
+
+      // Merge: backend customers take priority, then add order-derived ones not in backend
+      const backendEmails = new Set(backendList.map(c => c.email));
+      const orderOnly     = fromOrders.filter(c => !backendEmails.has(c.email));
+      const merged        = [...backendList, ...orderOnly];
+
+      // Also merge with hamp_customers localStorage
+      const storedCustomers = JSON.parse(localStorage.getItem('hamp_customers') || '[]');
+      const storedEmails    = new Set(merged.map(c => c.email));
+      const storedOnly      = storedCustomers.filter(c => !storedEmails.has(c.email));
+      const final           = [...merged, ...storedOnly];
+
+      setCustomers(final.length > 0 ? final : fromOrders);
+
+      // Cache the merged list
+      if (final.length > 0) {
+        localStorage.setItem('hamp_customers', JSON.stringify(final));
       }
-
-      if (!res.ok) {
-        // Show empty state rather than error — customers start empty anyway
-        const stored = JSON.parse(localStorage.getItem('hamp_customers') || '[]');
-        setCustomers(stored);
-        if (stored.length === 0) setError('');  // no error if just empty
-        return;
-      }
-
-      const data = await res.json();
-      const list = Array.isArray(data) ? data : (data.customers || data.users || []);
-      setCustomers(list);
-      localStorage.setItem('hamp_customers', JSON.stringify(list));
-    } catch (e) {
-      const stored = JSON.parse(localStorage.getItem('hamp_customers') || '[]');
-      setCustomers(stored);
+    } catch {
+      const fromOrders = buildCustomersFromOrders();
+      setCustomers(fromOrders);
     } finally {
       setLoading(false);
     }
