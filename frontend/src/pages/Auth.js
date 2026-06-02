@@ -545,7 +545,7 @@ function AuthForm() {
                   </Button>
                 </motion.div>
               </motion.form>
-            )}
+            ) : null}
           </AnimatePresence>
 
           {/* Toggle Auth Mode */}
