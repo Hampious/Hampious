@@ -40,6 +40,32 @@ def _get_token() -> str:
         _login()
     return _token_cache["token"]
 
+# ── Pickup location cache ─────────────────────────────────────────────────────
+_pickup_cache = {"name": None}
+
+def _get_pickup_location() -> str:
+    """Fetch first available pickup location from Shiprocket account."""
+    if _pickup_cache["name"]:
+        return _pickup_cache["name"]
+    try:
+        r = _api("GET", "/settings/company/pickup")
+        if r.ok:
+            data      = r.json()
+            addresses = data.get("data", {}).get("shipping_address", [])
+            if addresses:
+                # Use first active pickup location
+                active = next(
+                    (a for a in addresses if a.get("status") == 1),
+                    addresses[0]
+                )
+                name = active.get("pickup_location") or active.get("alias") or "Primary"
+                _pickup_cache["name"] = name
+                logger.info(f"[shiprocket] Using pickup location: {name}")
+                return name
+    except Exception as e:
+        logger.warning(f"[shiprocket] Could not fetch pickup locations: {e}")
+    return "Primary"  # fallback
+
 def _headers() -> dict:
     return {
         "Authorization": f"Bearer {_get_token()}",
@@ -100,10 +126,13 @@ async def create_shiprocket_order(request: Request):
     phone = str(addr.get("phone") or order.get("customer_phone", "9999999999"))
     phone = ''.join(filter(str.isdigit, phone))[-10:]  # keep last 10 digits
 
+    pickup_location = _get_pickup_location()
+    logger.info(f"[shiprocket] Creating order {order_id} with pickup: {pickup_location}")
+
     payload = {
         "order_id":               order_id,
         "order_date":             datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
-        "pickup_location":        "Primary",
+        "pickup_location":        pickup_location,
         "comment":                "Hampious Gift Hamper",
         "billing_customer_name":  first_name,
         "billing_last_name":      last_name,
@@ -223,11 +252,55 @@ async def get_label(shipment_id: str):
     return {"success": True, "label_url": r.json().get("label_url")}
 
 
+@router.get("/shiprocket/pickup-locations")
+async def get_pickup_locations():
+    """List all pickup addresses configured in Shiprocket account."""
+    try:
+        r = _api("GET", "/settings/company/pickup")
+        if not r.ok:
+            raise HTTPException(status_code=400, detail=f"Failed to fetch pickup locations: {r.text}")
+        data      = r.json()
+        addresses = data.get("data", {}).get("shipping_address", [])
+        return {
+            "success":   True,
+            "locations": [
+                {
+                    "name":    a.get("pickup_location") or a.get("alias"),
+                    "address": a.get("address", ""),
+                    "city":    a.get("city", ""),
+                    "state":   a.get("state", ""),
+                    "pincode": a.get("pin_code", ""),
+                    "active":  a.get("status") == 1,
+                }
+                for a in addresses
+            ]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/shiprocket/test-auth")
 async def test_auth():
-    """Test endpoint to verify Shiprocket credentials."""
+    """Test Shiprocket credentials and show pickup locations."""
     try:
-        token = _login()
-        return {"success": True, "message": "Shiprocket authentication successful", "token_preview": token[:20] + "..."}
+        token     = _login()
+        pickup    = _get_pickup_location()
+        # Also fetch location list
+        r         = _api("GET", "/settings/company/pickup")
+        addresses = []
+        if r.ok:
+            addresses = [
+                a.get("pickup_location") or a.get("alias", "?")
+                for a in r.json().get("data", {}).get("shipping_address", [])
+            ]
+        return {
+            "success":          True,
+            "message":          "Shiprocket authentication successful",
+            "pickup_location":  pickup,
+            "all_pickups":      addresses,
+            "token_preview":    token[:20] + "...",
+        }
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))

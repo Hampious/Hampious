@@ -333,9 +333,15 @@ export default function Shipments() {
                   headers: { Authorization: `Bearer ${token}` }
                 });
                 const d = await res.json();
-                if (d.success) alert('✅ Shiprocket Connected!\n' + d.message);
-                else alert('❌ Shiprocket Error: ' + (d.detail || JSON.stringify(d)));
-              } catch (e) { alert('❌ Backend not reachable: ' + e.message); }
+                if (d.success) {
+                  const pickups = d.all_pickups?.length
+                    ? '\n📍 Pickup locations: ' + d.all_pickups.join(', ')
+                    : '\n⚠️ No pickup locations found — add one at app.shiprocket.in > Settings > Manage Pickup';
+                  alert('✅ Shiprocket Connected!\nUsing pickup: ' + d.pickup_location + pickups);
+                } else {
+                  alert('❌ Shiprocket Error: ' + (d.detail || JSON.stringify(d)));
+                }
+              } catch (e) { alert('❌ Backend not reachable — start backend first.\n' + e.message); }
             }}
             style={{ background: '#D1FAE5', color: '#065F46', border: '1px solid #6EE7B7', borderRadius: 10, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
           >
