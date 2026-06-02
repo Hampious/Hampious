@@ -23,16 +23,21 @@ export default function Cart() {
 
       const productIds = cart.items.map(item => item.product_id);
 
+      // Load localStorage products as base fallback
+      const localProducts = JSON.parse(localStorage.getItem('hamp_products') || '[]');
+      const productsMap = {};
+      localProducts.forEach(p => {
+        productsMap[String(p.id)] = p;
+      });
+
+      // Try backend for each product (overrides localStorage if found)
       const productPromises = productIds.map(id =>
         API.get(`/products/${id}`).catch(() => null)
       );
-
       const responses = await Promise.all(productPromises);
-
-      const productsMap = {};
       responses.forEach(response => {
         if (response?.data) {
-          productsMap[response.data.id] = response.data;
+          productsMap[String(response.data.id)] = response.data;
         }
       });
 
@@ -101,8 +106,11 @@ export default function Cart() {
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4" data-testid="cart-items">
               {cart.items.map((item, index) => {
-                const product = products[item.product_id];
-                if (!product) return null;
+                const product = products[String(item.product_id)];
+                const name    = product?.name || item?.product_name || `Product #${item.product_id}`;
+                const image   = product?.images?.[0] || product?.image_url || null;
+                const price   = Number(item.price || 0);
+                const qty     = Number(item.quantity || 1);
 
                 return (
                   <motion.div
@@ -113,32 +121,40 @@ export default function Cart() {
                     className="flex gap-5 p-5 bg-card rounded-2xl border border-border/50 hover:border-primary/20 transition-colors"
                     data-testid={`cart-item-${item.product_id}`}
                   >
-                    <div className="w-24 h-24 md:w-28 md:h-28 rounded-xl overflow-hidden bg-secondary flex-shrink-0">
-                      <img
-                        src={product.images[0] || 'https://via.placeholder.com/150'}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
+                    {/* Product image / placeholder */}
+                    <div className="w-24 h-24 md:w-28 md:h-28 rounded-xl overflow-hidden bg-secondary flex-shrink-0 flex items-center justify-center">
+                      {image ? (
+                        <img
+                          src={image}
+                          alt={name}
+                          className="w-full h-full object-cover"
+                          onError={e => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <ShoppingBag className="h-10 w-10 text-muted-foreground opacity-40" />
+                      )}
                     </div>
+
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-heading text-lg font-medium text-foreground mb-1 truncate">{product.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Quantity: {item.quantity}
-                      </p>
+                      <h3 className="font-heading text-lg font-medium text-foreground mb-1 truncate">{name}</h3>
+                      <p className="text-sm text-muted-foreground mb-3">Quantity: {qty}</p>
                       <div className="flex items-center gap-3">
                         <span className="font-semibold text-lg text-primary">
-                          ₹{(item.price * item.quantity).toFixed(0)}
+                          ₹{(price * qty).toFixed(0)}
                         </span>
-                        <span className="text-sm text-muted-foreground">
-                          (₹{item.price.toFixed(0)} each)
-                        </span>
+                        {qty > 1 && (
+                          <span className="text-sm text-muted-foreground">
+                            (₹{price.toFixed(0)} each)
+                          </span>
+                        )}
                       </div>
                     </div>
+
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemove(item.product_id)}
-                      className="rounded-full h-10 w-10 p-0 hover:bg-destructive/10 hover:text-destructive"
+                      className="rounded-full h-10 w-10 p-0 hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
                       data-testid={`remove-item-btn-${item.product_id}`}
                     >
                       <Trash2 className="h-4 w-4" />
