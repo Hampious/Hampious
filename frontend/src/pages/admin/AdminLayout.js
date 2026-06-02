@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { to: '/admin/orders',     icon: '📦', label: 'Orders'     },
   { to: '/admin/customers',  icon: '👥', label: 'Customers'  },
   { to: '/admin/shipments',  icon: '🚚', label: 'Shipments'  },
+  { to: '/admin/pickup',     icon: '📍', label: 'Pickup Locations' },
 ];
 
 export default function AdminLayout() {

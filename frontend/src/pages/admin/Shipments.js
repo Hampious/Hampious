@@ -35,6 +35,128 @@ function StatusBadge({ status }) {
   );
 }
 
+// ── Shipment slip printer ─────────────────────────────────────────────────────
+function printShipmentSlip(order, awbCode, courierName, shipmentId) {
+  const addr  = order.shipping_address || {};
+  const items = order.items || [];
+  const total = Number(order.final_amount || order.total || 0);
+  const orderDate = new Date(order.created_at || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Shipment Slip - ${order.id}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Georgia', serif; background: #fff; color: #1A0F15; }
+    .page { width: 100mm; min-height: 150mm; margin: 0 auto; padding: 8mm; border: 2px solid #D4789A; }
+    .header { background: #1A0F15; color: #D4789A; padding: 8px 12px; text-align: center; border-radius: 4px; margin-bottom: 10px; }
+    .logo { font-size: 20px; font-weight: bold; letter-spacing: 4px; }
+    .tagline { font-size: 8px; letter-spacing: 3px; color: rgba(212,120,154,0.6); text-transform: uppercase; }
+    .awb { text-align: center; background: #FFF5F8; border: 2px dashed #D4789A; border-radius: 6px; padding: 8px; margin: 8px 0; }
+    .awb-num { font-size: 22px; font-weight: bold; color: #1A0F15; font-family: monospace; letter-spacing: 2px; }
+    .awb-label { font-size: 9px; color: #7c5a6a; text-transform: uppercase; letter-spacing: 2px; }
+    .section { margin: 8px 0; }
+    .section-title { font-size: 9px; text-transform: uppercase; letter-spacing: 2px; color: #B84E78; font-weight: bold; border-bottom: 1px solid #f3d0dd; padding-bottom: 3px; margin-bottom: 5px; }
+    .row { display: flex; justify-content: space-between; font-size: 10px; margin: 2px 0; }
+    .val { font-weight: bold; text-align: right; max-width: 60%; }
+    .address { font-size: 11px; line-height: 1.6; font-weight: bold; }
+    .items { font-size: 10px; }
+    .item-row { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #fdeef3; }
+    .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin-top: 5px; color: #B84E78; }
+    .footer { text-align: center; margin-top: 10px; font-size: 9px; color: #7c5a6a; border-top: 1px dashed #f3d0dd; padding-top: 6px; }
+    .divider { border: none; border-top: 1px dashed #f3d0dd; margin: 8px 0; }
+    @media print { body { margin: 0; } .no-print { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="no-print" style="text-align:center;padding:10px;background:#fff;position:sticky;top:0;border-bottom:1px solid #eee">
+    <button onclick="window.print()" style="background:#B84E78;color:#fff;border:none;padding:8px 24px;border-radius:6px;font-size:14px;cursor:pointer;margin-right:10px">🖨️ Print</button>
+    <button onclick="window.close()" style="background:#f3d0dd;color:#1A0F15;border:none;padding:8px 16px;border-radius:6px;font-size:14px;cursor:pointer">✕ Close</button>
+  </div>
+  <div class="page">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">🎁 HAMPIOUS</div>
+      <div class="tagline">Premium Gift Hampers</div>
+    </div>
+
+    <!-- AWB -->
+    <div class="awb">
+      <div class="awb-label">AWB / Tracking Number</div>
+      <div class="awb-num">${awbCode || shipmentId || '—'}</div>
+      <div style="font-size:10px;color:#7c5a6a;margin-top:3px">via ${courierName}</div>
+    </div>
+
+    <!-- From -->
+    <div class="section">
+      <div class="section-title">From (Sender)</div>
+      <div class="address">
+        Hampious<br>
+        team.hampious@gmail.com<br>
+        India
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- To -->
+    <div class="section">
+      <div class="section-title">To (Recipient)</div>
+      <div class="address">
+        ${addr.full_name || order.customer_name || '—'}<br>
+        ${addr.address || addr.line1 || ''}<br>
+        ${[addr.city, addr.state].filter(Boolean).join(', ')}${addr.pincode ? ' - ' + addr.pincode : ''}<br>
+        📞 ${addr.phone || order.customer_phone || '—'}<br>
+        ✉️ ${order.customer_email || addr.email || '—'}
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Order Details -->
+    <div class="section">
+      <div class="section-title">Order Details</div>
+      <div class="row"><span>Order ID</span><span class="val">${order.id}</span></div>
+      <div class="row"><span>Order Date</span><span class="val">${orderDate}</span></div>
+      <div class="row"><span>Payment</span><span class="val">Prepaid ✓</span></div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Items -->
+    <div class="section">
+      <div class="section-title">Items</div>
+      <div class="items">
+        ${items.map(it => `
+          <div class="item-row">
+            <span>${it.product_name || it.name || 'Gift Hamper'} ×${it.quantity || 1}</span>
+            <span>₹${(Number(it.price || 0) * Number(it.quantity || 1)).toLocaleString('en-IN')}</span>
+          </div>
+        `).join('')}
+        <div class="total-row">
+          <span>Total Paid</span>
+          <span>₹${total.toLocaleString('en-IN')}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div>Thank you for choosing Hampious! 💕</div>
+      <div style="margin-top:3px">For queries: team.hampious@gmail.com</div>
+      <div style="margin-top:6px;font-size:8px;color:#D4789A">🎁 Premium Gift Hampers — Delivered with Love</div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank', 'width=420,height=700');
+  win.document.write(html);
+  win.document.close();
+}
+
 // ── Shiprocket credentials (direct API — no backend needed) ──────────────────
 const SR_EMAIL    = 'debashisbisoye12@gmail.com';
 const SR_PASSWORD = 'xpe^7Ie1GkREgh$$ZH2a4p2CJX570eKT';
@@ -86,14 +208,17 @@ function ShiprocketForm({ order, onSuccess, onCancel }) {
 
       // ── Step 2: Get pickup location ──────────────────────────────────────
       setMessage('Fetching pickup address...');
-      let pickupLocation = 'Primary';
+      // Check if admin manually selected one from Pickup Locations tab
+      let pickupLocation = sessionStorage.getItem('sr_active_pickup') || 'Primary';
       try {
         const pr = await srApi('GET', '/settings/company/pickup', null, srToken);
         if (pr.ok) {
           const pd = await pr.json();
           const addresses = pd?.data?.shipping_address || [];
-          const active = addresses.find(a => a.status === 1) || addresses[0];
-          if (active) pickupLocation = active.pickup_location || active.alias || 'Primary';
+          if (!sessionStorage.getItem('sr_active_pickup')) {
+            const active = addresses.find(a => a.status === 1) || addresses[0];
+            if (active) pickupLocation = active.pickup_location || active.alias || 'Primary';
+          }
         }
       } catch {}
 
@@ -153,7 +278,7 @@ function ShiprocketForm({ order, onSuccess, onCancel }) {
       const awbRes = await srApi('POST', '/courier/assign/awb/shipment_id', { shipment_id: [shipmentId] }, srToken);
       if (awbRes.ok) {
         const awbData = (await awbRes.json())?.response?.data || {};
-        awbCode    = awbData.awb_code || '';
+        awbCode     = awbData.awb_code || '';
         courierName = awbData.courier_name || 'Shiprocket';
       }
 
@@ -234,15 +359,25 @@ function ShiprocketForm({ order, onSuccess, onCancel }) {
   if (status === 'success') {
     return (
       <div style={{ marginTop: 14, padding: 18, background: '#D1FAE5', borderRadius: 12, border: '1px solid #6EE7B7' }}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: '#065F46', margin: '0 0 8px' }}>✅ Shipment Booked!</p>
-        {result?.awb_code && <p style={{ fontSize: 13, color: '#065F46', margin: '0 0 4px' }}>AWB: <strong>{result.awb_code}</strong></p>}
+        <p style={{ fontSize: 14, fontWeight: 700, color: '#065F46', margin: '0 0 8px' }}>✅ Shipment Booked Successfully!</p>
+        {result?.awb_code && <p style={{ fontSize: 13, color: '#065F46', margin: '0 0 4px' }}>AWB: <strong style={{ fontFamily: 'monospace', letterSpacing: 1 }}>{result.awb_code}</strong></p>}
         {result?.courier_name && <p style={{ fontSize: 13, color: '#065F46', margin: '0 0 4px' }}>Courier: <strong>{result.courier_name}</strong></p>}
-        {result?.label_url && (
-          <a href={result.label_url} target="_blank" rel="noreferrer"
-            style={{ display: 'inline-block', marginTop: 8, background: '#065F46', color: '#fff', borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
-            🖨️ Print Label
-          </a>
-        )}
+        {result?.shipment_id && <p style={{ fontSize: 13, color: '#065F46', margin: '0 0 10px' }}>Shipment ID: <strong>{result.shipment_id}</strong></p>}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {/* Hampious branded shipment slip */}
+          <button
+            onClick={() => printShipmentSlip(order, result.awb_code, result.courier_name, result.shipment_id)}
+            style={{ background: PLUM, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Jost, sans-serif' }}>
+            🏷️ Print Shipment Slip
+          </button>
+          {/* Shiprocket official label */}
+          {result?.label_url && (
+            <a href={result.label_url} target="_blank" rel="noreferrer"
+              style={{ display: 'inline-block', background: '#065F46', color: '#fff', borderRadius: 8, padding: '8px 16px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+              🖨️ Shiprocket Label
+            </a>
+          )}
+        </div>
       </div>
     );
   }
