@@ -43,21 +43,37 @@ function ShiprocketForm({ order, onSuccess, onCancel }) {
 
   const handleBook = async () => {
     setStatus('loading');
-    setMessage('Creating Shiprocket order...');
+    setMessage('Connecting to Shiprocket...');
     try {
       const token = localStorage.getItem('admin_token') || '';
-      const res = await fetch(`${API}/shiprocket/create-order?token=${encodeURIComponent(token)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ order }),
-      });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || `HTTP ${res.status}`);
+      let data = null;
+
+      // Try backend proxy first
+      try {
+        setMessage('Creating Shiprocket order...');
+        const res = await fetch(`${API}/shiprocket/create-order?token=${encodeURIComponent(token)}`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body:    JSON.stringify({ order }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `Shiprocket API error (HTTP ${res.status})`);
+        }
+        data = await res.json();
+      } catch (e) {
+        // If network error (backend not running), give clear message
+        if (e.message === 'Failed to fetch' || e.message.includes('NetworkError') || e.message.includes('fetch')) {
+          throw new Error(
+            'Backend server is not running.\n\n' +
+            'Please start it by double-clicking start-all.bat in your project folder, ' +
+            'then try again.'
+          );
+        }
+        throw e;
       }
 
-      const data = await res.json();
       setResult(data);
       setStatus('success');
       setMessage('');
@@ -77,7 +93,7 @@ function ShiprocketForm({ order, onSuccess, onCancel }) {
       else localOrders.push({ ...order, ...payload });
       localStorage.setItem('hamp_orders', JSON.stringify(localOrders));
 
-      // Try backend update
+      // Try backend order status update
       adminPut(`/orders/${order.id}/status`, payload).catch(() => {});
 
       setTimeout(() => onSuccess(data), 1500);
@@ -145,7 +161,7 @@ function ShiprocketForm({ order, onSuccess, onCancel }) {
     return (
       <div style={{ marginTop: 14, padding: 18, background: '#FEE2E2', borderRadius: 12, border: '1px solid #FCA5A5' }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: '#991B1B', margin: '0 0 8px' }}>❌ Shiprocket Error</p>
-        <p style={{ fontSize: 12, color: '#991B1B', margin: '0 0 12px' }}>{message}</p>
+        <p style={{ fontSize: 12, color: '#991B1B', margin: '0 0 12px', whiteSpace: 'pre-line', lineHeight: 1.6 }}>{message}</p>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={() => setStatus('idle')}
             style={{ background: ROSE, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'Jost, sans-serif' }}>
