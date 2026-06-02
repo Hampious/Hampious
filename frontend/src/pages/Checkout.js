@@ -393,94 +393,44 @@ export default function Checkout() {
     navigate(`/order-success?order_id=${orderId}`);
   };
 
-  const handlePayment = async () => {
+  // ── Proceed to Payment Method page ────────────────────────────────────────
+  const handlePayment = () => {
     if (!validateForm()) return;
-    setLoading(true);
 
     const finalAmount = getCartTotal() - discount;
-
-    // ── Step 1: Try to load Razorpay ───────────────────────────────────────
-    const scriptLoaded = await loadRazorpayScript();
-
-    // ── Step 2: Razorpay script must load ─────────────────────────────────
-    if (!scriptLoaded) {
-      toast.error('Payment gateway failed to load. Please check your internet and try again.');
-      setLoading(false);
-      return;
-    }
-
-    // ── Step 3: Try backend order; fall back to direct amount if backend down ─
-    let razorpayOrderId = null;
-    let razorpayAmount  = Math.round(finalAmount * 100); // paise
-
-    try {
-      const res = await API.post('/payment/create-razorpay-order', { amount: finalAmount });
-      if (res.data?.id) {
-        razorpayOrderId = res.data.id;
-        razorpayAmount  = res.data.amount;
-      }
-    } catch {
-      // Backend offline — open Razorpay with just amount (no order_id).
-      // Payment still processes; we skip server-side signature verify.
-      console.warn('[payment] Backend unavailable — using direct amount mode');
-    }
-
-    // ── Step 4: Open Razorpay modal ───────────────────────────────────────
-    const options = {
-      key:         RAZORPAY_KEY_ID,
-      amount:      razorpayAmount,
-      currency:    'INR',
-      name:        'Hampious',
-      description: 'Premium Gift Hamper',
-      image:       `${window.location.origin}/logo.jpg`,
-      prefill: {
-        name:    customerDetails.fullName,
-        email:   customerDetails.email,
-        contact: customerDetails.phone.replace(/\D/g, '').slice(-10),
-      },
-      notes: { address: shippingInfo.address },
-      theme: { color: '#D4789A' },
-      modal: {
-        ondismiss: () => {
-          setLoading(false);
-          toast.error('Payment cancelled. Your order was not placed.');
-        },
-        animation: true,
-      },
-      handler: async (response) => {
-        try {
-          // Try backend signature verification (skip if backend was offline)
-          if (razorpayOrderId) {
-            try {
-              await API.post('/payment/verify', {
-                payment_id:        response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                signature:         response.razorpay_signature,
-              });
-            } catch {
-              // Verification endpoint offline — proceed anyway, payment was captured
-              console.warn('[payment] Verify endpoint offline — proceeding');
-            }
-          }
-          await completeOrder(response.razorpay_payment_id);
-        } catch (err) {
-          console.error('Payment handler error:', err);
-          setLoading(false);
-          toast.error(`Payment received (ID: ${response.razorpay_payment_id}). Please contact support to confirm your order.`);
-        }
-      },
+    const orderItems  = cart.items.map(item => ({
+      product_id:   item.product_id,
+      product_name: products[String(item.product_id)]?.name || item.product_name || 'Product',
+      quantity:     item.quantity,
+      price:        item.price,
+    }));
+    const shippingAddress = {
+      ...shippingInfo,
+      full_name: customerDetails.fullName,
+      phone:     customerDetails.phone,
+      email:     customerDetails.email,
     };
 
-    // Only attach order_id when backend created one
-    if (razorpayOrderId) options.order_id = razorpayOrderId;
-
-    const rzp = new window.Razorpay(options);
-    rzp.on('payment.failed', (resp) => {
-      console.error('Payment failed:', resp.error);
-      toast.error(`Payment failed: ${resp.error?.description || 'Please try again.'}`);
-      setLoading(false);
-    });
-    rzp.open();
+    // Save pending order to sessionStorage for PaymentMethod page
+    const pendingOrder = {
+      id:               `ORD-${Date.now()}`,
+      customer_name:    customerDetails.fullName,
+      customer_email:   customerDetails.email,
+      customer_phone:   customerDetails.phone,
+      items:            orderItems,
+      total_amount:     getCartTotal(),
+      discount_amount:  discount,
+      final_amount:     finalAmount,
+      total:            finalAmount,
+      shipping_address: shippingAddress,
+      gift_message:     giftMessage  || null,
+      spotify_link:     spotifyLink  || null,
+      qr_code:          qrCode       || null,
+      coupon_code:      appliedCoupon?.code || null,
+      created_at:       new Date().toISOString(),
+    };
+    sessionStorage.setItem('pending_order', JSON.stringify(pendingOrder));
+    navigate('/payment');
   };
 
   const finalAmount = getCartTotal() - discount;
@@ -836,18 +786,11 @@ export default function Checkout() {
                   className="w-full button-premium bg-primary hover:bg-primary/90 h-14 rounded-full text-base font-semibold"
                   data-testid="place-order-btn"
                 >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="h-5 w-5 mr-2" />
-                      Pay ₹{finalAmount.toFixed(0)}
-                      <ArrowRight className="h-5 w-5 ml-2" />
-                    </>
-                  )}
+                  <>
+                    <CreditCard className="h-5 w-5 mr-2" />
+                    Proceed to Pay — ₹{finalAmount.toFixed(0)}
+                    <ArrowRight className="h-5 w-5 ml-2" />
+                  </>
                 </Button>
               </motion.div>
 

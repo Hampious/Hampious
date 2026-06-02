@@ -15,6 +15,7 @@ import ProductDetails from './pages/ProductDetails';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
+import PaymentMethod from './pages/PaymentMethod';
 import MyOrders from './pages/MyOrders';
 import Profile from './pages/Profile';
 import Auth from './pages/Auth';
@@ -77,6 +78,7 @@ function App() {
                 <Route path="/profile"    element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
                 <Route path="/order-success" element={<OrderSuccess />} />
+                <Route path="/payment"       element={<PaymentMethod />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
