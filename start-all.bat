@@ -1,26 +1,31 @@
 @echo off
-title Hampious - Starting...
+title Hampious Launcher
+echo.
 echo ============================================
-echo   HAMPIOUS - Starting Backend + Frontend
+echo   HAMPIOUS - Launching App
 echo ============================================
 echo.
 
-:: Start backend in a new window
-start "Hampious Backend :8000" cmd /k "cd /d "%~dp0backend" && python -m uvicorn main:app --reload --port 8000"
+:: Kill anything on port 8000
+for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":8000 "') do (
+    taskkill /F /PID %%a >nul 2>&1
+)
 
-:: Wait 3 seconds for backend to boot
-timeout /T 3 /NOBREAK >nul
+:: Start backend using the correct uvicorn path
+echo Starting Backend...
+start "Hampious Backend :8000" cmd /k "cd /d "%~dp0backend" && "C:\Users\dbisoye\AppData\Roaming\Python\Python314\Scripts\uvicorn.exe" main:app --reload --port 8000"
 
-:: Start frontend in a new window
+timeout /T 4 /NOBREAK >nul
+
+:: Start frontend
+echo Starting Frontend...
 start "Hampious Frontend :3000" cmd /k "cd /d "%~dp0frontend" && set BROWSER=none && npm start"
 
 echo.
-echo Both servers are starting...
+echo Backend  : http://localhost:8000
+echo Website  : http://localhost:3000
+echo Admin    : http://localhost:3000/admin
 echo.
-echo  Backend  ^> http://localhost:8000
-echo  Website  ^> http://localhost:3000
-echo  Admin    ^> http://localhost:3000/admin
-echo.
-echo Wait ~30 seconds for frontend to compile, then open your browser.
-echo.
-pause
+echo Keep both terminal windows open!
+timeout /T 10 /NOBREAK >nul
+start "" "http://localhost:3000"

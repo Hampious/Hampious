@@ -43,7 +43,10 @@ export async function adminDelete(path) {
 }
 
 export function handleUnauth(res, navigate) {
+  // Don't log out if using local token — backend may just be offline
   if (res.status === 401 || res.status === 403) {
+    const token = getToken();
+    if (token === 'local_admin_token') return false; // local auth — ignore 401
     localStorage.removeItem('admin_token');
     navigate('/admin');
     return true;

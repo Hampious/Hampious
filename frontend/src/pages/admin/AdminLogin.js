@@ -4,6 +4,11 @@ import axios from 'axios';
 
 const API = 'http://localhost:8000/api/admin';
 
+// ── Local admin credentials (fallback when backend is offline) ────────────────
+const LOCAL_ADMIN_EMAIL    = 'team.hampious@gmail.com';
+const LOCAL_ADMIN_PASSWORD = 'Hampious@123';
+const LOCAL_TOKEN          = 'local_admin_token';
+
 export default function AdminLogin() {
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -20,17 +25,32 @@ export default function AdminLogin() {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // ── Step 1: Try backend ────────────────────────────────────────────────
     try {
-      const res = await axios.post(`${API}/login`, { email, password });
+      const res = await axios.post(`${API}/login`, { email, password }, { timeout: 4000 });
       localStorage.setItem('admin_token', res.data.access_token);
       navigate('/admin/dashboard', { replace: true });
+      return;
     } catch (err) {
-      if (!err.response) setError('Cannot connect to backend. Make sure the server is running.');
-      else if (err.response.status === 401) setError('Invalid admin email or password.');
-      else setError(err.response?.data?.detail || 'Login failed.');
-    } finally {
-      setLoading(false);
+      // If server is reachable but credentials are wrong → show error
+      if (err.response?.status === 401) {
+        setError('Invalid admin email or password.');
+        setLoading(false);
+        return;
+      }
+      // Network error → fall through to local auth
     }
+
+    // ── Step 2: Local auth fallback (backend offline) ──────────────────────
+    if (email === LOCAL_ADMIN_EMAIL && password === LOCAL_ADMIN_PASSWORD) {
+      localStorage.setItem('admin_token', LOCAL_TOKEN);
+      navigate('/admin/dashboard', { replace: true });
+      return;
+    }
+
+    setError('Invalid admin email or password.');
+    setLoading(false);
   };
 
   return (
