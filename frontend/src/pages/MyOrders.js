@@ -416,8 +416,12 @@ const OrderCard = ({ order, onRefresh }) => {
   
   // Defensive coding: Ensure items is always an array
   const items = Array.isArray(order.items) ? order.items : [];
-  
-  const status = statusConfig[order.status] || statusConfig.pending;
+
+  // Determine effective status: if payment not paid, always show Pending Payment
+  const effectiveStatus = (order.payment_status !== 'paid' && order.status !== 'delivered' && order.status !== 'shipped')
+    ? 'pending'
+    : order.status;
+  const status = statusConfig[effectiveStatus] || statusConfig.pending;
 
   useEffect(() => {
     const checkReturnEligibility = async () => {
@@ -760,10 +764,7 @@ export default function MyOrders() {
       const normalized = merged.map(o => ({
         ...o,
         id:           String(o.id || ''),
-        // If payment is paid but status is still 'pending', upgrade to 'processing'
-        status:       (o.status === 'pending' && o.payment_status === 'paid')
-                        ? 'processing'
-                        : (o.status || 'pending'),
+        status:       o.status || 'pending',
         final_amount: o.final_amount ?? o.total ?? o.total_amount ?? 0,
         created_at:   o.created_at || new Date().toISOString(),
         items:        Array.isArray(o.items) ? o.items.map(item => ({
