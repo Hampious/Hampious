@@ -278,10 +278,19 @@ export default function Shipments() {
       const backendIds  = new Set(allOrders.map(o => String(o.id)));
       allOrders = [...allOrders, ...localOrders.filter(o => !backendIds.has(String(o.id)))];
 
-      // Only show processing + shipped
+      // Show: processing, shipped, OR pending-but-paid (payment went through)
       const relevant = allOrders
-        .filter(o => o.status === 'processing' || o.status === 'shipped')
-        .map(o => ({ ...o, id: String(o.id || '') }))
+        .filter(o =>
+          o.status === 'processing' ||
+          o.status === 'shipped' ||
+          (o.status === 'pending' && o.payment_status === 'paid')
+        )
+        .map(o => ({
+          ...o,
+          id: String(o.id || ''),
+          // Treat paid-pending as processing for display
+          status: (o.status === 'pending' && o.payment_status === 'paid') ? 'processing' : o.status,
+        }))
         .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
       setOrders(relevant);
@@ -316,9 +325,26 @@ export default function Shipments() {
           <p style={{ color: '#7c5a6a', marginTop: 6, fontSize: 14 }}>Powered by Shiprocket · Auto AWB · Live Tracking</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ background: '#D1FAE5', color: '#065F46', borderRadius: 10, padding: '6px 14px', fontSize: 12, fontWeight: 700 }}>
-            🚀 Shiprocket Connected
-          </div>
+          <button
+            onClick={async () => {
+              try {
+                const token = localStorage.getItem('admin_token') || '';
+                const res = await fetch(`${API}/shiprocket/test-auth?token=${encodeURIComponent(token)}`, {
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+                const d = await res.json();
+                if (d.success) alert('✅ Shiprocket Connected!\n' + d.message);
+                else alert('❌ Shiprocket Error: ' + (d.detail || JSON.stringify(d)));
+              } catch (e) { alert('❌ Backend not reachable: ' + e.message); }
+            }}
+            style={{ background: '#D1FAE5', color: '#065F46', border: '1px solid #6EE7B7', borderRadius: 10, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+          >
+            🚀 Test Shiprocket
+          </button>
+          <button onClick={fetchOrders}
+            style={{ background: BLUSH, color: ROSE, border: `1px solid ${PINK}`, borderRadius: 10, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            🔄 Refresh
+          </button>
         </div>
       </motion.div>
 
