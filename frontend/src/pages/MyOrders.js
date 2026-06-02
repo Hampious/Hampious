@@ -12,16 +12,17 @@ import { toast } from 'sonner';
 // Removed const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const statusConfig = {
-  pending: { color: 'bg-yellow-500', label: 'Pending Payment', step: 0 },
-  payment_confirmed: { color: 'bg-blue-500', label: 'Payment Confirmed', step: 1 },
-  confirmed: { color: 'bg-blue-600', label: 'Order Confirmed', step: 2 },
-  packed: { color: 'bg-indigo-500', label: 'Packed', step: 3 },
-  shipped: { color: 'bg-purple-500', label: 'Shipped', step: 4 },
-  out_for_delivery: { color: 'bg-orange-500', label: 'Out for Delivery', step: 5 },
-  delivered: { color: 'bg-green-500', label: 'Delivered', step: 6 },
-  cancelled: { color: 'bg-red-500', label: 'Cancelled', step: -1 },
-  returned: { color: 'bg-gray-500', label: 'Returned', step: -1 },
-  refunded: { color: 'bg-teal-500', label: 'Refunded', step: -1 }
+  pending:           { color: 'bg-yellow-500', label: 'Pending Payment',   step: 0 },
+  payment_confirmed: { color: 'bg-blue-500',   label: 'Payment Confirmed', step: 1 },
+  processing:        { color: 'bg-blue-600',   label: 'Order Confirmed',   step: 2 },
+  confirmed:         { color: 'bg-blue-600',   label: 'Order Confirmed',   step: 2 },
+  packed:            { color: 'bg-indigo-500', label: 'Packed',            step: 3 },
+  shipped:           { color: 'bg-purple-500', label: 'Shipped',           step: 4 },
+  out_for_delivery:  { color: 'bg-orange-500', label: 'Out for Delivery',  step: 5 },
+  delivered:         { color: 'bg-green-500',  label: 'Delivered',         step: 6 },
+  cancelled:         { color: 'bg-red-500',    label: 'Cancelled',         step: -1 },
+  returned:          { color: 'bg-gray-500',   label: 'Returned',          step: -1 },
+  refunded:          { color: 'bg-teal-500',   label: 'Refunded',          step: -1 },
 };
 
 const timelineSteps = [
@@ -759,7 +760,10 @@ export default function MyOrders() {
       const normalized = merged.map(o => ({
         ...o,
         id:           String(o.id || ''),
-        status:       o.status || 'pending',
+        // If payment is paid but status is still 'pending', upgrade to 'processing'
+        status:       (o.status === 'pending' && o.payment_status === 'paid')
+                        ? 'processing'
+                        : (o.status || 'pending'),
         final_amount: o.final_amount ?? o.total ?? o.total_amount ?? 0,
         created_at:   o.created_at || new Date().toISOString(),
         items:        Array.isArray(o.items) ? o.items.map(item => ({

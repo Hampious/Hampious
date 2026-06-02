@@ -330,7 +330,7 @@ export default function Checkout() {
       payment_method:   'razorpay',
       payment_id:       paymentId,
       payment_status:   'paid',
-      status:           'pending',
+      status:           'processing',
       coupon_code:      appliedCoupon?.code || null,
       created_at:       new Date().toISOString(),
     };
