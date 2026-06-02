@@ -174,17 +174,20 @@ export default function Checkout() {
   const fetchProductDetails = async () => {
     try {
       const productIds = cart.items.map(item => item.product_id);
-      
-      const productPromises = productIds.map(id => 
+
+      // Pre-populate from localStorage so products show instantly
+      const localProducts = JSON.parse(localStorage.getItem('hamp_products') || '[]');
+      const productsMap = {};
+      localProducts.forEach(p => { productsMap[String(p.id)] = p; });
+
+      // Try backend to get fresh data
+      const productPromises = productIds.map(id =>
         API.get(`/products/${id}`).catch(() => null)
       );
-      
       const responses = await Promise.all(productPromises);
-      
-      const productsMap = {};
       responses.forEach(response => {
         if (response?.data) {
-          productsMap[response.data.id] = response.data;
+          productsMap[String(response.data.id)] = response.data;
         }
       });
       setProducts(productsMap);
