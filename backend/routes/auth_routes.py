@@ -4,6 +4,8 @@ from typing import Optional
 import smtplib
 import secrets
 import os
+import random
+import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
@@ -14,6 +16,78 @@ router = APIRouter()
 
 # In-memory token store { token: { email, expires } }
 reset_tokens = {}
+
+# In-memory OTP store { contact: { otp, expires } }
+_otps: dict = {}
+
+# ── Brevo config ──────────────────────────────────────────────────────────────
+BREVO_API_KEY     = os.environ.get("BREVO_API_KEY", "")
+BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL", "team.hampious@gmail.com")
+BREVO_SENDER_NAME  = os.environ.get("BREVO_SENDER_NAME", "Hampious")
+
+
+def _send_brevo_email(to_email: str, subject: str, html_content: str):
+    """Send email via Brevo transactional API."""
+    try:
+        import sib_api_v3_sdk
+        config = sib_api_v3_sdk.Configuration()
+        config.api_key["api-key"] = BREVO_API_KEY
+        api = sib_api_v3_sdk.TransactionalEmailsApi(
+              sib_api_v3_sdk.ApiClient(config))
+        email_obj = sib_api_v3_sdk.SendSmtpEmail(
+            to=[{"email": to_email}],
+            sender={"name": BREVO_SENDER_NAME, "email": BREVO_SENDER_EMAIL},
+            subject=subject,
+            html_content=html_content,
+        )
+        api.send_transac_email(email_obj)
+        return True
+    except Exception as e:
+        print(f"[brevo] Email send error: {e}")
+        return False
+
+
+def _otp_email_html(otp: str, name: str = "there") -> str:
+    return f"""
+    <div style="font-family:'Georgia',serif;max-width:500px;margin:0 auto;
+                background:#FFF5F8;border-radius:16px;overflow:hidden;">
+      <div style="background:#1A0F15;padding:2rem;text-align:center;">
+        <h1 style="color:#D4789A;font-size:1.8rem;margin:0;letter-spacing:0.12em;">
+          🎁 HAMPIOUS
+        </h1>
+        <p style="color:rgba(255,245,248,0.5);font-size:0.75rem;
+                  letter-spacing:0.2em;margin:0.3rem 0 0;">
+          PREMIUM GIFT HAMPERS
+        </p>
+      </div>
+      <div style="padding:2.5rem 2rem;text-align:center;">
+        <h2 style="color:#3D1A2A;font-size:1.5rem;margin:0 0 0.5rem;">
+          Hi {name}! 👋
+        </h2>
+        <p style="color:rgba(30,26,23,0.6);margin:0 0 1.5rem;">
+          Your one-time login code is:
+        </p>
+        <div style="background:#fff;border:2px dashed #D4789A;border-radius:14px;
+                    padding:1.5rem;margin:0 auto 1.5rem;display:inline-block;
+                    min-width:200px;">
+          <span style="font-size:2.5rem;font-weight:bold;color:#B84E78;
+                       letter-spacing:12px;font-family:monospace;">
+            {otp}
+          </span>
+        </div>
+        <p style="color:rgba(30,26,23,0.45);font-size:0.85rem;margin:0;">
+          ⏱ Valid for <strong>10 minutes</strong>. Do not share with anyone.
+        </p>
+      </div>
+      <div style="background:#FCEAF1;padding:1rem 2rem;text-align:center;
+                  border-top:1px solid rgba(212,120,154,0.15);">
+        <p style="color:rgba(30,26,23,0.35);font-size:0.72rem;margin:0;">
+          If you didn't request this, ignore this email.
+          © 2024 Hampious
+        </p>
+      </div>
+    </div>
+    """
 
 EMAIL_HOST     = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT     = int(os.environ.get('EMAIL_PORT', 587))
@@ -233,6 +307,94 @@ def reset_password(request: ResetPasswordRequest):
 @router.post("/logout")
 def logout():
     return {"message": "Logout successful"}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# OTP AUTHENTICATION (via Brevo Email)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class SendOtpRequest(BaseModel):
+    email: str
+    name: Optional[str] = "there"
+
+class VerifyOtpRequest(BaseModel):
+    email: str
+    otp:   str
+
+@router.post("/send-otp")
+def send_otp(request: SendOtpRequest):
+    email = request.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Valid email required")
+
+    if not BREVO_API_KEY:
+        raise HTTPException(status_code=500, detail="Email service not configured")
+
+    # Generate 6-digit OTP
+    otp = str(random.randint(100000, 999999))
+    _otps[email] = {"otp": otp, "expires": time.time() + 600}  # 10 min
+
+    # Get user name from Supabase if exists
+    name = request.name or "there"
+    try:
+        rows = db_select("customers", {"email": email})
+        if rows and rows[0].get("name"):
+            name = rows[0]["name"].split()[0]
+    except: pass
+
+    sent = _send_brevo_email(
+        to_email=email,
+        subject="Your Hampious Login OTP",
+        html_content=_otp_email_html(otp, name),
+    )
+    if not sent:
+        raise HTTPException(status_code=500, detail="Failed to send OTP email")
+
+    return {"message": "OTP sent to your email", "email": email}
+
+
+@router.post("/verify-otp")
+def verify_otp(request: VerifyOtpRequest):
+    email = request.email.strip().lower()
+    entry = _otps.get(email)
+
+    if not entry:
+        raise HTTPException(status_code=400, detail="No OTP found. Please request a new one.")
+    if time.time() > entry["expires"]:
+        del _otps[email]
+        raise HTTPException(status_code=400, detail="OTP expired. Please request a new one.")
+    if entry["otp"] != request.otp.strip():
+        raise HTTPException(status_code=400, detail="Invalid OTP. Please try again.")
+
+    # OTP valid — delete it
+    del _otps[email]
+
+    # Get or create user in Supabase
+    name = email.split("@")[0].title()
+    try:
+        rows = db_select("customers", {"email": email})
+        if rows:
+            name = rows[0].get("name", name)
+        else:
+            db_insert("customers", {
+                "email":        email,
+                "name":         name,
+                "total_orders": 0,
+                "total_spent":  0,
+                "created_at":   datetime.utcnow().isoformat(),
+            })
+    except Exception as e:
+        print(f"[verify_otp] Supabase error: {e}")
+
+    # Cache in local session store
+    if email not in users_db:
+        users_db[email] = {"email": email, "name": name, "password": "", "phone": ""}
+
+    return {
+        "message": "Login successful",
+        "token":   f"token_{email}",
+        "user":    {"email": email, "name": name},
+    }
 
 
 @router.get("/profile")

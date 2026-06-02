@@ -70,11 +70,45 @@ export default function Auth() {
 }
 
 function AuthForm() {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp]   = useState(false);
+  const [authMode, setAuthMode]   = useState('password'); // 'password' | 'otp'
+  const [loading, setLoading]     = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  // OTP state
+  const [otpEmail, setOtpEmail]   = useState('');
+  const [otpCode,  setOtpCode]    = useState('');
+  const [otpStep,  setOtpStep]    = useState('email'); // 'email' | 'verify'
+  const [otpLoading, setOtpLoading] = useState(false);
+
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    if (!otpEmail.trim()) { toast.error('Enter your email'); return; }
+    setOtpLoading(true);
+    try {
+      await API.post('/auth/send-otp', { email: otpEmail });
+      setOtpStep('verify');
+      toast.success(`OTP sent to ${otpEmail}`);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to send OTP');
+    } finally { setOtpLoading(false); }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (!otpCode.trim()) { toast.error('Enter the OTP'); return; }
+    setOtpLoading(true);
+    try {
+      const res = await API.post('/auth/verify-otp', { email: otpEmail, otp: otpCode });
+      login(res.data.token, res.data.user);
+      toast.success('Logged in successfully!');
+      navigate('/');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Invalid OTP');
+    } finally { setOtpLoading(false); }
+  };
 
   const [signUpData, setSignUpData] = useState({
     first_name: '',
@@ -182,8 +216,8 @@ function AuthForm() {
           className="bg-card p-8 rounded-3xl border border-border/50 premium-shadow-lg"
           layout
         >
-          <motion.div 
-            className="text-center mb-8"
+          <motion.div
+            className="text-center mb-6"
             key={isSignUp ? 'signup-header' : 'signin-header'}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -197,7 +231,74 @@ function AuthForm() {
             </p>
           </motion.div>
 
+          {/* Auth Mode Toggle — only show on sign-in */}
+          {!isSignUp && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20, background: '#f8f0f4', borderRadius: 12, padding: 4 }}>
+              <button type="button"
+                onClick={() => { setAuthMode('password'); setOtpStep('email'); setOtpCode(''); }}
+                style={{ flex: 1, padding: '8px', borderRadius: 9, border: 'none', cursor: 'pointer', fontFamily: 'Jost, sans-serif', fontSize: 13, fontWeight: 600, transition: 'all 0.2s',
+                  background: authMode === 'password' ? '#fff' : 'transparent',
+                  color: authMode === 'password' ? '#B84E78' : '#7c5a6a',
+                  boxShadow: authMode === 'password' ? '0 2px 8px rgba(26,15,21,0.08)' : 'none' }}>
+                🔑 Password
+              </button>
+              <button type="button"
+                onClick={() => { setAuthMode('otp'); setOtpStep('email'); }}
+                style={{ flex: 1, padding: '8px', borderRadius: 9, border: 'none', cursor: 'pointer', fontFamily: 'Jost, sans-serif', fontSize: 13, fontWeight: 600, transition: 'all 0.2s',
+                  background: authMode === 'otp' ? '#fff' : 'transparent',
+                  color: authMode === 'otp' ? '#B84E78' : '#7c5a6a',
+                  boxShadow: authMode === 'otp' ? '0 2px 8px rgba(26,15,21,0.08)' : 'none' }}>
+                📧 Email OTP
+              </button>
+            </div>
+          )}
+
           <AnimatePresence mode="wait">
+            {/* ── OTP Login Flow ── */}
+            {!isSignUp && authMode === 'otp' && (
+              <motion.div key="otp-form"
+                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+                {otpStep === 'email' ? (
+                  <form onSubmit={handleSendOtp} className="space-y-5">
+                    <div>
+                      <Label className="text-sm font-medium text-foreground">Email Address</Label>
+                      <div className="relative mt-2">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input type="email" required placeholder="your@email.com" value={otpEmail}
+                          onChange={e => setOtpEmail(e.target.value)}
+                          className="pl-10 h-12 rounded-xl input-premium" />
+                      </div>
+                    </div>
+                    <Button type="submit" disabled={otpLoading}
+                      className="w-full button-premium bg-primary hover:bg-primary/90 h-12 rounded-full font-semibold">
+                      {otpLoading ? 'Sending OTP...' : 'Send OTP to Email →'}
+                    </Button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleVerifyOtp} className="space-y-5">
+                    <div style={{ background: '#D1FAE5', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#065F46' }}>
+                      ✅ OTP sent to <strong>{otpEmail}</strong>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-foreground">Enter 6-digit OTP</Label>
+                      <Input type="text" required maxLength={6} placeholder="• • • • • •"
+                        value={otpCode} onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                        className="mt-2 h-14 rounded-xl text-center text-2xl font-bold tracking-widest input-premium" />
+                    </div>
+                    <Button type="submit" disabled={otpLoading || otpCode.length !== 6}
+                      className="w-full button-premium bg-primary hover:bg-primary/90 h-12 rounded-full font-semibold">
+                      {otpLoading ? 'Verifying...' : 'Verify & Sign In'}
+                    </Button>
+                    <button type="button" onClick={() => { setOtpStep('email'); setOtpCode(''); }}
+                      className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors">
+                      ← Change email / Resend OTP
+                    </button>
+                  </form>
+                )}
+              </motion.div>
+            )}
+
             {isSignUp ? (
               <motion.form 
                 key="signup-form"
@@ -313,10 +414,10 @@ function AuthForm() {
                   </Button>
                 </motion.div>
               </motion.form>
-            ) : (
-              <motion.form 
+            ) : authMode === 'password' ? (
+              <motion.form
                 key="signin-form"
-                onSubmit={handleSignIn} 
+                onSubmit={handleSignIn}
                 className="space-y-5"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
