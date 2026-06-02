@@ -1,11 +1,9 @@
 from fastapi import APIRouter, HTTPException, Request
 from datetime import datetime
 
-router = APIRouter()
+from database import db_select, db_insert, db_update, db_delete, db_upsert, get_db
 
-# In-memory cart store: { email: { items: [...] } }
-# Each item: { product_id, quantity, price, added_at }
-carts_db = {}
+router = APIRouter()
 
 
 def _get_email(request: Request) -> str:
@@ -14,7 +12,6 @@ def _get_email(request: Request) -> str:
     token = auth.replace("Bearer ", "").replace("bearer ", "").strip()
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    # Token format: token_{email}
     if token.startswith("token_"):
         email = token[len("token_"):]
         if email:
@@ -22,17 +19,19 @@ def _get_email(request: Request) -> str:
     raise HTTPException(status_code=401, detail="Invalid token")
 
 
-def _get_cart(email: str) -> dict:
-    if email not in carts_db:
-        carts_db[email] = {"items": []}
-    return carts_db[email]
+def _build_cart_response(items: list) -> dict:
+    return {"items": items}
 
 
 @router.get("/cart")
 async def get_cart(request: Request):
     email = _get_email(request)
-    cart = _get_cart(email)
-    return cart
+    try:
+        items = db_select("cart", {"email": email})
+        return _build_cart_response(items)
+    except Exception as e:
+        print(f"[get_cart] Supabase error: {e}")
+        return {"items": []}
 
 
 @router.post("/cart/add")
@@ -41,37 +40,48 @@ async def add_to_cart(request: Request):
     body = await request.json()
 
     product_id = body.get("product_id")
-    quantity = int(body.get("quantity", 1))
-    price = float(body.get("price", 0))
+    quantity   = int(body.get("quantity", 1))
+    price      = float(body.get("price", 0))
 
     if not product_id:
         raise HTTPException(status_code=400, detail="product_id is required")
 
-    cart = _get_cart(email)
+    now = datetime.utcnow().isoformat()
 
-    # Check if item already in cart — increase quantity
-    for item in cart["items"]:
-        if str(item["product_id"]) == str(product_id):
-            item["quantity"] += quantity
-            item["updated_at"] = datetime.utcnow().isoformat()
-            return cart
-
-    # Add new item
-    cart["items"].append({
-        "product_id": product_id,
-        "quantity": quantity,
-        "price": price,
-        "added_at": datetime.utcnow().isoformat(),
-    })
-    return cart
+    try:
+        existing_items = db_select("cart", {"email": email, "product_id": str(product_id)})
+        if existing_items:
+            item = existing_items[0]
+            new_qty = item.get("quantity", 0) + quantity
+            db_update("cart", "id", item["id"], {"quantity": new_qty, "updated_at": now})
+        else:
+            db_insert("cart", {
+                "email":      email,
+                "product_id": str(product_id),
+                "quantity":   quantity,
+                "price":      price,
+                "added_at":   now,
+                "updated_at": now,
+            })
+        items = db_select("cart", {"email": email})
+        return _build_cart_response(items)
+    except Exception as e:
+        print(f"[add_to_cart] Supabase error: {e}")
+        return {"items": []}
 
 
 @router.post("/cart/remove/{product_id}")
 async def remove_from_cart(product_id: str, request: Request):
     email = _get_email(request)
-    cart = _get_cart(email)
-    cart["items"] = [i for i in cart["items"] if str(i["product_id"]) != str(product_id)]
-    return cart
+    try:
+        rows = db_select("cart", {"email": email, "product_id": product_id})
+        for row in rows:
+            db_delete("cart", "id", row["id"])
+        items = db_select("cart", {"email": email})
+        return _build_cart_response(items)
+    except Exception as e:
+        print(f"[remove_from_cart] Supabase error: {e}")
+        return {"items": []}
 
 
 @router.put("/cart/update/{product_id}")
@@ -79,21 +89,29 @@ async def update_cart_item(product_id: str, request: Request):
     email = _get_email(request)
     body = await request.json()
     quantity = int(body.get("quantity", 1))
-    cart = _get_cart(email)
+    now = datetime.utcnow().isoformat()
 
-    for item in cart["items"]:
-        if str(item["product_id"]) == str(product_id):
+    try:
+        rows = db_select("cart", {"email": email, "product_id": product_id})
+        for row in rows:
             if quantity <= 0:
-                cart["items"] = [i for i in cart["items"] if str(i["product_id"]) != str(product_id)]
+                db_delete("cart", "id", row["id"])
             else:
-                item["quantity"] = quantity
-                item["updated_at"] = datetime.utcnow().isoformat()
-            break
-    return cart
+                db_update("cart", "id", row["id"], {"quantity": quantity, "updated_at": now})
+        items = db_select("cart", {"email": email})
+        return _build_cart_response(items)
+    except Exception as e:
+        print(f"[update_cart_item] Supabase error: {e}")
+        return {"items": []}
 
 
 @router.post("/cart/clear")
 async def clear_cart(request: Request):
     email = _get_email(request)
-    carts_db[email] = {"items": []}
+    try:
+        rows = db_select("cart", {"email": email})
+        for row in rows:
+            db_delete("cart", "id", row["id"])
+    except Exception as e:
+        print(f"[clear_cart] Supabase error: {e}")
     return {"items": []}

@@ -8,6 +8,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 
+from database import db_select, db_insert, db_update, db_delete, db_upsert, get_db
+
 router = APIRouter()
 
 # In-memory token store { token: { email, expires } }
@@ -19,6 +21,7 @@ EMAIL_USERNAME = os.environ.get('EMAIL_USERNAME', '')
 EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
 EMAIL_FROM     = os.environ.get('EMAIL_FROM', 'Hampious <no-reply@hampious.com>')
 FRONTEND_URL   = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+
 
 def send_reset_email(to_email: str, reset_link: str):
     try:
@@ -63,6 +66,7 @@ def send_reset_email(to_email: str, reset_link: str):
     except Exception as e:
         print(f"Email send error: {e}")
 
+
 class LoginRequest(BaseModel):
     email: str
     password: str
@@ -75,7 +79,7 @@ class SignupRequest(BaseModel):
     phone: Optional[str] = None
     name: Optional[str] = None
 
-# Mock user database for local development
+# In-memory fallback user store
 users_db = {
     "test@example.com": {
         "email": "test@example.com",
@@ -84,34 +88,79 @@ users_db = {
     }
 }
 
+
 @router.post("/signup")
 def signup(request: SignupRequest):
+    # Check local store first
     if request.email in users_db:
         raise HTTPException(status_code=400, detail="User already exists")
+
+    # Check Supabase for duplicate
+    try:
+        existing = db_select("customers", {"email": request.email})
+        if existing:
+            raise HTTPException(status_code=400, detail="User already exists")
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[signup] Supabase check error: {e}")
 
     full_name = request.name or f"{request.first_name or ''} {request.last_name or ''}".strip() or "New User"
 
     users_db[request.email] = {
-        "email": request.email,
+        "email":    request.email,
         "password": request.password,
-        "name": full_name,
-        "phone": request.phone or ""
+        "name":     full_name,
+        "phone":    request.phone or ""
     }
+
+    # Persist to Supabase
+    try:
+        db_insert("customers", {
+            "email":        request.email,
+            "name":         full_name,
+            "phone":        request.phone or "",
+            "password":     request.password,
+            "total_orders": 0,
+            "total_spent":  0,
+            "created_at":   datetime.utcnow().isoformat(),
+        })
+    except Exception as e:
+        print(f"[signup] Supabase insert error: {e}")
 
     return {
         "message": "User created successfully",
         "user": {
             "email": request.email,
-            "name": full_name,
+            "name":  full_name,
             "phone": request.phone
         },
         "token": f"token_{request.email}"
     }
 
+
 @router.post("/login")
 @router.post("/signin")
 def login(request: LoginRequest):
+    # Try local store first
     user = users_db.get(request.email)
+
+    if not user:
+        # Fall back to Supabase
+        try:
+            rows = db_select("customers", {"email": request.email})
+            if rows:
+                row = rows[0]
+                # Load into local store for this session
+                users_db[request.email] = {
+                    "email":    row.get("email", request.email),
+                    "password": row.get("password", ""),
+                    "name":     row.get("name", ""),
+                    "phone":    row.get("phone", ""),
+                }
+                user = users_db[request.email]
+        except Exception as e:
+            print(f"[login] Supabase lookup error: {e}")
 
     if not user or user["password"] != request.password:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -120,10 +169,11 @@ def login(request: LoginRequest):
         "message": "Login successful",
         "user": {
             "email": user["email"],
-            "name": user["name"]
+            "name":  user["name"]
         },
         "token": f"token_{user['email']}"
     }
+
 
 class ForgotPasswordRequest(BaseModel):
     email: str
@@ -132,20 +182,30 @@ class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
 
+
 @router.post("/forgot-password")
 def forgot_password(request: ForgotPasswordRequest, background_tasks: BackgroundTasks):
     # Always return success to prevent email enumeration
     user = users_db.get(request.email)
+    if not user:
+        try:
+            rows = db_select("customers", {"email": request.email})
+            if rows:
+                user = rows[0]
+        except Exception as e:
+            print(f"[forgot_password] Supabase error: {e}")
+
     if user:
         token = secrets.token_urlsafe(32)
         reset_tokens[token] = {
-            "email": request.email,
+            "email":   request.email,
             "expires": datetime.utcnow() + timedelta(hours=1)
         }
         reset_link = f"{FRONTEND_URL}/reset-password?token={token}"
         background_tasks.add_task(send_reset_email, request.email, reset_link)
 
     return {"message": "If this email is registered, a reset link has been sent."}
+
 
 @router.post("/reset-password")
 def reset_password(request: ResetPasswordRequest):
@@ -160,21 +220,37 @@ def reset_password(request: ResetPasswordRequest):
     if email in users_db:
         users_db[email]["password"] = request.new_password
 
+    # Update password in Supabase
+    try:
+        db_update("customers", "email", email, {"password": request.new_password})
+    except Exception as e:
+        print(f"[reset_password] Supabase update error: {e}")
+
     del reset_tokens[request.token]
     return {"message": "Password reset successfully"}
+
 
 @router.post("/logout")
 def logout():
     return {"message": "Logout successful"}
+
 
 @router.get("/profile")
 def get_profile(email: str):
     user = users_db.get(email)
 
     if not user:
+        try:
+            rows = db_select("customers", {"email": email})
+            if rows:
+                user = rows[0]
+        except Exception as e:
+            print(f"[get_profile] Supabase error: {e}")
+
+    if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
     return {
-        "email": user["email"],
-        "name": user["name"]
+        "email": user.get("email", email),
+        "name":  user.get("name", "")
     }
