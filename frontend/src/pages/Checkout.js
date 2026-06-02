@@ -145,6 +145,21 @@ export default function Checkout() {
     country: 'India'
   });
 
+  // ── Gift personalisation ────────────────────────────────────────────────────
+  const [giftMessage,   setGiftMessage]   = useState('');
+  const [spotifyLink,   setSpotifyLink]   = useState('');
+  const [qrCode,        setQrCode]        = useState('');  // base64 data URL
+  const [qrUploading,   setQrUploading]   = useState(false);
+
+  const handleQrUpload = (file) => {
+    if (!file) return;
+    setQrUploading(true);
+    const reader = new FileReader();
+    reader.onload = (e) => { setQrCode(e.target.result); setQrUploading(false); };
+    reader.onerror = () => setQrUploading(false);
+    reader.readAsDataURL(file);
+  };
+
   useEffect(() => {
     if (cart.items.length === 0) {
       // Don't redirect if we just cleared the cart after a successful payment
@@ -352,6 +367,10 @@ export default function Checkout() {
       status:           'processing',
       coupon_code:      appliedCoupon?.code || null,
       created_at:       new Date().toISOString(),
+      // Gift personalisation
+      gift_message:     giftMessage  || null,
+      spotify_link:     spotifyLink  || null,
+      qr_code:          qrCode       || null,
     };
 
     try {
@@ -610,6 +629,88 @@ export default function Checkout() {
                       data-testid="country-input"
                     />
                   </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* ── Personalise Your Gift ─────────────────────────────────── */}
+            <motion.div variants={itemVariants} className="checkout-card">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="checkout-step-indicator" style={{ background: 'linear-gradient(135deg,#D4789A,#B84E78)' }}>
+                  <span style={{ fontSize: 18 }}>🎁</span>
+                </div>
+                <div>
+                  <h2 className="font-heading text-xl font-semibold text-foreground">Personalise Your Gift</h2>
+                  <p className="text-sm text-muted-foreground">Optional — add a special touch</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                {/* Custom Message */}
+                <div>
+                  <label className="text-sm font-medium text-foreground block mb-2">
+                    💌 Gift Message <span style={{ color: '#a0728a', fontWeight: 400 }}>(optional)</span>
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Write a heartfelt message for the recipient..."
+                    value={giftMessage}
+                    onChange={e => setGiftMessage(e.target.value)}
+                    maxLength={500}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #f3d0dd', fontFamily: 'Jost, sans-serif', fontSize: 14, color: '#1A0F15', background: '#FFF5F8', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+                  />
+                  <p style={{ fontSize: 11, color: '#a0728a', marginTop: 4 }}>{giftMessage.length}/500 characters</p>
+                </div>
+
+                {/* Spotify Link */}
+                <div>
+                  <label className="text-sm font-medium text-foreground block mb-2">
+                    🎵 Spotify Playlist / Song Link <span style={{ color: '#a0728a', fontWeight: 400 }}>(optional)</span>
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://open.spotify.com/playlist/..."
+                    value={spotifyLink}
+                    onChange={e => setSpotifyLink(e.target.value)}
+                    className="mt-1 input-premium"
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #f3d0dd', fontFamily: 'Jost, sans-serif', fontSize: 14, color: '#1A0F15', background: '#FFF5F8', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                  {spotifyLink && (
+                    <p style={{ fontSize: 11, color: '#1DB954', marginTop: 4 }}>✓ Spotify link added — a QR will be printed on your gift</p>
+                  )}
+                </div>
+
+                {/* QR Code Upload */}
+                <div>
+                  <label className="text-sm font-medium text-foreground block mb-2">
+                    📱 Custom QR Code <span style={{ color: '#a0728a', fontWeight: 400 }}>(optional — upload your own QR image)</span>
+                  </label>
+                  {qrCode ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                      <img src={qrCode} alt="QR Code" style={{ width: 80, height: 80, borderRadius: 10, border: '1px solid #f3d0dd', objectFit: 'contain', background: '#fff', padding: 4 }} />
+                      <div>
+                        <p style={{ fontSize: 13, color: '#065F46', margin: '0 0 6px', fontWeight: 600 }}>✓ QR code uploaded</p>
+                        <button onClick={() => setQrCode('')}
+                          style={{ background: '#FEE2E2', color: '#991B1B', border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', border: '2px dashed #f3d0dd', borderRadius: 12, cursor: 'pointer', background: '#FFF5F8', transition: 'border-color 0.2s' }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = '#D4789A'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = '#f3d0dd'}>
+                      <input type="file" accept="image/*" style={{ display: 'none' }}
+                        onChange={e => handleQrUpload(e.target.files[0])} />
+                      <span style={{ fontSize: 24 }}>📱</span>
+                      <div>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: '#1A0F15', margin: 0 }}>
+                          {qrUploading ? 'Uploading...' : 'Click to upload QR code'}
+                        </p>
+                        <p style={{ fontSize: 11, color: '#a0728a', margin: '2px 0 0' }}>PNG, JPG — max 2MB</p>
+                      </div>
+                    </label>
+                  )}
                 </div>
               </div>
             </motion.div>

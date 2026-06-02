@@ -184,6 +184,40 @@ function OrderDrawer({ order, onClose, onUpdated }) {
           {customerPhone && <p style={{ fontSize: 13, color: '#7c5a6a', margin: 0 }}>📞 {customerPhone}</p>}
         </div>
 
+        {/* Gift Personalisation */}
+        {(order.gift_message || order.spotify_link || order.qr_code) && (
+          <div style={{ background: 'linear-gradient(135deg,#FFF5F8,#FCEAF1)', borderRadius: 14, padding: 18, marginBottom: 18, border: '1px solid #f3d0dd' }}>
+            <p style={{ ...drawerLabelStyle, marginBottom: 12, color: '#B84E78' }}>🎁 Gift Personalisation</p>
+
+            {order.gift_message && (
+              <div style={{ marginBottom: 12 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: '#7c5a6a', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 5px' }}>💌 Gift Message</p>
+                <div style={{ background: '#fff', borderRadius: 10, padding: '10px 14px', border: '1px solid #f3d0dd' }}>
+                  <p style={{ fontSize: 13, color: PLUM, lineHeight: 1.7, margin: 0, fontStyle: 'italic' }}>"{order.gift_message}"</p>
+                </div>
+              </div>
+            )}
+
+            {order.spotify_link && (
+              <div style={{ marginBottom: 12 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: '#7c5a6a', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 5px' }}>🎵 Spotify Link</p>
+                <a href={order.spotify_link} target="_blank" rel="noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#1DB954', color: '#fff', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+                  ▶ Open Playlist
+                </a>
+                <p style={{ fontSize: 11, color: '#a0728a', margin: '4px 0 0', wordBreak: 'break-all' }}>{order.spotify_link}</p>
+              </div>
+            )}
+
+            {order.qr_code && (
+              <div>
+                <p style={{ fontSize: 11, fontWeight: 700, color: '#7c5a6a', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>📱 Custom QR Code</p>
+                <img src={order.qr_code} alt="QR Code" style={{ width: 100, height: 100, borderRadius: 10, border: '1px solid #f3d0dd', objectFit: 'contain', background: '#fff', padding: 4 }} />
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Shipping Address */}
         <div style={{ background: BLUSH, borderRadius: 14, padding: 18, marginBottom: 18 }}>
           <p style={{ ...drawerLabelStyle, marginBottom: 10 }}>Shipping Address</p>
