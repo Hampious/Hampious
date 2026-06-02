@@ -2,9 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import API from '../api';
 import { useNavigate } from 'react-router-dom';
-import { Award, Truck, Sparkles, ChevronDown, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Award, Truck, Sparkles, ChevronDown, ArrowRight, ChevronLeft, ChevronRight, ShoppingCart, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProductCard } from '../components/ProductCard';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 /* ─────────────────────────────────────────────────── */
 const BLUSH   = '#FFF5F8';
@@ -68,6 +70,177 @@ const stagger = {
   hidden:  { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.13, delayChildren: 0.15 } },
 };
+
+/* ── Top Rated Products Section ─────────────────────────────────────────── */
+function TopRatedSection({ navigate }) {
+  const { addToCart } = useCart();
+  const { user }      = useAuth();
+  const [products, setProducts] = useState([]);
+  const [loading,  setLoading]  = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const r    = await API.get('/products');
+        const all  = Array.isArray(r.data) ? r.data : [];
+        // Top rated = featured OR highest stock → take first 4
+        const top  = all.filter(p => p.stock > 0).slice(0, 4);
+        setProducts(top.length ? top : all.slice(0, 4));
+      } catch {
+        // Fallback: localStorage products
+        const local = JSON.parse(localStorage.getItem('hamp_products') || '[]');
+        setProducts(local.filter(p => Number(p.stock || 0) > 0).slice(0, 4));
+      } finally { setLoading(false); }
+    };
+    load();
+  }, []);
+
+  const handleAddToCart = async (e, product) => {
+    e.stopPropagation();
+    if (!user) { toast.error('Please sign in to add items to cart'); navigate('/auth'); return; }
+    if (!product || Number(product.stock) <= 0) { toast.error('Out of stock'); return; }
+    try {
+      await addToCart(product.id, 1, product.discount_price || product.price);
+      toast.success('Added to cart!');
+    } catch { toast.error('Failed to add to cart'); }
+  };
+
+  const handleBuyNow = async (e, product) => {
+    e.stopPropagation();
+    if (!user) { toast.error('Please sign in to continue'); navigate('/auth'); return; }
+    if (!product || Number(product.stock) <= 0) { toast.error('Out of stock'); return; }
+    try {
+      await addToCart(product.id, 1, product.discount_price || product.price);
+      navigate('/checkout');
+    } catch { toast.error('Failed to proceed'); }
+  };
+
+  if (loading) return null;
+  if (!products.length) return null;
+
+  return (
+    <section style={{ background: '#fff', padding: '80px 24px' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          style={{ marginBottom: 48, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <span style={{ fontSize: 11, letterSpacing: '0.25em', textTransform: 'uppercase', color: PINK, fontFamily: 'Jost, sans-serif', fontWeight: 600 }}>
+              Customer Favourites
+            </span>
+            <h2 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 500, color: PLUM, margin: '8px 0 0', lineHeight: 1.05 }}>
+              Top Rated Products
+            </h2>
+            {/* Stars decoration */}
+            <div style={{ display: 'flex', gap: 3, marginTop: 10 }}>
+              {[1,2,3,4,5].map(i => <Star key={i} size={16} fill="#D4789A" color="#D4789A" />)}
+              <span style={{ fontSize: 12, color: '#7c5a6a', marginLeft: 6, fontFamily: 'Jost, sans-serif' }}>Loved by 1000+ customers</span>
+            </div>
+          </div>
+          <button onClick={() => navigate('/products')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1.5px solid ${PINK}`, borderRadius: 50, padding: '10px 22px', cursor: 'pointer', color: ROSE, fontFamily: 'Jost, sans-serif', fontSize: 13, fontWeight: 600, letterSpacing: '0.05em' }}>
+            View All <ArrowRight size={14} />
+          </button>
+        </motion.div>
+
+        {/* Products Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 24 }}>
+          {products.map((product, i) => {
+            const image    = product.images?.[0] || product.image_url || null;
+            const price    = Number(product.discount_price || product.price || 0);
+            const original = Number(product.original_price || product.price || 0);
+            const hasDisc  = original > price && price > 0;
+            const pct      = hasDisc ? Math.round((original - price) / original * 100) : 0;
+            const stock    = Number(product.stock || 0);
+            const isOut    = stock === 0;
+
+            return (
+              <motion.div key={product.id} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.6 }}
+                onClick={() => navigate(`/products/${product.id}`)}
+                style={{ background: '#fff', borderRadius: 20, border: '1px solid rgba(212,120,154,0.15)', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 2px 16px rgba(26,15,21,0.06)', transition: 'all 0.3s ease' }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 12px 40px rgba(184,78,120,0.18)'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 2px 16px rgba(26,15,21,0.06)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                {/* Image */}
+                <div style={{ position: 'relative', aspectRatio: '1', background: '#FCEAF1', overflow: 'hidden' }}>
+                  {image ? (
+                    <img src={image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                      onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.06)'}
+                      onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                      onError={e => { e.currentTarget.style.display = 'none'; }} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 60 }}>🎁</div>
+                  )}
+                  {/* Badges */}
+                  {hasDisc && !isOut && (
+                    <div style={{ position: 'absolute', top: 12, left: 12, background: ROSE, color: '#fff', borderRadius: 20, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
+                      -{pct}%
+                    </div>
+                  )}
+                  {stock > 0 && stock <= 3 && (
+                    <div style={{ position: 'absolute', top: 12, right: 12, background: '#FEF3C7', color: '#92400E', borderRadius: 20, padding: '3px 10px', fontSize: 10, fontWeight: 700 }}>
+                      ⚡ Only {stock} left
+                    </div>
+                  )}
+                  {isOut && (
+                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,245,248,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontSize: 11, color: 'rgba(26,15,21,0.5)', border: '1px solid rgba(212,120,154,0.25)', padding: '4px 12px', borderRadius: 4, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Out of Stock</span>
+                    </div>
+                  )}
+                  {/* Rating stars */}
+                  <div style={{ position: 'absolute', bottom: 10, left: 10, display: 'flex', alignItems: 'center', gap: 3, background: 'rgba(255,255,255,0.92)', borderRadius: 20, padding: '3px 8px' }}>
+                    {[1,2,3,4,5].map(s => <Star key={s} size={10} fill="#D4789A" color="#D4789A" />)}
+                    <span style={{ fontSize: 10, color: '#7c5a6a', fontFamily: 'Jost, sans-serif', marginLeft: 2 }}>5.0</span>
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div style={{ padding: '18px 18px 20px' }}>
+                  <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 17, fontWeight: 600, color: PLUM, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {product.name}
+                  </p>
+                  {product.description && (
+                    <p style={{ fontSize: 12, color: '#a0728a', margin: '0 0 10px', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                      {product.description}
+                    </p>
+                  )}
+                  {/* Price */}
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 14 }}>
+                    <span style={{ fontSize: 20, fontWeight: 800, color: ROSE, fontFamily: 'Jost, sans-serif' }}>₹{price.toLocaleString('en-IN')}</span>
+                    {hasDisc && <span style={{ fontSize: 13, color: '#a0728a', textDecoration: 'line-through', fontFamily: 'Jost, sans-serif' }}>₹{original.toLocaleString('en-IN')}</span>}
+                  </div>
+                  {/* Buttons */}
+                  {!isOut ? (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={e => handleAddToCart(e, product)}
+                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: '#FFF5F8', color: ROSE, border: `1.5px solid ${PINK}`, borderRadius: 10, padding: '10px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Jost, sans-serif', transition: 'all 0.2s' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = PINK; e.currentTarget.style.color = '#fff'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = '#FFF5F8'; e.currentTarget.style.color = ROSE; }}>
+                        <ShoppingCart size={13} /> Add to Cart
+                      </button>
+                      <button onClick={e => handleBuyNow(e, product)}
+                        style={{ flex: 1, background: ROSE, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Jost, sans-serif', transition: 'all 0.2s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#9b3d63'}
+                        onMouseLeave={e => e.currentTarget.style.background = ROSE}>
+                        Buy Now
+                      </button>
+                    </div>
+                  ) : (
+                    <button disabled style={{ width: '100%', background: '#f3f4f6', color: '#9ca3af', border: 'none', borderRadius: 10, padding: '10px', fontSize: 12, fontWeight: 600, cursor: 'not-allowed', fontFamily: 'Jost, sans-serif' }}>
+                      Out of Stock
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 /* ═══════════════════════════════════════════════════════════ */
 export default function Home() {
@@ -465,6 +638,11 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
+
+      {/* ══════════════════════════════════════════════════════
+          TOP RATED PRODUCTS
+          ══════════════════════════════════════════════════════ */}
+      <TopRatedSection navigate={navigate} />
 
       {/* ══════════════════════════════════════════════════════
           5 — EDITORIAL BANNER (Period Care)
