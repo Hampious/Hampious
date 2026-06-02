@@ -74,36 +74,54 @@ export default function Dashboard() {
     fetchDashboard();
   }, [navigate]);
 
+  // Build stats from localStorage when backend is offline
+  const buildLocalStats = () => {
+    const orders    = JSON.parse(localStorage.getItem('hamp_orders')    || '[]');
+    const products  = JSON.parse(localStorage.getItem('hamp_products')  || '[]');
+    const customers = JSON.parse(localStorage.getItem('hamp_customers') || '[]');
+    const revenue   = orders.filter(o => o.payment_status === 'paid')
+                            .reduce((s, o) => s + Number(o.final_amount || o.total || 0), 0);
+    return {
+      total_products:    products.length,
+      total_orders:      orders.length,
+      total_customers:   customers.length,
+      total_revenue:     revenue,
+      pending_orders:    orders.filter(o => o.status === 'pending').length,
+      processing_orders: orders.filter(o => o.status === 'processing').length,
+      shipped_orders:    orders.filter(o => o.status === 'shipped').length,
+      delivered_orders:  orders.filter(o => o.status === 'delivered').length,
+      low_stock_products:products.filter(p => Number(p.stock) > 0 && Number(p.stock) <= 3).length,
+      recent_orders:     [...orders].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5),
+    };
+  };
+
   const fetchDashboard = async () => {
+    setLoading(true);
+    setError('');
     try {
-      setLoading(true);
-      setError('');
       const res = await adminGet('/dashboard');
       if (handleUnauth(res, navigate)) return;
-      if (!res.ok) { setError(`Failed to load dashboard (HTTP ${res.status})`); return; }
-      const data = await res.json();
-      setStats(data);
-    } catch (e) {
-      setError('Network error — could not reach the server.');
-      console.error('Dashboard fetch error:', e);
+      if (res.ok) {
+        const data = await res.json();
+        // Merge backend data with localStorage for completeness
+        const local = buildLocalStats();
+        setStats({
+          ...data,
+          recent_orders: data.recent_orders || local.recent_orders,
+        });
+      } else {
+        // Backend returned error — use localStorage
+        setStats(buildLocalStats());
+      }
+    } catch {
+      // Backend offline — build stats from localStorage
+      setStats(buildLocalStats());
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) return <Spinner />;
-
-  if (error) {
-    return (
-      <div style={{ padding: '32px', maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
-        <p style={{ color: '#991B1B', fontSize: 15, marginBottom: 20 }}>{error}</p>
-        <button onClick={fetchDashboard} style={{ background: ROSE, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 24px', cursor: 'pointer', fontFamily: 'Jost, sans-serif', fontWeight: 600 }}>
-          Retry
-        </button>
-      </div>
-    );
-  }
 
   const hasStockWarning = (stats?.low_stock_products > 0) || (stats?.out_of_stock_products > 0);
 

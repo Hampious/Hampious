@@ -18,7 +18,7 @@ const heroSlides = [
     title: 'Period Care', subtitle: 'Hamper',
     tag: 'Wellness & Comfort',
     description: 'Pampered wellness essentials curated with love. Premium comfort products for her wellbeing.',
-    bg: 'https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=1600&auto=format&fit=crop&q=80',
+    bg: '/period-care-hero.png',
     cta: 'Explore Hamper', category: 'period',
   },
   {
@@ -26,7 +26,7 @@ const heroSlides = [
     title: 'I Love You', subtitle: 'Hamper',
     tag: 'Love Expressed Beautifully',
     description: 'Express your deepest feelings through thoughtfully curated gifts — premium hampers filled with elegance.',
-    bg: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=1600&auto=format&fit=crop&q=80',
+    bg: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=1920&auto=format&fit=crop&q=85',
     cta: 'Explore Hamper', category: 'love',
   },
   {
@@ -34,7 +34,7 @@ const heroSlides = [
     title: 'Birthday', subtitle: 'Hamper',
     tag: 'Celebrate Her Uniqueness',
     description: 'Celebrate another year of memories. Luxury gifts curated to make birthdays truly unforgettable.',
-    bg: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=1600&auto=format&fit=crop&q=80',
+    bg: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=1920&auto=format&fit=crop&q=85',
     cta: 'Explore Hamper', category: 'birthday',
   },
   {
@@ -42,7 +42,7 @@ const heroSlides = [
     title: 'Sorry', subtitle: 'Hamper',
     tag: 'Reconciliation with Sincerity',
     description: 'Sometimes actions speak louder than words. Premium hampers designed to mend bonds with grace.',
-    bg: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&auto=format&fit=crop&q=80',
+    bg: '/sorry-hero.png',
     cta: 'Explore Hamper', category: 'sorry',
   },
 ];
@@ -127,9 +127,9 @@ export default function Home() {
             <div className="absolute inset-0 bg-cover bg-center"
                  style={{ backgroundImage: `url(${heroSlides[currentSlide].bg})` }} />
             <div className="absolute inset-0"
-                 style={{ background: 'linear-gradient(110deg, rgba(26,15,21,0.78) 0%, rgba(26,15,21,0.45) 55%, rgba(26,15,21,0.18) 100%)' }} />
+                 style={{ background: 'linear-gradient(110deg, rgba(26,15,21,0.55) 0%, rgba(26,15,21,0.25) 55%, rgba(26,15,21,0.05) 100%)' }} />
             {/* Bottom fade to blush */}
-            <div className="absolute bottom-0 left-0 right-0 h-40"
+            <div className="absolute bottom-0 left-0 right-0 h-28"
                  style={{ background: `linear-gradient(to top, ${BLUSH}, transparent)` }} />
 
             <div className="relative z-10 h-full flex items-center px-8 md:px-16 lg:px-24">
