@@ -124,6 +124,8 @@ export default function Checkout() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState({});
+  // Prevents the cart-empty useEffect from redirecting to /cart after payment
+  const orderCompletedRef = React.useRef(false);
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -145,7 +147,10 @@ export default function Checkout() {
 
   useEffect(() => {
     if (cart.items.length === 0) {
-      navigate('/cart');
+      // Don't redirect if we just cleared the cart after a successful payment
+      if (!orderCompletedRef.current) {
+        navigate('/cart');
+      }
       return;
     }
     fetchProductDetails();
@@ -362,6 +367,8 @@ export default function Checkout() {
     else localOrders.push(newOrder);
     localStorage.setItem('hamp_orders', JSON.stringify(localOrders));
 
+    // Flag so the cart-empty useEffect doesn't redirect to /cart
+    orderCompletedRef.current = true;
     await clearCart();
     toast.success('🎉 Order placed successfully!');
     navigate(`/order-success?order_id=${orderId}`);
