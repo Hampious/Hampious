@@ -10,6 +10,9 @@ const Toaster = ({
     <Sonner
       theme={theme}
       className="toaster group"
+      duration={2500}
+      closeButton
+      richColors
       toastOptions={{
         classNames: {
           toast:

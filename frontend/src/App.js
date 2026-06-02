@@ -79,7 +79,7 @@ function App() {
               </Route>
             </Routes>
 
-            <Toaster position="top-right" />
+            <Toaster position="top-right" duration={2500} closeButton richColors />
           </WishlistProvider>
         </CartProvider>
       </AuthProvider>

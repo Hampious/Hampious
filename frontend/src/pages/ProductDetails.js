@@ -46,9 +46,35 @@ export default function ProductDetails() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      // Replaced axios with API
-      const response = await API.get(`/products/${id}`);
-      setProduct(response.data);
+      let found = null;
+
+      // 1. Try backend
+      try {
+        const response = await API.get(`/products/${id}`);
+        if (response.data) found = response.data;
+      } catch {}
+
+      // 2. Fallback: search hamp_products localStorage
+      if (!found) {
+        const local = JSON.parse(localStorage.getItem('hamp_products') || '[]');
+        found = local.find(p => String(p.id) === String(id)) || null;
+      }
+
+      if (found) {
+        // Normalise fields so the page never crashes
+        setProduct({
+          ...found,
+          price:         Number(found.price || 0),
+          discount_price: found.discount_price ? Number(found.discount_price) : null,
+          original_price: found.original_price ? Number(found.original_price) : null,
+          stock:         Number(found.stock ?? 0),
+          images:        Array.isArray(found.images) && found.images.length > 0
+                           ? found.images
+                           : (found.image_url ? [found.image_url] : []),
+        });
+      } else {
+        toast.error('Product not found');
+      }
     } catch (error) {
       console.error('Failed to fetch product:', error);
       toast.error('Failed to load product');
@@ -59,11 +85,18 @@ export default function ProductDetails() {
 
   const fetchSimilarProducts = async () => {
     try {
-      // Replaced axios with API
+      // Try backend; fall back to products in same category from localStorage
       const response = await API.get(`/products/${id}/similar`);
-      setSimilarProducts(response.data);
-    } catch (error) {
-      console.error('Failed to fetch similar products:', error);
+      setSimilarProducts(Array.isArray(response.data) ? response.data : []);
+    } catch {
+      try {
+        const local  = JSON.parse(localStorage.getItem('hamp_products') || '[]');
+        const cur    = local.find(p => String(p.id) === String(id));
+        const similar = cur
+          ? local.filter(p => String(p.id) !== String(id) && p.category === cur.category).slice(0, 4)
+          : [];
+        setSimilarProducts(similar);
+      } catch {}
     }
   };
 
@@ -217,16 +250,17 @@ export default function ProductDetails() {
     );
   }
 
-  const displayPrice = product.discount_price || product.price;
-  const hasDiscount = product.discount_price && product.discount_price < product.price;
-  const discountPercent = hasDiscount ? Math.round(((product.price - product.discount_price) / product.price) * 100) : 0;
+  const displayPrice = Number(product.discount_price || product.original_price || product.price || 0);
+  const basePrice   = Number(product.price || 0);
+  const hasDiscount = displayPrice > 0 && basePrice > 0 && displayPrice < basePrice;
+  const discountPercent = hasDiscount ? Math.round(((basePrice - displayPrice) / basePrice) * 100) : 0;
   const avgRating = product.average_rating || 0;
   const reviewCount = product.review_count || reviews.length;
   
   // Safe images array
-  const images = Array.isArray(product.images) && product.images.length > 0 
-    ? product.images 
-    : ['https://via.placeholder.com/600?text=No+Image'];
+  const images = Array.isArray(product.images) && product.images.filter(Boolean).length > 0
+    ? product.images.filter(Boolean)
+    : null;
 
   return (
     <div className="min-h-screen bg-background py-10 md:py-16 px-6 md:px-12 lg:px-24" data-testid="product-details-page">
@@ -239,14 +273,21 @@ export default function ProductDetails() {
           {/* Image Gallery */}
           <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }}>
             <div className="relative aspect-square rounded-3xl overflow-hidden mb-4 bg-card border border-border/30 premium-shadow">
-              {/* Safe image access */}
-              <img 
-                src={images[currentImageIndex] || images[0]} 
-                alt={product.name} 
-                className="w-full h-full object-cover" 
-              />
+              {images ? (
+                <img
+                  src={images[currentImageIndex] || images[0]}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                  onError={e => { e.currentTarget.style.display = 'none'; }}
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-pink-50">
+                  <svg width="80" height="80" viewBox="0 0 80 80" fill="none"><rect width="80" height="80" rx="20" fill="#F9DDE8"/><path d="M18 56l16-22 10 14 8-10 14 18H18z" fill="#D4789A" fillOpacity=".4"/><circle cx="56" cy="28" r="6" fill="#D4789A" fillOpacity=".6"/></svg>
+                  <span style={{ fontSize: 12, color: '#D4789A', marginTop: 10, fontFamily: 'Jost,sans-serif', letterSpacing: '0.1em' }}>HAMPIOUS</span>
+                </div>
+              )}
               {hasDiscount && <div className="absolute top-5 left-5 badge-discount">{discountPercent}% OFF</div>}
-              {images.length > 1 && (
+              {images && images.length > 1 && (
                 <>
                   <button onClick={() => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length)} className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm hover:bg-white rounded-full p-2.5 transition-all premium-shadow">
                     <ChevronLeft className="h-5 w-5 text-foreground" />
@@ -257,7 +298,7 @@ export default function ProductDetails() {
                 </>
               )}
             </div>
-            {images.length > 1 && (
+            {images && images.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {images.map((image, index) => (
                   <button key={index} onClick={() => setCurrentImageIndex(index)} className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${index === currentImageIndex ? 'border-primary ring-2 ring-primary/20' : 'border-border/50 opacity-70 hover:opacity-100'}`}>
@@ -280,8 +321,8 @@ export default function ProductDetails() {
                 </div>
               )}
               <div className="flex items-baseline gap-4 mb-4">
-                <span className="font-body text-3xl font-bold text-primary">₹{displayPrice.toFixed(0)}</span>
-                {hasDiscount && <span className="text-xl text-muted-foreground line-through">₹{product.price.toFixed(0)}</span>}
+                <span className="font-body text-3xl font-bold text-primary">₹{Number(displayPrice).toFixed(0)}</span>
+                {hasDiscount && <span className="text-xl text-muted-foreground line-through">₹{Number(basePrice).toFixed(0)}</span>}
               </div>
               {product.stock > 0 ? (
                 <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full text-sm font-medium">
