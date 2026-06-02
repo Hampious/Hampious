@@ -33,9 +33,12 @@ def lookup_pincode(pincode: str):
         data = res.json()
         if data and data[0].get("Status") == "Success" and data[0].get("PostOffice"):
             po = data[0]["PostOffice"][0]
+            # Use most specific available: Taluk > Division > District > Block > Name
+            city = (po.get("Taluk") or po.get("Division") or
+                    po.get("District") or po.get("Block") or po.get("Name", ""))
             return {
                 "success":     True,
-                "city":        po.get("District") or po.get("Block") or po.get("Name", ""),
+                "city":        city,
                 "state":       po.get("State", ""),
                 "country":     "India",
                 "post_office": po.get("Name", ""),

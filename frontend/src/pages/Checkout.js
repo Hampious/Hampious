@@ -179,58 +179,72 @@ export default function Checkout() {
     if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
       setPincodeLoading(true);
 
-      // ── Step 1: instant local lookup (no network) ──────────────────────────
+      // Helper: extract best city name from India Post post office object
+      const extractCity = (po) => {
+        // Prefer Taluk (most specific), then Division, then District, then Block, then Name
+        return po.Taluk || po.Division || po.District || po.Block || po.Name || '';
+      };
+
+      // ── Step 1: instant local lookup for state (no network) ───────────────
       const local = lookupPincode(pincode);
-      if (local) {
-        setShippingInfo(prev => ({
-          ...prev,
-          pincode,
-          city:    local.city  || prev.city,
-          state:   local.state || prev.state,
-          country: 'India',
-        }));
-        if (local.city) {
-          toast.success(`📍 ${local.city}, ${local.state}`);
-          setPincodeLoading(false);
-          // Try backend in background to get more specific city name
-          try {
-            const res = await API.get(`/pincode/${pincode}`);
-            if (res.data?.success && res.data.city) {
-              setShippingInfo(prev => ({
-                ...prev,
-                city:  res.data.city  || prev.city,
-                state: res.data.state || prev.state,
-              }));
-            }
-          } catch {}
-          return;
-        }
-        // State found but no city — show state, still try backend for city
-        toast.success(`📍 ${local.state} — please enter your city`);
+      if (local?.city) {
+        // Known major city — set immediately, still fetch for accuracy
+        setShippingInfo(prev => ({ ...prev, pincode, city: local.city, state: local.state, country: 'India' }));
+      } else if (local?.state) {
+        setShippingInfo(prev => ({ ...prev, pincode, state: local.state, country: 'India' }));
       }
 
-      // ── Step 2: try backend proxy (gets exact city name) ───────────────────
+      // ── Step 2: try backend proxy first ───────────────────────────────────
+      let resolved = false;
       try {
         const res = await API.get(`/pincode/${pincode}`);
-        if (res.data?.success) {
+        if (res.data?.success && res.data.city) {
           setShippingInfo(prev => ({
-            ...prev,
-            pincode,
-            city:    res.data.city    || prev.city,
-            state:   res.data.state   || prev.state,
+            ...prev, pincode,
+            city:    res.data.city,
+            state:   res.data.state  || prev.state,
             country: 'India',
           }));
           toast.success(`📍 ${res.data.city}, ${res.data.state}`);
-        } else if (!local) {
-          toast.error('Pincode not found. Please enter city & state manually.');
+          resolved = true;
         }
-      } catch {
-        if (!local) {
-          toast.error('Could not auto-detect location. Please enter manually.');
-        }
-      } finally {
-        setPincodeLoading(false);
+      } catch {}
+
+      // ── Step 3: fallback — call India Post API directly via CORS proxy ─────
+      if (!resolved) {
+        try {
+          const res = await fetch(
+            `https://api.postalpincode.in/pincode/${pincode}`,
+            { headers: { 'Accept': 'application/json' } }
+          );
+          const data = await res.json();
+
+          if (data?.[0]?.Status === 'Success' && data[0].PostOffice?.length > 0) {
+            const postOffices = data[0].PostOffice;
+            // Pick the first post office — use its data for city/state
+            const po    = postOffices[0];
+            const city  = extractCity(po);
+            const state = po.State || '';
+
+            setShippingInfo(prev => ({
+              ...prev, pincode,
+              city:    city  || prev.city,
+              state:   state || prev.state,
+              country: 'India',
+            }));
+
+            if (city) toast.success(`📍 ${city}, ${state}`);
+            else if (state) toast.success(`📍 ${state} — please type your city`);
+            resolved = true;
+          }
+        } catch {}
       }
+
+      if (!resolved && !local) {
+        toast.error('Pincode not found. Please enter city & state manually.');
+      }
+
+      setPincodeLoading(false);
     }
   };
 
