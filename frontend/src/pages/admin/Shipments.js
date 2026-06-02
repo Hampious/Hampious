@@ -369,21 +369,66 @@ function TrackingDrawer({ awbCode, onClose }) {
   const [error, setError]       = useState('');
 
   useEffect(() => {
-    const fetch_ = async () => {
+    const fetchTracking = async () => {
+      setLoading(true);
+      setError('');
       try {
-        const token = localStorage.getItem('admin_token') || '';
-        const res = await fetch(`${API}/shiprocket/track/${awbCode}?token=${encodeURIComponent(token)}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        // Login to Shiprocket directly (no backend needed)
+        const srToken = await srLogin();
+
+        // Try AWB tracking first
+        let data = null;
+        const awbRes = await fetch(`${SR_BASE}/courier/track/awb/${awbCode}`, {
+          headers: { Authorization: `Bearer ${srToken}`, 'Content-Type': 'application/json' },
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        setTracking(await res.json());
+
+        if (awbRes.ok) {
+          const raw       = await awbRes.json();
+          const trackData = raw.tracking_data || {};
+          const shipment  = (trackData.shipment_track || [])[0] || {};
+          const activities = (trackData.shipment_track_activities || []).slice(0, 15);
+          data = {
+            status:      shipment.current_status || 'In Transit',
+            courier:     shipment.courier_name   || '',
+            eta:         shipment.etd            || '',
+            origin:      shipment.origin         || '',
+            destination: shipment.destination    || '',
+            activities:  activities.map(a => ({
+              date:     a.date     || '',
+              activity: a.activity || '',
+              location: a.location || '',
+            })),
+          };
+        }
+
+        // If AWB not found, try by shipment ID
+        if (!data || !data.status) {
+          const shipRes = await fetch(`${SR_BASE}/courier/track/shipment/${awbCode}`, {
+            headers: { Authorization: `Bearer ${srToken}`, 'Content-Type': 'application/json' },
+          });
+          if (shipRes.ok) {
+            const raw = await shipRes.json();
+            const shipment = (raw.tracking_data?.shipment_track || [])[0] || {};
+            data = {
+              status:      shipment.current_status || 'Processing',
+              courier:     shipment.courier_name   || '',
+              eta:         shipment.etd            || '',
+              activities:  (raw.tracking_data?.shipment_track_activities || []).slice(0, 15).map(a => ({
+                date: a.date || '', activity: a.activity || '', location: a.location || '',
+              })),
+            };
+          }
+        }
+
+        if (data) setTracking(data);
+        else setError('No tracking data found for this shipment yet. Check back after pickup is done.');
       } catch (e) {
-        setError(e.message);
+        setError('Could not fetch tracking: ' + e.message);
       } finally {
         setLoading(false);
       }
     };
-    fetch_();
+    fetchTracking();
   }, [awbCode]);
 
   return (
@@ -405,8 +450,8 @@ function TrackingDrawer({ awbCode, onClose }) {
             <span style={{ color: '#7c5a6a', fontSize: 13 }}>Fetching tracking info...</span>
           </div>
         ) : error ? (
-          <div style={{ background: '#FEE2E2', color: '#991B1B', padding: 16, borderRadius: 10, fontSize: 13 }}>
-            {error} — Check AWB code or try again later.
+          <div style={{ background: '#FEE2E2', color: '#991B1B', padding: 16, borderRadius: 10, fontSize: 13, lineHeight: 1.6 }}>
+            {error}
           </div>
         ) : tracking ? (
           <div>
