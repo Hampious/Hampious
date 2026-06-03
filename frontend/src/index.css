@@ -56,17 +56,31 @@
 }
 
 @layer base {
-  * { @apply border-border; }
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
 
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%; /* prevents iOS font zoom */
+    text-size-adjust: 100%;
+  }
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Jost', system-ui, sans-serif;
+    font-family: 'Jost', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     font-weight: 400;
     font-feature-settings: "rlig" 1, "calt" 1;
     letter-spacing: 0.01em;
     background-color: #FFF5F8;
+    /* Mac font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent horizontal overflow on mobile/mac */
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   h1, h2, h3, h4, h5, h6 {
