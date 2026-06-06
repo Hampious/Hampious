@@ -67,7 +67,7 @@ export default function ProductDetails() {
           price:         Number(found.price || 0),
           discount_price: found.discount_price ? Number(found.discount_price) : null,
           original_price: found.original_price ? Number(found.original_price) : null,
-          stock:         Number(found.stock ?? 0),
+          stock:         found.stock != null ? Number(found.stock) : null,
           images:        Array.isArray(found.images) && found.images.length > 0
                            ? found.images
                            : (found.image_url ? [found.image_url] : []),
@@ -154,8 +154,8 @@ export default function ProductDetails() {
       return;
     }
     
-    // Safety check for stock
-    if (!product || product.stock <= 0) {
+    // Safety check for stock — null means stock not tracked, treat as available
+    if (!product || (product.stock != null && product.stock <= 0)) {
       toast.error('This product is out of stock');
       return;
     }
@@ -176,8 +176,8 @@ export default function ProductDetails() {
       return;
     }
 
-    // Safety check for stock
-    if (!product || product.stock <= 0) {
+    // Safety check for stock — null means stock not tracked, treat as available
+    if (!product || (product.stock != null && product.stock <= 0)) {
       toast.error('This product is out of stock');
       return;
     }

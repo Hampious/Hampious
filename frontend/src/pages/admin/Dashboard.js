@@ -170,7 +170,7 @@ export default function Dashboard() {
       )}
 
       {/* Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16, marginBottom: 36 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(180px, 100%), 1fr))', gap: 16, marginBottom: 36 }}>
         {cards.map((c) => (
           <StatCard key={c.label} {...c} />
         ))}

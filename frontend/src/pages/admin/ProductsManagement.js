@@ -602,7 +602,7 @@ export default function ProductsManagement() {
           <p style={{ color: '#7c5a6a', fontSize: 15 }}>No products found</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: 18 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(230px, 100%), 1fr))', gap: 18 }}>
           {filtered.map((product, i) => (
             <motion.div
               key={product.id}

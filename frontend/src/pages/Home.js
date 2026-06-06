@@ -99,7 +99,7 @@ function TopRatedSection({ navigate }) {
   const handleAddToCart = async (e, product) => {
     e.stopPropagation();
     if (!user) { toast.error('Please sign in to add items to cart'); navigate('/auth'); return; }
-    if (!product || Number(product.stock) <= 0) { toast.error('Out of stock'); return; }
+    if (!product || (product.stock != null && Number(product.stock) <= 0)) { toast.error('Out of stock'); return; }
     try {
       await addToCart(product.id, 1, product.discount_price || product.price);
       toast.success('Added to cart!');
@@ -109,7 +109,7 @@ function TopRatedSection({ navigate }) {
   const handleBuyNow = async (e, product) => {
     e.stopPropagation();
     if (!user) { toast.error('Please sign in to continue'); navigate('/auth'); return; }
-    if (!product || Number(product.stock) <= 0) { toast.error('Out of stock'); return; }
+    if (!product || (product.stock != null && Number(product.stock) <= 0)) { toast.error('Out of stock'); return; }
     try {
       await addToCart(product.id, 1, product.discount_price || product.price);
       navigate('/checkout');
@@ -120,7 +120,7 @@ function TopRatedSection({ navigate }) {
   if (!products.length) return null;
 
   return (
-    <section style={{ background: '#fff', padding: '80px 24px' }}>
+    <section style={{ background: '#fff', padding: 'clamp(2.5rem, 8vw, 5rem) clamp(1rem, 4vw, 1.5rem)' }}>
       <div style={{ maxWidth: 1280, margin: '0 auto' }}>
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -145,7 +145,7 @@ function TopRatedSection({ navigate }) {
         </motion.div>
 
         {/* Products Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(260px, 100%), 1fr))', gap: 24 }}>
           {products.map((product, i) => {
             const image    = product.images?.[0] || product.image_url || null;
             const price    = Number(product.discount_price || product.price || 0);

@@ -1,16 +1,14 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional
-import smtplib
 import secrets
 import os
 import random
 import time
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 
 from database import db_select, db_insert, db_update, db_delete, db_upsert, get_db
+from email_utils import send_email, otp_email, reset_password_email, FRONTEND_URL
 
 router = APIRouter()
 
@@ -20,157 +18,14 @@ reset_tokens = {}
 # In-memory OTP store { contact: { otp, expires } }
 _otps: dict = {}
 
-# ── Brevo config ──────────────────────────────────────────────────────────────
-BREVO_API_KEY     = os.environ.get("BREVO_API_KEY", "")
-BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL", "team.hampious@gmail.com")
-BREVO_SENDER_NAME  = os.environ.get("BREVO_SENDER_NAME", "Hampious")
-
-
-def _send_brevo_email(to_email: str, subject: str, html_content: str):
-    """Send email via Brevo transactional API."""
-    try:
-        import sib_api_v3_sdk
-        config = sib_api_v3_sdk.Configuration()
-        config.api_key["api-key"] = BREVO_API_KEY
-        api = sib_api_v3_sdk.TransactionalEmailsApi(
-              sib_api_v3_sdk.ApiClient(config))
-        email_obj = sib_api_v3_sdk.SendSmtpEmail(
-            to=[{"email": to_email}],
-            sender={"name": BREVO_SENDER_NAME, "email": BREVO_SENDER_EMAIL},
-            subject=subject,
-            html_content=html_content,
-        )
-        api.send_transac_email(email_obj)
-        return True
-    except Exception as e:
-        print(f"[brevo] Email send error: {e}")
-        return False
-
-
-def _otp_email_html(otp: str, name: str = "there") -> str:
-    return f"""
-    <div style="font-family:'Georgia',serif;max-width:500px;margin:0 auto;
-                background:#FFF5F8;border-radius:16px;overflow:hidden;">
-      <div style="background:#1A0F15;padding:2rem;text-align:center;">
-        <h1 style="color:#D4789A;font-size:1.8rem;margin:0;letter-spacing:0.12em;">
-          🎁 HAMPIOUS
-        </h1>
-        <p style="color:rgba(255,245,248,0.5);font-size:0.75rem;
-                  letter-spacing:0.2em;margin:0.3rem 0 0;">
-          PREMIUM GIFT HAMPERS
-        </p>
-      </div>
-      <div style="padding:2.5rem 2rem;text-align:center;">
-        <h2 style="color:#3D1A2A;font-size:1.5rem;margin:0 0 0.5rem;">
-          Hi {name}! 👋
-        </h2>
-        <p style="color:rgba(30,26,23,0.6);margin:0 0 1.5rem;">
-          Your one-time login code is:
-        </p>
-        <div style="background:#fff;border:2px dashed #D4789A;border-radius:14px;
-                    padding:1.5rem;margin:0 auto 1.5rem;display:inline-block;
-                    min-width:200px;">
-          <span style="font-size:2.5rem;font-weight:bold;color:#B84E78;
-                       letter-spacing:12px;font-family:monospace;">
-            {otp}
-          </span>
-        </div>
-        <p style="color:rgba(30,26,23,0.45);font-size:0.85rem;margin:0;">
-          ⏱ Valid for <strong>10 minutes</strong>. Do not share with anyone.
-        </p>
-      </div>
-      <div style="background:#FCEAF1;padding:1rem 2rem;text-align:center;
-                  border-top:1px solid rgba(212,120,154,0.15);">
-        <p style="color:rgba(30,26,23,0.35);font-size:0.72rem;margin:0;">
-          If you didn't request this, ignore this email.
-          © 2024 Hampious
-        </p>
-      </div>
-    </div>
-    """
-
-EMAIL_HOST     = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT     = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_USERNAME = os.environ.get('EMAIL_USERNAME', '')
-EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
-EMAIL_FROM     = os.environ.get('EMAIL_FROM', 'Hampious <no-reply@hampious.com>')
-FRONTEND_URL   = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
-
 
 def send_reset_email(to_email: str, reset_link: str):
     """Send password reset email via Brevo."""
-    html = f"""
-    <div style="font-family:'Georgia',serif;max-width:520px;margin:0 auto;
-                background:#FFF5F8;border-radius:16px;overflow:hidden;">
-      <div style="background:#1A0F15;padding:2rem;text-align:center;">
-        <h1 style="color:#D4789A;font-size:1.8rem;margin:0;letter-spacing:0.1em;">
-          🎁 HAMPIOUS
-        </h1>
-        <p style="color:rgba(255,245,248,0.5);font-size:0.75rem;
-                  letter-spacing:0.2em;margin:0.3rem 0 0;">
-          PREMIUM GIFT HAMPERS
-        </p>
-      </div>
-      <div style="padding:2.5rem 2rem;text-align:center;">
-        <div style="width:64px;height:64px;border-radius:50%;
-                    border:2px solid #D4789A;
-                    background:rgba(212,120,154,0.1);
-                    display:inline-flex;align-items:center;
-                    justify-content:center;margin-bottom:1.5rem;
-                    font-size:1.8rem;">
-          🔑
-        </div>
-        <h2 style="color:#3D1A2A;font-size:1.6rem;margin:0 0 0.75rem;">
-          Reset Your Password
-        </h2>
-        <p style="color:rgba(30,26,23,0.55);font-size:0.9rem;
-                  line-height:1.8;margin:0 0 2rem;">
-          We received a request to reset your password.<br/>
-          Click the button below to set a new one.
-        </p>
-        <a href="{reset_link}"
-           style="display:inline-block;background:#D4789A;color:#FFFFFF;
-                  text-decoration:none;padding:0.85rem 2.5rem;
-                  border-radius:50px;font-size:0.85rem;font-weight:600;
-                  letter-spacing:0.1em;text-transform:uppercase;">
-          Reset Password →
-        </a>
-        <p style="color:rgba(30,26,23,0.35);font-size:0.75rem;
-                  margin:2rem 0 0;line-height:1.7;">
-          This link expires in <strong>1 hour</strong>.<br/>
-          If you didn't request this, ignore this email.
-        </p>
-      </div>
-      <div style="background:#FCEAF1;padding:1rem 2rem;text-align:center;
-                  border-top:1px solid rgba(212,120,154,0.15);">
-        <p style="color:rgba(30,26,23,0.35);font-size:0.72rem;margin:0;">
-          © 2024 Hampious. All rights reserved.
-        </p>
-      </div>
-    </div>
-    """
-    # Try Brevo first (preferred)
-    sent = _send_brevo_email(
+    send_email(
         to_email=to_email,
         subject="Reset Your Hampious Password",
-        html_content=html,
+        html_body=reset_password_email(reset_link),
     )
-    if sent:
-        return
-
-    # Fallback: Gmail SMTP
-    try:
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = 'Reset Your Hampious Password'
-        msg['From']    = EMAIL_FROM
-        msg['To']      = to_email
-        msg.attach(MIMEText(html, 'html'))
-        with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as server:
-            server.starttls()
-            server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
-            server.sendmail(EMAIL_USERNAME, to_email, msg.as_string())
-    except Exception as e:
-        print(f"[reset email] SMTP fallback error: {e}")
 
 
 class LoginRequest(BaseModel):
@@ -291,25 +146,16 @@ class ResetPasswordRequest(BaseModel):
 
 @router.post("/forgot-password")
 def forgot_password(request: ForgotPasswordRequest, background_tasks: BackgroundTasks):
-    # Always return success to prevent email enumeration
-    user = users_db.get(request.email)
-    if not user:
-        try:
-            rows = db_select("customers", {"email": request.email})
-            if rows:
-                user = rows[0]
-        except Exception as e:
-            print(f"[forgot_password] Supabase error: {e}")
-
-    if user:
-        token = secrets.token_urlsafe(32)
-        reset_tokens[token] = {
-            "email":   request.email,
-            "expires": datetime.utcnow() + timedelta(hours=1)
-        }
-        reset_link = f"{FRONTEND_URL}/reset-password?token={token}"
-        background_tasks.add_task(send_reset_email, request.email, reset_link)
-
+    email = request.email.strip().lower()
+    # Always generate and send — prevents email enumeration and works even when
+    # Supabase is unreachable or users_db is empty (e.g. after server restart)
+    token = secrets.token_urlsafe(32)
+    reset_tokens[token] = {
+        "email":   email,
+        "expires": datetime.utcnow() + timedelta(hours=1)
+    }
+    reset_link = f"{FRONTEND_URL}/reset-password?token={token}"
+    background_tasks.add_task(send_reset_email, email, reset_link)
     return {"message": "If this email is registered, a reset link has been sent."}
 
 
@@ -374,10 +220,10 @@ def send_otp(request: SendOtpRequest):
             name = rows[0]["name"].split()[0]
     except: pass
 
-    sent = _send_brevo_email(
+    sent = send_email(
         to_email=email,
-        subject="Your Hampious Login OTP",
-        html_content=_otp_email_html(otp, name),
+        subject="Your Hampious Login Code",
+        html_body=otp_email(otp, name),
     )
     if not sent:
         raise HTTPException(status_code=500, detail="Failed to send OTP email")

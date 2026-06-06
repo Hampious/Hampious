@@ -28,8 +28,15 @@ export const CartProvider = ({ children }) => {
       setLoading(true);
       const response = await API.get('/cart');
       const data = response.data || { items: [] };
-      setCart(data);
-      writeLocal(data);
+      if (data.items && data.items.length > 0) {
+        // Backend has real data — use it and sync to localStorage
+        setCart(data);
+        writeLocal(data);
+      } else {
+        // Backend returned empty — keep any existing localStorage cart
+        const local = readLocal();
+        setCart(local);
+      }
     } catch (error) {
       // Backend unavailable — use localStorage cart
       const local = readLocal();
@@ -40,59 +47,56 @@ export const CartProvider = ({ children }) => {
   };
 
   const addToCart = async (productId, quantity, price) => {
+    // Optimistically update localStorage and state immediately
+    const local = readLocal();
+    const existing = local.items.find(i => String(i.product_id) === String(productId));
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      local.items.push({ product_id: productId, quantity, price, added_at: new Date().toISOString() });
+    }
+    writeLocal(local);
+    setCart({ ...local });
+
+    // Sync to backend (best effort — don't let backend errors undo the local add)
     try {
       const response = await API.post('/cart/add', { product_id: productId, quantity, price });
-      const data = response.data || { items: [] };
-      setCart(data);
-      writeLocal(data);
-    } catch (error) {
-      // Fallback: add to local cart
-      const local = readLocal();
-      const existing = local.items.find(i => String(i.product_id) === String(productId));
-      if (existing) {
-        existing.quantity += quantity;
-      } else {
-        local.items.push({ product_id: productId, quantity, price, added_at: new Date().toISOString() });
+      const data = response.data;
+      if (data?.items?.length > 0) {
+        // Backend confirmed with real data — use that as source of truth
+        setCart(data);
+        writeLocal(data);
       }
-      writeLocal(local);
-      setCart({ ...local });
-      // Re-throw only if it's a real auth error, otherwise swallow
+    } catch (error) {
+      // Re-throw only for auth errors so callers can redirect to login
       if (error.response?.status === 401) throw error;
+      // Otherwise keep the optimistic local state
     }
   };
 
   const removeFromCart = async (productId) => {
-    try {
-      const response = await API.post(`/cart/remove/${productId}`);
-      const data = response.data || { items: [] };
-      setCart(data);
-      writeLocal(data);
-    } catch (error) {
-      // Fallback: remove from local cart
-      const local = readLocal();
-      local.items = local.items.filter(i => String(i.product_id) !== String(productId));
-      writeLocal(local);
-      setCart({ ...local });
-    }
+    // Remove locally first
+    const local = readLocal();
+    local.items = local.items.filter(i => String(i.product_id) !== String(productId));
+    writeLocal(local);
+    setCart({ ...local });
+    // Sync to backend best-effort
+    try { await API.post(`/cart/remove/${productId}`); } catch {}
   };
 
   const updateQuantity = async (productId, quantity) => {
-    try {
-      const response = await API.put(`/cart/update/${productId}`, { quantity });
-      const data = response.data || { items: [] };
-      setCart(data);
-      writeLocal(data);
-    } catch (error) {
-      const local = readLocal();
-      if (quantity <= 0) {
-        local.items = local.items.filter(i => String(i.product_id) !== String(productId));
-      } else {
-        const item = local.items.find(i => String(i.product_id) === String(productId));
-        if (item) item.quantity = quantity;
-      }
-      writeLocal(local);
-      setCart({ ...local });
+    // Update locally first
+    const local = readLocal();
+    if (quantity <= 0) {
+      local.items = local.items.filter(i => String(i.product_id) !== String(productId));
+    } else {
+      const item = local.items.find(i => String(i.product_id) === String(productId));
+      if (item) item.quantity = quantity;
     }
+    writeLocal(local);
+    setCart({ ...local });
+    // Sync to backend best-effort
+    try { await API.put(`/cart/update/${productId}`, { quantity }); } catch {}
   };
 
   const clearCart = async () => {

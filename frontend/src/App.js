@@ -19,6 +19,7 @@ import PaymentMethod from './pages/PaymentMethod';
 import MyOrders from './pages/MyOrders';
 import Profile from './pages/Profile';
 import Auth from './pages/Auth';
+import ResetPassword from './pages/ResetPassword';
 import Wishlist from './pages/Wishlist';
 import AboutUs from './pages/AboutUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -65,6 +66,7 @@ function App() {
                 <Route path="/products" element={<Products />} />
                 <Route path="/products/:id" element={<ProductDetails />} />
                 <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/about" element={<AboutUs />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsConditions />} />

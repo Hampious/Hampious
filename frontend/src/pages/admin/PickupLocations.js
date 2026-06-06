@@ -226,7 +226,7 @@ export default function PickupLocations() {
               )}
 
               <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: 16 }}>
                   <div>
                     <label style={labelStyle}>Location Name * <span style={{ fontSize: 11, color: '#a0728a', fontWeight: 400 }}>(e.g. "Hampious Warehouse")</span></label>
                     <input required style={inputStyle} value={form.pickup_location}
@@ -241,7 +241,7 @@ export default function PickupLocations() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: 16 }}>
                   <div>
                     <label style={labelStyle}>Email *</label>
                     <input required type="email" style={inputStyle} value={form.email}
@@ -270,7 +270,7 @@ export default function PickupLocations() {
                     placeholder="Area, Landmark (optional)" />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(160px, 100%), 1fr))', gap: 16 }}>
                   <div>
                     <label style={labelStyle}>City *</label>
                     <input required style={inputStyle} value={form.city}

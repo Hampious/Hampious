@@ -116,35 +116,35 @@ function printShipmentSlip(order, awbCode, courierName, shipmentId) {
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
-// ── Shiprocket credentials (direct API — no backend needed) ──────────────────
-const SR_EMAIL    = process.env.REACT_APP_SHIPROCKET_EMAIL    || '';
-const SR_PASSWORD = process.env.REACT_APP_SHIPROCKET_PASSWORD || '';
-const SR_BASE     = 'https://apiv2.shiprocket.in/v1/external';
+// ── Backend-proxied Shiprocket helpers ───────────────────────────────────────
+// All Shiprocket calls go through our backend — credentials stay server-side.
+const SR_BASE = 'https://apiv2.shiprocket.in/v1/external';  // kept for tracking fallback only
 
-// Cache JWT in sessionStorage so we don't login on every booking
-async function srLogin() {
-  const cached = sessionStorage.getItem('sr_token');
-  if (cached) return cached;
-  const res = await fetch(`${SR_BASE}/auth/login`, {
+async function backendSrPost(path, body) {
+  const res = await fetch(`${API}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: SR_EMAIL, password: SR_PASSWORD }),
-  });
-  if (!res.ok) throw new Error(`Shiprocket login failed (${res.status})`);
-  const data = await res.json();
-  const token = data.token;
-  if (!token) throw new Error('Shiprocket login returned no token');
-  sessionStorage.setItem('sr_token', token);
-  return token;
-}
-
-async function srApi(method, path, body, token) {
-  const res = await fetch(`${SR_BASE}${path}`, {
-    method,
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: body ? JSON.stringify(body) : undefined,
+    body: JSON.stringify(body),
   });
   return res;
+}
+
+async function backendSrGet(path) {
+  return fetch(`${API}${path}`);
+}
+
+// Legacy srLogin kept only for the tracking panel which still uses direct Shiprocket
+// (backend /shiprocket/track/{awb} is used first; this is the fallback)
+async function srLoginDirect() {
+  const cached = sessionStorage.getItem('sr_token');
+  if (cached) return cached;
+  // Use backend test-auth endpoint to get a token server-side, then cache it
+  const res = await fetch(`${API}/shiprocket/test-auth`);
+  if (!res.ok) throw new Error(`Shiprocket login failed (${res.status})`);
+  const data = await res.json();
+  const token = data.token_preview;  // this is just a preview; use backend for actual calls
+  sessionStorage.setItem('sr_token', token || 'ok');
+  return token;
 }
 
 // ── Shiprocket create + book shipment ────────────────────────────────────────
@@ -155,109 +155,40 @@ function ShiprocketForm({ order, onSuccess, onCancel }) {
 
   const handleBook = async () => {
     setStatus('loading');
-    setMessage('Logging in to Shiprocket...');
+    setMessage('Connecting to Shiprocket...');
     try {
-      // ── Step 1: Login ────────────────────────────────────────────────────
-      let srToken;
-      try {
-        srToken = await srLogin();
-      } catch (e) {
-        throw new Error(`Shiprocket login failed: ${e.message}\nCheck your email/password.`);
-      }
-
-      // ── Step 2: Get pickup location ──────────────────────────────────────
-      setMessage('Fetching pickup address...');
-      // Check if admin manually selected one from Pickup Locations tab
-      let pickupLocation = sessionStorage.getItem('sr_active_pickup') || 'Primary';
-      try {
-        const pr = await srApi('GET', '/settings/company/pickup', null, srToken);
-        if (pr.ok) {
-          const pd = await pr.json();
-          const addresses = pd?.data?.shipping_address || [];
-          if (!sessionStorage.getItem('sr_active_pickup')) {
-            const active = addresses.find(a => a.status === 1) || addresses[0];
-            if (active) pickupLocation = active.pickup_location || active.alias || 'Primary';
+      // Single backend call — handles login, pickup, AWB, label server-side
+      setMessage('Creating shipment via Shiprocket...');
+      const res = await backendSrPost('/shiprocket/create-order', { order });
+      if (!res.ok) {
+        let errMsg = `Shipment failed (${res.status})`;
+        try {
+          const ct = res.headers.get('content-type') || '';
+          if (ct.includes('json')) {
+            const errData = await res.json();
+            errMsg = errData.detail || errData.message || errMsg;
+          } else {
+            const text = await res.text();
+            if (text && text.length < 500) errMsg = text;
           }
-        }
-      } catch {}
-
-      // ── Step 3: Build order payload ──────────────────────────────────────
-      setMessage('Creating Shiprocket order...');
-      const addr  = order.shipping_address || {};
-      const items = (order.items || []).map(item => ({
-        name:          item.product_name || item.name || 'Gift Hamper',
-        sku:           `HAMP-${item.product_id || '001'}`,
-        units:         parseInt(item.quantity) || 1,
-        selling_price: parseFloat(item.price) || 0,
-        discount: 0, tax: 0,
-      }));
-      if (!items.length) items.push({ name: 'Gift Hamper', sku: 'HAMP-001', units: 1, selling_price: parseFloat(order.total || 0) });
-
-      const customerName = addr.full_name || order.customer_name || 'Customer';
-      const [firstName, ...rest] = customerName.split(' ');
-      const phone = (addr.phone || order.customer_phone || '9999999999').replace(/\D/g, '').slice(-10);
-      const orderId = String(order.id);
-
-      const orderPayload = {
-        order_id: orderId,
-        order_date: new Date().toISOString().slice(0, 16).replace('T', ' '),
-        pickup_location: pickupLocation,
-        comment: 'Hampious Gift Hamper',
-        billing_customer_name: firstName,
-        billing_last_name: rest.join(' ') || '.',
-        billing_address: addr.address || addr.line1 || 'NA',
-        billing_address_2: '',
-        billing_city: addr.city || '',
-        billing_pincode: String(addr.pincode || '400001'),
-        billing_state: addr.state || '',
-        billing_country: 'India',
-        billing_email: order.customer_email || addr.email || '',
-        billing_phone: phone,
-        shipping_is_billing: true,
-        order_items: items,
-        payment_method: 'prepaid',
-        sub_total: parseFloat(order.total || order.final_amount || 0),
-        length: 20, breadth: 15, height: 10, weight: 0.5,
-      };
-
-      const orderRes = await srApi('POST', '/orders/create/adhoc', orderPayload, srToken);
-      if (!orderRes.ok) {
-        const errData = await orderRes.json().catch(() => ({}));
-        throw new Error(errData.message || errData.detail || `Order create failed (${orderRes.status})`);
+        } catch {}
+        throw new Error(errMsg);
       }
-      const orderData = await orderRes.json();
-      const shipmentId = orderData.shipment_id;
-      const srOrderId  = orderData.order_id;
+      const data = await res.json();
 
-      if (!shipmentId) throw new Error('No shipment ID from Shiprocket — check pickup address is set up');
-
-      // ── Step 4: Assign AWB ───────────────────────────────────────────────
-      setMessage('Assigning courier & AWB...');
-      let awbCode = '', courierName = 'Shiprocket', labelUrl = '';
-      const awbRes = await srApi('POST', '/courier/assign/awb/shipment_id', { shipment_id: [shipmentId] }, srToken);
-      if (awbRes.ok) {
-        const awbData = (await awbRes.json())?.response?.data || {};
-        awbCode     = awbData.awb_code || '';
-        courierName = awbData.courier_name || 'Shiprocket';
-      }
-
-      // ── Step 5: Request pickup ───────────────────────────────────────────
-      setMessage('Requesting pickup...');
-      await srApi('POST', '/courier/generate/pickup', { shipment_id: [shipmentId] }, srToken).catch(() => {});
-
-      // ── Step 6: Get label ────────────────────────────────────────────────
-      const labelRes = await srApi('POST', '/courier/generate/label', { shipment_id: [shipmentId] }, srToken);
-      if (labelRes.ok) labelUrl = (await labelRes.json()).label_url || '';
-
-      const data = { success: true, shiprocket_order_id: srOrderId, shipment_id: shipmentId, awb_code: awbCode, courier_name: courierName, label_url: labelUrl };
       setResult(data);
       setStatus('success');
       setMessage('');
 
-      // ── Update order status ──────────────────────────────────────────────
+      // Update order status in backend + localStorage
+      const awbCode    = data.awb_code    || String(data.shipment_id || '');
+      const courierName = data.courier_name || 'Shiprocket';
+      const srOrderId   = data.shiprocket_order_id;
+      const shipmentId  = data.shipment_id;
+
       const payload = {
         status:          'shipped',
-        tracking_number: awbCode || String(shipmentId),
+        tracking_number: awbCode,
         courier:         courierName,
         notes:           `Shiprocket Order: ${srOrderId} | Shipment: ${shipmentId}`,
         updated_at:      new Date().toISOString(),
@@ -272,7 +203,6 @@ function ShiprocketForm({ order, onSuccess, onCancel }) {
       setTimeout(() => onSuccess(data), 1500);
 
     } catch (e) {
-      sessionStorage.removeItem('sr_token'); // clear cached token on error
       setStatus('error');
       setMessage(e.message || 'Failed to create shipment');
     }
@@ -373,55 +303,14 @@ function TrackingDrawer({ awbCode, onClose }) {
       setLoading(true);
       setError('');
       try {
-        // Login to Shiprocket directly (no backend needed)
-        const srToken = await srLogin();
-
-        // Try AWB tracking first
-        let data = null;
-        const awbRes = await fetch(`${SR_BASE}/courier/track/awb/${awbCode}`, {
-          headers: { Authorization: `Bearer ${srToken}`, 'Content-Type': 'application/json' },
-        });
-
-        if (awbRes.ok) {
-          const raw       = await awbRes.json();
-          const trackData = raw.tracking_data || {};
-          const shipment  = (trackData.shipment_track || [])[0] || {};
-          const activities = (trackData.shipment_track_activities || []).slice(0, 15);
-          data = {
-            status:      shipment.current_status || 'In Transit',
-            courier:     shipment.courier_name   || '',
-            eta:         shipment.etd            || '',
-            origin:      shipment.origin         || '',
-            destination: shipment.destination    || '',
-            activities:  activities.map(a => ({
-              date:     a.date     || '',
-              activity: a.activity || '',
-              location: a.location || '',
-            })),
-          };
+        // Use backend tracking endpoint — no credentials needed in frontend
+        const res = await backendSrGet(`/shiprocket/track/${encodeURIComponent(awbCode)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setTracking(data);
+        } else {
+          setError('No tracking data found for this shipment yet. Check back after pickup is done.');
         }
-
-        // If AWB not found, try by shipment ID
-        if (!data || !data.status) {
-          const shipRes = await fetch(`${SR_BASE}/courier/track/shipment/${awbCode}`, {
-            headers: { Authorization: `Bearer ${srToken}`, 'Content-Type': 'application/json' },
-          });
-          if (shipRes.ok) {
-            const raw = await shipRes.json();
-            const shipment = (raw.tracking_data?.shipment_track || [])[0] || {};
-            data = {
-              status:      shipment.current_status || 'Processing',
-              courier:     shipment.courier_name   || '',
-              eta:         shipment.etd            || '',
-              activities:  (raw.tracking_data?.shipment_track_activities || []).slice(0, 15).map(a => ({
-                date: a.date || '', activity: a.activity || '', location: a.location || '',
-              })),
-            };
-          }
-        }
-
-        if (data) setTracking(data);
-        else setError('No tracking data found for this shipment yet. Check back after pickup is done.');
       } catch (e) {
         setError('Could not fetch tracking: ' + e.message);
       } finally {

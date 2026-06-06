@@ -27,7 +27,17 @@ def _login() -> str:
         "password": SHIPROCKET_PASSWORD,
     }, timeout=20)
     if not resp.ok:
-        raise Exception(f"Shiprocket login failed: {resp.status_code} — {resp.text}")
+        try:
+            msg = resp.json().get("message", resp.text)
+        except Exception:
+            msg = resp.text
+        if resp.status_code == 403 and "blocked" in msg.lower():
+            raise Exception(
+                "Your Shiprocket account is temporarily blocked due to too many failed login attempts. "
+                "Please wait 30–60 minutes, then try again. You can also reset the block by logging in "
+                "to https://app.shiprocket.in and changing your password."
+            )
+        raise Exception(f"Shiprocket login failed ({resp.status_code}): {msg}")
     token = resp.json().get("token")
     if not token:
         raise Exception("Shiprocket login returned no token")
@@ -96,6 +106,12 @@ async def create_shiprocket_order(request: Request):
     Body: { order } — full admin order object.
     Returns: { shiprocket_order_id, shipment_id, awb_code, courier_name, label_url }
     """
+    # Verify credentials / account status before doing anything else
+    try:
+        _get_token()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     body  = await request.json()
     order = body.get("order", body)
 
@@ -285,9 +301,9 @@ async def get_pickup_locations():
 async def test_auth():
     """Test Shiprocket credentials and show pickup locations."""
     try:
+        _token_cache["token"] = None  # force fresh login
         token     = _login()
         pickup    = _get_pickup_location()
-        # Also fetch location list
         r         = _api("GET", "/settings/company/pickup")
         addresses = []
         if r.ok:
@@ -303,4 +319,4 @@ async def test_auth():
             "token_preview":    token[:20] + "...",
         }
     except Exception as e:
-        raise HTTPException(status_code=401, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))

@@ -129,7 +129,7 @@ export default function AboutUs() {
         <motion.div
           initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-80px' }}
           variants={stagger}
-          style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem', alignItems: 'center' }}
+          style={{ maxWidth: '1100px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '2rem', alignItems: 'center' }}
         >
           {/* Image panel */}
           <motion.div variants={fadeUp} style={{ position: 'relative' }}>
@@ -242,7 +242,7 @@ export default function AboutUs() {
             </h2>
           </motion.div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))', gap: '1.5rem' }}>
             {values.map(({ Icon, title, desc }, i) => (
               <motion.div
                 key={i} variants={fadeUp}
@@ -311,7 +311,7 @@ export default function AboutUs() {
             </h2>
           </motion.div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: '1rem' }}>
             {promises.map((item, i) => (
               <motion.div
                 key={i} variants={fadeUp}

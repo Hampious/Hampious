@@ -5,26 +5,17 @@ Data persisted in Supabase; falls back to empty lists if Supabase is not configu
 """
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Request
 from datetime import datetime
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import smtplib
 import secrets
 import os
 
 from database import db_select, db_insert, db_update, db_delete, db_upsert, get_db
+from email_utils import send_email, order_status_email, STATUS_LABELS
 
 router = APIRouter()
 
 # ─── Config ──────────────────────────────────────────────────────────────────
 ADMIN_EMAIL    = os.environ.get("ADMIN_EMAIL",    "")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
-
-EMAIL_HOST         = os.environ.get("EMAIL_HOST",  "smtp.gmail.com")
-EMAIL_PORT         = int(os.environ.get("EMAIL_PORT", 587))
-EMAIL_USERNAME     = os.environ.get("EMAIL_USERNAME", "")
-EMAIL_PASSWORD_ENV = os.environ.get("EMAIL_PASSWORD", "")
-EMAIL_FROM         = os.environ.get("EMAIL_FROM",  "Hampious <no-reply@hampious.com>")
-FRONTEND_URL       = os.environ.get("FRONTEND_URL","http://localhost:3000")
 
 # ─── Active session tokens (in-memory — intentional) ─────────────────────────
 _sessions = set()
@@ -43,47 +34,17 @@ def _verify(request: Request):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 # ─── Email ────────────────────────────────────────────────────────────────────
-STATUS_LABELS = {
-    "pending":    ("Pending",    "#F59E0B"),
-    "processing": ("Processing", "#3B82F6"),
-    "shipped":    ("Shipped",    "#8B5CF6"),
-    "delivered":  ("Delivered",  "#10B981"),
-    "cancelled":  ("Cancelled",  "#EF4444"),
-}
-
 def _send_order_email(order: dict):
-    try:
-        label, color = STATUS_LABELS.get(order["status"], (order["status"].title(), "#D4789A"))
-        tracking = ""
-        if order.get("tracking_number"):
-            tracking = f'<p>Tracking: <strong>{order["tracking_number"]}</strong>' + (f' via {order["courier"]}' if order.get("courier") else "") + "</p>"
-        items_html = "".join(
-            f'<tr><td>{i["name"]}</td><td style="text-align:right">x{i["qty"]} - Rs.{i["price"]}</td></tr>'
-            for i in order.get("items", [])
-        )
-        html = f"""<div style="max-width:520px;margin:0 auto;background:#FFF5F8;border-radius:16px;overflow:hidden;">
-          <div style="background:#1A0F15;padding:2rem;text-align:center;">
-            <h1 style="color:#D4789A;margin:0;">HAMPIOUS</h1></div>
-          <div style="padding:2rem;">
-            <span style="background:{color};color:#fff;border-radius:50px;padding:4px 16px;font-size:13px;">{label}</span>
-            <h2 style="color:#3D1A2A;">Hi {order.get('customer_name','there')}!</h2>
-            <p>Your order <strong>#{order["id"]}</strong> is now <strong>{label}</strong>.</p>
-            {tracking}
-            <table style="width:100%;border-collapse:collapse;">{items_html}</table>
-            <p style="color:#B84E78;font-weight:700;">Total: Rs.{order.get('total','')}</p>
-            <a href="{FRONTEND_URL}/my-orders" style="background:#D4789A;color:#fff;text-decoration:none;padding:12px 32px;border-radius:50px;display:inline-block;font-weight:700;">View Order</a>
-          </div></div>"""
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"Your Hampious Order #{order['id']} is {label}"
-        msg["From"] = EMAIL_FROM
-        msg["To"] = order["customer_email"]
-        msg.attach(MIMEText(html, "html"))
-        with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as s:
-            s.starttls()
-            s.login(EMAIL_USERNAME, EMAIL_PASSWORD_ENV)
-            s.sendmail(EMAIL_USERNAME, order["customer_email"], msg.as_string())
-    except Exception as e:
-        print(f"[email error] {e}")
+    to_email = order.get("customer_email")
+    if not to_email:
+        return
+    status = order.get("status", "pending")
+    label, _ = STATUS_LABELS.get(status, (status.title(), "#D4789A"))
+    send_email(
+        to_email=to_email,
+        subject=f"Your Hampious Order #{order.get('id','')} — {label}",
+        html_body=order_status_email(order),
+    )
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # AUTH
@@ -297,7 +258,7 @@ async def update_order_status(order_id: str, request: Request, background_tasks:
         if "notes"           in body: updates["notes"]           = body["notes"]
         result = db_update("orders", "id", order_id, updates)
         updated = result[0] if result else {**o, **updates}
-        if EMAIL_USERNAME:
+        if updated.get("customer_email"):
             background_tasks.add_task(_send_order_email, dict(updated))
         return updated
     except HTTPException:

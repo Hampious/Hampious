@@ -382,7 +382,7 @@ export default function CategoryManagement() {
           <p style={{ color: '#7c5a6a', fontSize: 15 }}>No categories yet. Create your first one!</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 18 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: 18 }}>
           {categories.map((cat, i) => (
             <motion.div
               key={cat.id}
