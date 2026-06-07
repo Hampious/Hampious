@@ -216,3 +216,142 @@ def order_status_email(order: dict) -> str:
       </div>
     </div>"""
     return _email_wrap(body)
+
+
+def shipment_dispatched_email(order: dict, awb_code: str, courier_name: str, tracking_url: str = "") -> str:
+    customer_name = (order.get("shipping_address") or {}).get("full_name") or order.get("customer_name", "there")
+    order_id = str(order.get("id", "")).replace("ORD-", "")[:8].upper()
+    addr = order.get("shipping_address") or {}
+    address_str = ", ".join(filter(None, [
+        addr.get("address") or addr.get("line1"),
+        addr.get("city"),
+        addr.get("state"),
+        str(addr.get("pincode", "")),
+    ]))
+
+    tracking_section = ""
+    if awb_code:
+        tracking_section = f"""
+      <div style="background:#EDE9FE;border:1px solid #c4b5fd;border-radius:14px;
+                  padding:1.5rem;margin:1.25rem 0;text-align:center;">
+        <p style="margin:0 0 6px;font-size:0.8rem;font-weight:700;color:#5B21B6;
+                  letter-spacing:0.1em;text-transform:uppercase;">Tracking Number</p>
+        <p style="margin:0;font-size:1.6rem;font-weight:800;color:#4C1D95;
+                  letter-spacing:4px;font-family:monospace;">{awb_code}</p>
+        <p style="margin:6px 0 0;font-size:0.82rem;color:#7C3AED;">via {courier_name}</p>
+        {f'<a href="{tracking_url}" style="display:inline-block;margin-top:10px;background:#7C3AED;color:#fff;text-decoration:none;padding:8px 20px;border-radius:50px;font-size:0.8rem;font-weight:600;">Track Shipment →</a>' if tracking_url else ''}
+      </div>"""
+
+    body = f"""
+    <div style="padding:2rem 2rem 1.5rem;">
+      <div style="margin-bottom:1.25rem;">
+        <span style="background:#7C3AED;color:#fff;border-radius:50px;padding:5px 16px;
+                     font-size:0.78rem;font-weight:600;letter-spacing:0.06em;
+                     text-transform:uppercase;">🚚 Shipped!</span>
+      </div>
+      <h2 style="color:#3D1A2A;font-size:1.35rem;margin:0 0 0.5rem;">
+        Your order is on its way, {customer_name}! 🎁</h2>
+      <p style="color:rgba(30,26,23,0.6);margin:0 0 0.25rem;font-size:0.9rem;">
+        Order <strong style="color:#3D1A2A;">#{order_id}</strong>
+      </p>
+      <p style="color:rgba(30,26,23,0.7);font-size:0.95rem;line-height:1.7;margin:1rem 0 0;">
+        Great news! Your Hampious gift hamper has been handed over to <strong>{courier_name}</strong> and is on its way to:
+      </p>
+      <div style="background:#FFF5F8;border:1px solid #f3d0dd;border-radius:10px;
+                  padding:12px 16px;margin:1rem 0;font-size:0.9rem;color:#3D1A2A;line-height:1.7;">
+        📍 {address_str or "Your delivery address"}
+      </div>
+      {tracking_section}
+      <div style="text-align:center;margin-top:1.5rem;">
+        <a href="{FRONTEND_URL}/my-orders"
+           style="display:inline-block;background:#D4789A;color:#FFFFFF;text-decoration:none;
+                  padding:0.85rem 2.5rem;border-radius:50px;font-size:0.88rem;font-weight:600;
+                  letter-spacing:0.06em;">View My Orders →</a>
+      </div>
+    </div>"""
+    return _email_wrap(body)
+
+
+def order_confirmation_email(order: dict) -> str:
+    customer_name = (order.get("shipping_address") or {}).get("full_name") or order.get("customer_name", "there")
+    order_id = str(order.get("id", "")).upper()
+    items = order.get("items", [])
+    addr = order.get("shipping_address") or {}
+    address_str = ", ".join(filter(None, [
+        addr.get("address") or addr.get("line1"),
+        addr.get("city"),
+        addr.get("state"),
+        str(addr.get("pincode", "")),
+    ]))
+    final_amount = order.get("final_amount") or order.get("total") or 0
+    discount = order.get("discount_amount", 0)
+    coupon = order.get("coupon_code", "")
+    payment_method = (order.get("payment_method") or "").upper()
+
+    # Items HTML
+    items_html = ""
+    if items:
+        rows = "".join(f"""
+          <tr>
+            <td style="padding:10px 16px;border-bottom:1px solid #fdeef3;font-size:13px;color:#3D1A2A;">
+              {item.get('product_name') or item.get('name','Product')}
+              <span style="color:#a0728a;font-size:11px;"> × {item.get('quantity',1)}</span>
+            </td>
+            <td style="padding:10px 16px;border-bottom:1px solid #fdeef3;font-size:13px;font-weight:700;color:#B84E78;text-align:right;">
+              ₹{int(float(item.get('price',0)) * int(item.get('quantity',1))):,}
+            </td>
+          </tr>""" for item in items)
+
+        discount_row = f"""
+          <tr style="background:#FFF5F8;">
+            <td style="padding:8px 16px;font-size:12px;color:#065F46;">🎟️ Coupon ({coupon})</td>
+            <td style="padding:8px 16px;font-size:12px;font-weight:700;color:#065F46;text-align:right;">- ₹{int(float(discount)):,}</td>
+          </tr>""" if discount and coupon else ""
+
+        items_html = f"""
+        <div style="margin:1.5rem 0;">
+          <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #f3d0dd;">
+            {rows}
+            {discount_row}
+            <tr style="background:#FCEAF1;">
+              <td style="padding:13px 16px;font-weight:700;color:#1A0F15;font-size:15px;">Total Paid</td>
+              <td style="padding:13px 16px;font-weight:800;color:#B84E78;font-size:17px;text-align:right;">₹{int(float(final_amount)):,}</td>
+            </tr>
+          </table>
+        </div>"""
+
+    address_html = f"""
+        <div style="background:#fff;border:1px solid #f3d0dd;border-radius:10px;padding:12px 16px;margin:1rem 0;font-size:13px;color:#3D1A2A;line-height:1.7;">
+          📍 {address_str or "Your delivery address"}
+        </div>""" if address_str else ""
+
+    payment_html = f'<p style="margin:0.5rem 0 0;font-size:12px;color:#a0728a;">Payment: {payment_method}</p>' if payment_method else ""
+
+    body = f"""
+    <div style="padding:2rem 2rem 1.5rem;">
+      <div style="margin-bottom:1.25rem;">
+        <span style="background:#D4789A;color:#fff;border-radius:50px;padding:5px 16px;
+                     font-size:0.78rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">
+          🎁 Order Confirmed!
+        </span>
+      </div>
+      <h2 style="color:#3D1A2A;font-size:1.35rem;margin:0 0 0.4rem;">
+        Thank you, {customer_name}! 💕</h2>
+      <p style="color:rgba(30,26,23,0.55);font-size:0.88rem;margin:0 0 0.25rem;">
+        Order <strong style="color:#3D1A2A;">#{order_id}</strong> has been placed successfully.
+      </p>
+      {payment_html}
+      <p style="color:rgba(30,26,23,0.7);font-size:0.95rem;line-height:1.7;margin:1rem 0 0;">
+        We're carefully preparing your Hampious gift hamper with love. You'll receive another email once it's shipped.
+      </p>
+      {items_html}
+      <p style="font-size:13px;color:#7c5a6a;margin:0.5rem 0 0.25rem;font-weight:600;">Delivering to:</p>
+      {address_html}
+      <div style="text-align:center;margin-top:1.5rem;">
+        <a href="{FRONTEND_URL}/my-orders"
+           style="display:inline-block;background:#D4789A;color:#FFFFFF;text-decoration:none;
+                  padding:0.85rem 2.5rem;border-radius:50px;font-size:0.88rem;font-weight:600;
+                  letter-spacing:0.06em;">Track My Order →</a>
+      </div>
+    </div>"""
+    return _email_wrap(body)

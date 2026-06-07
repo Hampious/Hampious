@@ -8,7 +8,7 @@ import time
 from datetime import datetime, timedelta
 
 from database import db_select, db_insert, db_update, db_delete, db_upsert, get_db
-from email_utils import send_email, otp_email, reset_password_email, FRONTEND_URL
+from email_utils import send_email, otp_email, reset_password_email, FRONTEND_URL, BREVO_API_KEY
 
 router = APIRouter()
 

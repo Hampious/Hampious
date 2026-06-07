@@ -36,6 +36,7 @@ import OrdersManagement from './pages/admin/OrdersManagement';
 import UsersManagement from './pages/admin/UsersManagement';
 import Shipments from './pages/admin/Shipments';
 import PickupLocations from './pages/admin/PickupLocations';
+import CouponsManagement from './pages/admin/CouponsManagement';
 
 import NotFound from './pages/NotFound';
 import './App.css';
@@ -58,6 +59,7 @@ function App() {
                 <Route path="customers"  element={<UsersManagement />} />
                 <Route path="shipments"  element={<Shipments />} />
                 <Route path="pickup"     element={<PickupLocations />} />
+                <Route path="coupons"   element={<CouponsManagement />} />
               </Route>
 
               {/* Customer site — wrapped in Layout (navbar + footer) */}

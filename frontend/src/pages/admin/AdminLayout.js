@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { to: '/admin/customers',  icon: '👥', label: 'Customers'  },
   { to: '/admin/shipments',  icon: '🚚', label: 'Shipments'  },
   { to: '/admin/pickup',     icon: '📍', label: 'Pickup Locations' },
+  { to: '/admin/coupons',   icon: '🎟️', label: 'Coupons' },
 ];
 
 export default function AdminLayout() {

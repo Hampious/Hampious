@@ -20,7 +20,7 @@ const heroSlides = [
     title: 'Period Care', subtitle: 'Hamper',
     tag: 'Wellness & Comfort',
     description: 'Pampered wellness essentials curated with love. Premium comfort products for her wellbeing.',
-    bg: '/period-care-hero.png',
+    bg: '/Periods.png',
     cta: 'Explore Hamper', category: 'period',
   },
   {

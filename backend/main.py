@@ -20,6 +20,7 @@ from routes.expresbee_routes import router as expresbee_router
 from routes.cart_routes import router as cart_router
 from routes.payment_routes import router as payment_router
 from routes.shiprocket_routes import router as shiprocket_router
+from routes.coupon_routes import router as coupon_router
 
 app = FastAPI()
 
@@ -38,6 +39,7 @@ app.include_router(admin_router, prefix="/api/admin")
 app.include_router(cart_router, prefix="/api")
 app.include_router(payment_router, prefix="/api")
 app.include_router(shiprocket_router, prefix="/api")
+app.include_router(coupon_router, prefix="/api")
 app.include_router(expresbee_router)
 
 @app.get("/")

@@ -389,6 +389,11 @@ export default function Checkout() {
     else localOrders.push(newOrder);
     localStorage.setItem('hamp_orders', JSON.stringify(localOrders));
 
+    // Increment coupon usage count
+    if (appliedCoupon?.code) {
+      fetch(`http://localhost:8000/api/coupons/use/${appliedCoupon.code}`, { method: 'POST' }).catch(() => {});
+    }
+
     // Flag so the cart-empty useEffect doesn't redirect to /cart
     orderCompletedRef.current = true;
     await clearCart();

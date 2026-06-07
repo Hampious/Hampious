@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { adminGet, adminPut, handleUnauth, parseError } from '../../utils/adminApi';
+import { adminGet, adminPut, adminPost, handleUnauth, parseError } from '../../utils/adminApi';
 
 const PLUM = '#1A0F15';
 const PINK = '#D4789A';
@@ -62,6 +62,8 @@ function OrderDrawer({ order, onClose, onUpdated }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [shipping, setShipping] = useState(false);
+  const [shipResult, setShipResult] = useState(null);
 
   useEffect(() => {
     if (order) {
@@ -73,8 +75,44 @@ function OrderDrawer({ order, onClose, onUpdated }) {
       });
       setError('');
       setSuccess(false);
+      setShipResult(null);
     }
   }, [order]);
+
+  const handleShipViaShiprocket = async () => {
+    setShipping(true);
+    setError('');
+    setShipResult(null);
+    const token = localStorage.getItem('admin_token') || '';
+    try {
+      const res = await fetch(`http://localhost:8000/api/shiprocket/ship-order?token=${encodeURIComponent(token)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ order }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setError(err.detail || 'Failed to create Shiprocket shipment');
+        return;
+      }
+      const data = await res.json();
+      setShipResult(data);
+      // Update local form status to shipped
+      setForm(f => ({ ...f, status: 'shipped', tracking_number: data.awb_code || '', courier: data.courier_name || 'Shiprocket' }));
+      // Update localStorage
+      const localOrders = JSON.parse(localStorage.getItem('hamp_orders') || '[]');
+      const idx = localOrders.findIndex(o => String(o.id) === String(order.id));
+      if (idx >= 0) {
+        localOrders[idx] = { ...localOrders[idx], status: 'shipped', tracking_number: data.awb_code, courier: data.courier_name };
+        localStorage.setItem('hamp_orders', JSON.stringify(localOrders));
+      }
+      setTimeout(() => onUpdated(), 2500);
+    } catch (e) {
+      setError('Network error — could not reach Shiprocket');
+    } finally {
+      setShipping(false);
+    }
+  };
 
   const handleUpdate = async () => {
     setError('');
@@ -305,13 +343,12 @@ function OrderDrawer({ order, onClose, onUpdated }) {
               </div>
               <div>
                 <label style={drawerLabelStyle}>Courier</label>
-                <select
+                <input
                   style={drawerInputStyle}
                   value={form.courier}
                   onChange={e => setForm(f => ({ ...f, courier: e.target.value }))}
-                >
-                  {COURIERS.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                  placeholder="e.g. Delhivery, BlueDart, DTDC..."
+                />
               </div>
             </>
           )}
@@ -326,6 +363,48 @@ function OrderDrawer({ order, onClose, onUpdated }) {
               placeholder="Internal notes about this order..."
             />
           </div>
+
+          {/* Shiprocket shipping */}
+          {(form.status === 'pending' || form.status === 'processing') && !shipResult && (
+            <div style={{ border: '1px solid #c4b5fd', borderRadius: 12, padding: 16, background: '#F5F3FF' }}>
+              <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: '#5B21B6' }}>🚚 Ship via Shiprocket</p>
+              <p style={{ margin: '0 0 12px', fontSize: 12, color: '#7C3AED', lineHeight: 1.6 }}>
+                Automatically create a Shiprocket order, assign AWB, request pickup, and email the customer their tracking details.
+              </p>
+              <button
+                onClick={handleShipViaShiprocket}
+                disabled={shipping}
+                style={{
+                  width: '100%', background: shipping ? '#a78bfa' : '#7C3AED',
+                  color: '#fff', border: 'none', borderRadius: 10, padding: '12px',
+                  fontFamily: 'Jost, sans-serif', fontSize: 14, fontWeight: 600,
+                  cursor: shipping ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {shipping ? '⏳ Creating Shipment...' : '🚀 Ship via Shiprocket'}
+              </button>
+            </div>
+          )}
+
+          {/* Shiprocket success result */}
+          {shipResult && (
+            <div style={{ border: '1px solid #6ee7b7', borderRadius: 12, padding: 16, background: '#ECFDF5' }}>
+              <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700, color: '#065F46' }}>✅ Shipment Created!</p>
+              {shipResult.awb_code && (
+                <p style={{ margin: '0 0 4px', fontSize: 13, color: '#065F46' }}>
+                  AWB: <strong style={{ fontFamily: 'monospace', letterSpacing: 2 }}>{shipResult.awb_code}</strong>
+                </p>
+              )}
+              <p style={{ margin: '0 0 4px', fontSize: 12, color: '#047857' }}>Courier: {shipResult.courier_name}</p>
+              <p style={{ margin: 0, fontSize: 12, color: '#047857' }}>📧 Shipping email sent to customer</p>
+              {shipResult.label_url && (
+                <a href={shipResult.label_url} target="_blank" rel="noreferrer"
+                  style={{ display: 'inline-block', marginTop: 10, background: '#065F46', color: '#fff', textDecoration: 'none', borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 600 }}>
+                  📄 Download Label
+                </a>
+              )}
+            </div>
+          )}
 
           <p style={{ fontSize: 12, color: '#7c5a6a', textAlign: 'center', margin: '4px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             <span>📧</span>

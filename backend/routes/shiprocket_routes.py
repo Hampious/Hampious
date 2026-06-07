@@ -8,6 +8,8 @@ from datetime import datetime
 import requests as http
 import os
 import logging
+from email_utils import send_email, shipment_dispatched_email
+from database import db_update
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -295,6 +297,128 @@ async def get_pickup_locations():
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/shiprocket/ship-order")
+async def ship_order(request: Request):
+    """
+    One-click ship: create Shiprocket order + update order status in DB + email customer.
+    Body: { order } — full admin order object.
+    """
+    try:
+        _get_token()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    body  = await request.json()
+    order = body.get("order", body)
+
+    # Step 1: Create Shiprocket order (reuse existing logic)
+    addr     = order.get("shipping_address", {})
+    items    = order.get("items", [])
+    order_id = str(order.get("id", f"HAMP-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"))
+
+    sr_items = []
+    for item in items:
+        sr_items.append({
+            "name":          item.get("product_name") or item.get("name", "Gift Hamper"),
+            "sku":           f"HAMP-{item.get('product_id', '001')}",
+            "units":         int(item.get("quantity", 1)),
+            "selling_price": float(item.get("price", 0)),
+            "discount":      0,
+            "tax":           0,
+        })
+    if not sr_items:
+        sr_items = [{"name": "Gift Hamper", "sku": "HAMP-001", "units": 1,
+                     "selling_price": float(order.get("total", 0))}]
+
+    customer_name = addr.get("full_name") or order.get("customer_name", "Customer")
+    name_parts = customer_name.split(" ", 1)
+    first_name = name_parts[0]
+    last_name  = name_parts[1] if len(name_parts) > 1 else "."
+    phone = str(addr.get("phone") or order.get("customer_phone", "9999999999"))
+    phone = ''.join(filter(str.isdigit, phone))[-10:]
+    pickup_location = _get_pickup_location()
+
+    payload = {
+        "order_id":               order_id,
+        "order_date":             datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
+        "pickup_location":        pickup_location,
+        "comment":                "Hampious Gift Hamper",
+        "billing_customer_name":  first_name,
+        "billing_last_name":      last_name,
+        "billing_address":        addr.get("address") or addr.get("line1", "NA"),
+        "billing_address_2":      "",
+        "billing_city":           addr.get("city", ""),
+        "billing_pincode":        str(addr.get("pincode", "400001")),
+        "billing_state":          addr.get("state", ""),
+        "billing_country":        "India",
+        "billing_email":          order.get("customer_email") or addr.get("email", ""),
+        "billing_phone":          phone,
+        "shipping_is_billing":    True,
+        "order_items":            sr_items,
+        "payment_method":         "prepaid",
+        "sub_total":              float(order.get("total") or order.get("final_amount", 0)),
+        "length":                 20,
+        "breadth":                15,
+        "height":                 10,
+        "weight":                 0.5,
+    }
+
+    r = _api("POST", "/orders/create/adhoc", json=payload)
+    if not r.ok:
+        raise HTTPException(status_code=400, detail=f"Shiprocket order failed ({r.status_code}): {r.text[:300]}")
+
+    data        = r.json()
+    sr_order_id = data.get("order_id")
+    shipment_id = data.get("shipment_id")
+    if not shipment_id:
+        raise HTTPException(status_code=400, detail="No shipment_id from Shiprocket")
+
+    # Step 2: Auto-assign AWB + pickup
+    awb_code     = None
+    courier_name = "Shiprocket"
+    label_url    = None
+
+    awb_r = _api("POST", "/courier/assign/awb/shipment_id", json={"shipment_id": [shipment_id]})
+    if awb_r.ok:
+        awb_data     = awb_r.json().get("response", {}).get("data", {})
+        awb_code     = awb_data.get("awb_code")
+        courier_name = awb_data.get("courier_name", "Shiprocket")
+        _api("POST", "/courier/generate/pickup", json={"shipment_id": [shipment_id]})
+        label_r = _api("POST", "/courier/generate/label", json={"shipment_id": [shipment_id]})
+        if label_r.ok:
+            label_url = label_r.json().get("label_url")
+
+    # Step 3: Update order in Supabase
+    try:
+        db_update("orders", "id", order_id, {
+            "status":          "shipped",
+            "tracking_number": awb_code or "",
+            "courier":         courier_name,
+            "updated_at":      datetime.utcnow().isoformat(),
+        })
+    except Exception as e:
+        logger.warning(f"[ship-order] DB update failed: {e}")
+
+    # Step 4: Email customer
+    customer_email = order.get("customer_email") or addr.get("email", "")
+    if customer_email:
+        try:
+            html = shipment_dispatched_email(order, awb_code or "", courier_name)
+            send_email(customer_email, "Your Hampious Order Has Been Shipped! 🚚", html)
+        except Exception as e:
+            logger.warning(f"[ship-order] Email failed: {e}")
+
+    return {
+        "success":             True,
+        "shiprocket_order_id": sr_order_id,
+        "shipment_id":         shipment_id,
+        "awb_code":            awb_code,
+        "courier_name":        courier_name,
+        "label_url":           label_url,
+        "order_id":            order_id,
+    }
 
 
 @router.get("/shiprocket/test-auth")

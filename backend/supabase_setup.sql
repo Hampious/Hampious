@@ -92,3 +92,17 @@ on conflict (slug) do nothing;
 -- alter table customers enable row level security;
 -- alter table cart      enable row level security;
 -- alter table categories enable row level security;
+
+-- 6. COUPONS
+create table if not exists coupons (
+  id               serial primary key,
+  code             text unique not null,
+  discount_percent numeric(5,2) not null default 0,
+  min_order_amount numeric(10,2) default 0,
+  max_uses         integer,
+  times_used       integer default 0,
+  is_active        boolean default true,
+  description      text,
+  expires_at       timestamptz,
+  created_at       timestamptz default now()
+);
