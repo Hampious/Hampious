@@ -24,9 +24,18 @@ from routes.coupon_routes import router as coupon_router
 
 app = FastAPI()
 
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "https://hampious.com",
+    "https://www.hampious.com",
+    os.environ.get("VERCEL_URL", ""),
+    os.environ.get("FRONTEND_URL", ""),
+]
+ALLOWED_ORIGINS = [o for o in ALLOWED_ORIGINS if o]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Keep * for now — tighten after deployment
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
