@@ -254,6 +254,7 @@ export default function Home() {
   const [loadingFeatured, setLoadingFeatured]   = useState(true);
   const [currentSlide, setCurrentSlide]         = useState(0);
   const [isMobile, setIsMobile]                 = useState(window.innerWidth < 768);
+  const [imagesLoaded, setImagesLoaded]         = useState({});
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -262,17 +263,16 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const t = setInterval(() => setCurrentSlide(p => (p + 1) % heroSlides.length), 6000);
+    const t = setInterval(() => setCurrentSlide(p => (p + 1) % heroSlides.length), 4000);
     return () => clearInterval(t);
   }, []);
 
-  // Preload all hero images on mount to avoid skeleton/flash
+  // Preload all hero images eagerly and track when they're ready
   useEffect(() => {
-    heroSlides.forEach(slide => {
-      if (slide.bg.startsWith('/')) {
-        const img = new Image();
-        img.src = slide.bg;
-      }
+    heroSlides.forEach((slide, idx) => {
+      const img = new Image();
+      img.onload = () => setImagesLoaded(prev => ({ ...prev, [idx]: true }));
+      img.src = slide.bg;
     });
   }, []);
   const nextSlide = useCallback(() => setCurrentSlide(p => (p + 1) % heroSlides.length), []);
@@ -312,27 +312,33 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════
           1 — HERO SLIDER
           ══════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden" style={{ height: 'min(92vh, 100svh)' }} data-testid="hero-slider">
+      <section className="relative overflow-hidden" style={{ height: isMobile ? '60vh' : 'min(92vh, 100svh)' }} data-testid="hero-slider">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
-            initial={{ opacity: 0, scale: 1.04 }}
+            initial={{ opacity: 0, scale: 1.02 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.0, ease: [0.19, 1, 0.22, 1] }}
+            transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
             className="absolute inset-0"
           >
-            <div className="absolute inset-0 bg-cover bg-no-repeat"
-                 style={{ backgroundImage: `url(${heroSlides[currentSlide].bg})`, backgroundSize: 'cover', backgroundPosition: isMobile ? 'right center' : 'center top' }} />
+            <div className="absolute inset-0 bg-no-repeat"
+                 style={{
+                   backgroundImage: imagesLoaded[currentSlide] ? `url(${heroSlides[currentSlide].bg})` : 'none',
+                   backgroundSize: 'cover',
+                   backgroundPosition: isMobile ? 'center center' : 'center top',
+                   backgroundColor: '#FCEAF1',
+                   transition: 'background-image 0.3s',
+                 }} />
             {/* Gradient: left-dark for left-text slides, right-dark for right-text slides */}
             <div className="absolute inset-0" style={{
               background: heroSlides[currentSlide].textSide === 'right'
                 ? 'linear-gradient(to left, rgba(10,5,8,0.75) 0%, rgba(10,5,8,0.45) 40%, rgba(10,5,8,0.05) 70%)'
                 : 'linear-gradient(110deg, rgba(26,15,21,0.68) 0%, rgba(26,15,21,0.32) 55%, rgba(26,15,21,0.02) 100%)'
             }} />
-            {/* Bottom fade to blush */}
-            <div className="absolute bottom-0 left-0 right-0 h-28"
-                 style={{ background: `linear-gradient(to top, ${BLUSH}, transparent)` }} />
+            {/* Bottom fade — stronger on mobile to keep buttons legible */}
+            <div className="absolute bottom-0 left-0 right-0"
+                 style={{ height: isMobile ? '140px' : '112px', background: isMobile ? `linear-gradient(to top, rgba(10,5,8,0.72) 0%, rgba(10,5,8,0.3) 60%, transparent 100%)` : `linear-gradient(to top, ${BLUSH}, transparent)` }} />
 
             {/* Poster slides: title badge top-right */}
             {heroSlides[currentSlide].textSide === 'right' && (
@@ -518,7 +524,7 @@ export default function Home() {
         ))}
 
         {/* Dots */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        <div className="absolute bottom-4 md:bottom-10 left-1/2 -translate-x-1/2 z-20 flex gap-2">
           {heroSlides.map((_, i) => (
             <button key={i} onClick={() => setCurrentSlide(i)}
               style={{
@@ -534,17 +540,19 @@ export default function Home() {
         {/* Progress bar */}
         <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'rgba(212,120,154,0.12)' }}>
           <motion.div key={currentSlide} style={{ background: PINK, height: '100%' }}
-            initial={{ width: '0%' }} animate={{ width: '100%' }} transition={{ duration: 6, ease: 'linear' }} />
+            initial={{ width: '0%' }} animate={{ width: '100%' }} transition={{ duration: 4, ease: 'linear' }} />
         </div>
 
-        {/* Scroll cue */}
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2 }}
-          className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 scroll-indicator cursor-pointer"
-          onClick={() => document.getElementById('tagline')?.scrollIntoView({ behavior: 'smooth' })}
-        >
-          <ChevronDown size={20} style={{ color: 'rgba(212,120,154,0.6)' }} />
-        </motion.div>
+        {/* Scroll cue — desktop only */}
+        {!isMobile && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2 }}
+            className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 scroll-indicator cursor-pointer"
+            onClick={() => document.getElementById('tagline')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            <ChevronDown size={20} style={{ color: 'rgba(212,120,154,0.6)' }} />
+          </motion.div>
+        )}
       </section>
 
       {/* ══════════════════════════════════════════════════════
@@ -587,7 +595,7 @@ export default function Home() {
               Explore Collection <ArrowRight size={13} />
             </button>
             <button
-              onClick={() => navigate('/products')}
+              onClick={() => document.getElementById('occasions')?.scrollIntoView({ behavior: 'smooth' })}
               className="btn-ghost-gold" style={{ borderRadius: '2px' }}
             >
               Shop by Occasion
