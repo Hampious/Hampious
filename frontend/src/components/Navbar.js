@@ -105,7 +105,10 @@ export const Navbar = () => {
                 fontWeight: 700,
                 fontSize: '1.55rem',
                 letterSpacing: '0.18em',
-                color: ROSE,
+                background: 'linear-gradient(135deg, #A67C2A 0%, #D4A843 40%, #A67C2A 70%, #7A5518 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
               }}
             >
               HAMPIOUS

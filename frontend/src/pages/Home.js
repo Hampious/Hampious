@@ -20,32 +20,36 @@ const heroSlides = [
     title: 'Period Care', subtitle: 'Hamper',
     tag: 'Wellness & Comfort',
     description: 'Pampered wellness essentials curated with love. Premium comfort products for her wellbeing.',
-    bg: '/Periods.png',
+    bg: '/periods.png',
     cta: 'Explore Hamper', category: 'period',
+    textSide: 'right',
   },
   {
     id: 2,
     title: 'I Love You', subtitle: 'Hamper',
     tag: 'Love Expressed Beautifully',
     description: 'Express your deepest feelings through thoughtfully curated gifts — premium hampers filled with elegance.',
-    bg: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=1920&auto=format&fit=crop&q=85',
+    bg: '/iloveyou.png',
     cta: 'Explore Hamper', category: 'love',
+    textSide: 'right',
   },
   {
     id: 3,
     title: 'Birthday', subtitle: 'Hamper',
     tag: 'Celebrate Her Uniqueness',
     description: 'Celebrate another year of memories. Luxury gifts curated to make birthdays truly unforgettable.',
-    bg: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=1920&auto=format&fit=crop&q=85',
+    bg: '/birthday.png',
     cta: 'Explore Hamper', category: 'birthday',
+    textSide: 'right',
   },
   {
     id: 4,
     title: 'Sorry', subtitle: 'Hamper',
     tag: 'Reconciliation with Sincerity',
     description: 'Sometimes actions speak louder than words. Premium hampers designed to mend bonds with grace.',
-    bg: '/sorry-hero.png',
+    bg: '/sorry.png',
     cta: 'Explore Hamper', category: 'sorry',
+    textSide: 'right',
   },
 ];
 
@@ -251,7 +255,7 @@ export default function Home() {
   const [currentSlide, setCurrentSlide]         = useState(0);
 
   useEffect(() => {
-    const t = setInterval(() => setCurrentSlide(p => (p + 1) % heroSlides.length), 6000);
+    const t = setInterval(() => setCurrentSlide(p => (p + 1) % heroSlides.length), 10000);
     return () => clearInterval(t);
   }, []);
   const nextSlide = useCallback(() => setCurrentSlide(p => (p + 1) % heroSlides.length), []);
@@ -291,59 +295,127 @@ export default function Home() {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
-            initial={{ opacity: 0, scale: 1.03 }}
+            initial={{ opacity: 0, scale: 1.04 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.4, ease: [0.19, 1, 0.22, 1] }}
+            transition={{ duration: 2.2, ease: [0.19, 1, 0.22, 1] }}
             className="absolute inset-0"
           >
-            <div className="absolute inset-0 bg-cover bg-center"
-                 style={{ backgroundImage: `url(${heroSlides[currentSlide].bg})` }} />
-            <div className="absolute inset-0"
-                 style={{ background: 'linear-gradient(110deg, rgba(26,15,21,0.55) 0%, rgba(26,15,21,0.25) 55%, rgba(26,15,21,0.05) 100%)' }} />
+            <div className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                 style={{ backgroundImage: `url(${heroSlides[currentSlide].bg})`, backgroundSize: 'cover', backgroundPosition: 'center top' }} />
+            {/* Gradient: left-dark for left-text slides, right-dark for right-text slides */}
+            <div className="absolute inset-0" style={{
+              background: heroSlides[currentSlide].textSide === 'right'
+                ? 'linear-gradient(to left, rgba(10,5,8,0.75) 0%, rgba(10,5,8,0.45) 40%, rgba(10,5,8,0.05) 70%)'
+                : 'linear-gradient(110deg, rgba(26,15,21,0.68) 0%, rgba(26,15,21,0.32) 55%, rgba(26,15,21,0.02) 100%)'
+            }} />
             {/* Bottom fade to blush */}
             <div className="absolute bottom-0 left-0 right-0 h-28"
                  style={{ background: `linear-gradient(to top, ${BLUSH}, transparent)` }} />
 
-            <div className="relative z-10 h-full flex items-center px-8 md:px-16 lg:px-24">
-              <div className="max-w-xl">
-                <motion.span
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4, duration: 0.8 }}
-                  className="eyebrow block mb-6"
-                >
+            {/* Poster slides: title badge top-right */}
+            {heroSlides[currentSlide].textSide === 'right' && (
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.8, duration: 1.4, ease: [0.19, 1, 0.22, 1] }}
+                className="absolute top-10 right-10 z-10 text-right"
+              >
+                <span style={{
+                  display: 'inline-block',
+                  fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.22em',
+                  textTransform: 'uppercase', color: PINK,
+                  fontFamily: 'Jost, sans-serif',
+                  background: 'rgba(255,245,248,0.12)',
+                  backdropFilter: 'blur(6px)',
+                  padding: '4px 14px', borderRadius: '2px',
+                  border: '1px solid rgba(212,120,154,0.3)',
+                  marginBottom: 10, display: 'block'
+                }}>
                   {heroSlides[currentSlide].tag}
-                </motion.span>
-
-                <motion.h2
-                  initial={{ opacity: 0, y: 28, filter: 'blur(6px)' }}
-                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  transition={{ delay: 0.6, duration: 1.2, ease: [0.19, 1, 0.22, 1] }}
-                  className="font-heading font-light leading-[0.92] mb-7"
-                  style={{ fontSize: 'clamp(3rem, 8vw, 6.5rem)', color: 'rgba(255,245,248,0.95)' }}
-                >
+                </span>
+                <h2 style={{
+                  fontFamily: 'Cormorant Garamond, Georgia, serif',
+                  fontSize: 'clamp(2.2rem, 5vw, 4.5rem)',
+                  fontWeight: 300, lineHeight: 0.95,
+                  color: 'rgba(255,245,248,0.95)',
+                  textShadow: '0 2px 20px rgba(0,0,0,0.5)',
+                  margin: '8px 0 0',
+                }}>
                   {heroSlides[currentSlide].title}
-                  <span className="block italic" style={{ color: PINK, fontSize: '88%' }}>
+                  <span style={{ display: 'block', fontStyle: 'italic', color: PINK, fontSize: '88%' }}>
                     {heroSlides[currentSlide].subtitle}
                   </span>
-                </motion.h2>
+                </h2>
+              </motion.div>
+            )}
 
-                <motion.p
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.9, duration: 1 }}
-                  className="text-[0.88rem] leading-[1.85] mb-10 max-w-sm"
-                  style={{ color: 'rgba(255,245,248,0.55)', fontFamily: 'Jost, sans-serif', fontWeight: 300 }}
+            {/* Poster slides: buttons bottom-center */}
+            {heroSlides[currentSlide].textSide === 'right' && (
+              <div className="absolute bottom-16 left-0 right-0 z-10 flex justify-center gap-4 px-8">
+                <motion.button
+                  initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.9 }}
+                  onClick={() => { const kw = heroSlides[currentSlide].category; if (kw && categories.length > 0) handleOccasionClick(kw); else navigate('/products'); }}
+                  style={{ background: PINK, border: `1.5px solid ${PINK}`, color: '#fff', fontFamily: 'Jost, sans-serif', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', padding: '0.85rem 2.5rem', borderRadius: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.6rem', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', transition: 'all 0.35s ease' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = ROSE; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = PINK; }}
                 >
-                  {heroSlides[currentSlide].description}
-                </motion.p>
+                  {heroSlides[currentSlide].cta} <ArrowRight size={14} />
+                </motion.button>
+                <motion.button
+                  initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75, duration: 0.9 }}
+                  onClick={() => navigate('/products')}
+                  style={{ background: 'rgba(255,255,255,0.18)', border: '1.5px solid rgba(255,255,255,0.95)', color: '#fff', fontFamily: 'Jost, sans-serif', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', padding: '0.85rem 2.5rem', borderRadius: '2px', cursor: 'pointer', backdropFilter: 'blur(8px)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', transition: 'all 0.35s ease' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.35)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
+                >
+                  All Products
+                </motion.button>
+              </div>
+            )}
+
+            <div className={`relative z-10 h-full flex items-center px-8 md:px-16 lg:px-24 ${heroSlides[currentSlide].textSide === 'right' ? 'justify-end' : 'justify-start'}`}>
+              <div className="max-w-xl" style={{ textAlign: heroSlides[currentSlide].textSide === 'right' ? 'right' : 'left' }}>
+
+                {heroSlides[currentSlide].textSide !== 'right' && (
+                  <>
+                    <motion.span
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6, duration: 1.2 }}
+                      className="eyebrow block mb-6"
+                    >
+                      {heroSlides[currentSlide].tag}
+                    </motion.span>
+                    <motion.h2
+                      initial={{ opacity: 0, y: 28, filter: 'blur(6px)' }}
+                      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                      transition={{ delay: 0.9, duration: 1.6, ease: [0.19, 1, 0.22, 1] }}
+                      className="font-heading font-light leading-[0.92] mb-7"
+                      style={{ fontSize: 'clamp(3rem, 8vw, 6.5rem)', color: 'rgba(255,245,248,0.95)' }}
+                    >
+                      {heroSlides[currentSlide].title}
+                      <span className="block italic" style={{ color: PINK, fontSize: '88%' }}>
+                        {heroSlides[currentSlide].subtitle}
+                      </span>
+                    </motion.h2>
+                    <motion.p
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.2, duration: 1.2 }}
+                      className="text-[0.88rem] leading-[1.85] mb-10 max-w-sm"
+                      style={{ color: 'rgba(255,245,248,0.7)', fontFamily: 'Jost, sans-serif', fontWeight: 300 }}
+                    >
+                      {heroSlides[currentSlide].description}
+                    </motion.p>
+                  </>
+                )}
 
                 <motion.div
                   initial={{ opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.1, duration: 0.9 }}
-                  className="flex gap-4 flex-wrap"
+                  transition={{ delay: 1.5, duration: 1.0 }}
+                  className={`flex gap-4 flex-wrap ${heroSlides[currentSlide].textSide === 'right' ? 'hidden' : 'flex'}`}
                 >
                   <button
                     onClick={() => {
@@ -376,21 +448,23 @@ export default function Home() {
                   <button
                     onClick={() => navigate('/products')}
                     style={{
-                      background: 'rgba(255,255,255,0.15)',
-                      border: '1px solid rgba(255,255,255,0.7)',
+                      background: 'rgba(255,255,255,0.22)',
+                      border: '1.5px solid rgba(255,255,255,0.95)',
                       color: '#FFFFFF',
                       fontFamily: 'Jost, sans-serif',
                       fontSize: '0.68rem',
-                      fontWeight: 600,
+                      fontWeight: 700,
                       letterSpacing: '0.2em',
                       textTransform: 'uppercase',
                       padding: '0.75rem 2rem',
                       borderRadius: '2px',
                       transition: 'all 0.35s ease',
                       cursor: 'pointer',
+                      backdropFilter: 'blur(6px)',
+                      textShadow: '0 1px 4px rgba(0,0,0,0.4)',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.3)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.38)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.22)'; }}
                   >
                     All Products
                   </button>

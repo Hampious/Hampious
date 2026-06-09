@@ -43,7 +43,8 @@
       "Bash(find ~/Downloads ~/Desktop /var/folders -name \"*.png\" -o -name \"*.jpg\" -o -name \"*.jpeg\" -o -name \"*.webp\" 2>/dev/null | sort -t/ -k5 -r | head -10)",
       "Bash(xargs ls -lt)",
       "Bash(cp /private/tmp/hampious_clone/frontend/public/period-care-hero.png /Users/debashisbisoye/Hampious_New/frontend/public/period-care-hero.png && echo \"copied existing\")",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git push *)"
     ]
   }
 }

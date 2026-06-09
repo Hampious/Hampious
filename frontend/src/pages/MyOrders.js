@@ -413,6 +413,32 @@ const OrderCard = ({ order, onRefresh }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [returnEligibility, setReturnEligibility] = useState(null);
   const [trackingInfo, setTrackingInfo] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+
+  const handleCancelOrder = async () => {
+    setCancelling(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/orders/${order.id}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: cancelReason }),
+      });
+      if (res.ok) {
+        setShowCancelModal(false);
+        setCancelReason('');
+        onRefresh();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || 'Failed to cancel order');
+      }
+    } catch {
+      alert('Network error. Please try again.');
+    } finally {
+      setCancelling(false);
+    }
+  };
   
   // Defensive coding: Ensure items is always an array
   const items = Array.isArray(order.items) ? order.items : [];
@@ -654,6 +680,64 @@ const OrderCard = ({ order, onRefresh }) => {
                   </div>
                 </div>
               </div>
+
+              {/* Cancel Section */}
+              {['pending', 'processing'].includes(order.status) && (
+                <div className="p-4 md:p-5 border-t border-border/50 bg-red-50/40">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm">
+                      <p className="text-muted-foreground">Need to cancel this order?</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowCancelModal(true)}
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      ✕ Cancel Order
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Cancel Confirmation Modal */}
+              {showCancelModal && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                  <div style={{ background: '#fff', borderRadius: 16, padding: '2rem', maxWidth: 440, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+                    <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.4rem', color: '#1A0F15', margin: '0 0 0.5rem' }}>Cancel Order?</h3>
+                    <p style={{ color: '#7c5a6a', fontSize: '0.9rem', margin: '0 0 1.25rem', lineHeight: 1.6 }}>
+                      Are you sure you want to cancel order <strong>#{String(order.id).slice(0,8).toUpperCase()}</strong>? This action cannot be undone.
+                    </p>
+                    <div style={{ marginBottom: '1.25rem' }}>
+                      <label style={{ fontSize: 12, fontWeight: 600, color: '#7c5a6a', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }}>
+                        Reason for cancellation (optional)
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={cancelReason}
+                        onChange={e => setCancelReason(e.target.value)}
+                        placeholder="e.g. Ordered by mistake, found better price..."
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #f3d0dd', fontFamily: 'Jost, sans-serif', fontSize: 14, color: '#1A0F15', background: '#FFF5F8', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button
+                        onClick={() => { setShowCancelModal(false); setCancelReason(''); }}
+                        style={{ flex: 1, background: '#FFF5F8', color: '#B84E78', border: '1px solid #f3d0dd', borderRadius: 10, padding: '11px', fontFamily: 'Jost, sans-serif', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                      >
+                        Keep Order
+                      </button>
+                      <button
+                        onClick={handleCancelOrder}
+                        disabled={cancelling}
+                        style={{ flex: 1, background: cancelling ? '#fca5a5' : '#EF4444', color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontFamily: 'Jost, sans-serif', fontSize: 14, fontWeight: 600, cursor: cancelling ? 'not-allowed' : 'pointer' }}
+                      >
+                        {cancelling ? 'Cancelling...' : 'Yes, Cancel'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Return Section */}
               {order.status === 'delivered' && (

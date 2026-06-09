@@ -3,7 +3,10 @@ from datetime import datetime
 import threading
 
 from database import db_select, db_insert, db_update, db_delete, db_upsert, get_db
-from email_utils import send_email, order_confirmation_email
+from email_utils import send_email, order_confirmation_email, order_cancellation_admin_email, order_cancellation_customer_email
+import os
+
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "team.hampious@gmail.com")
 
 router = APIRouter()
 
@@ -138,3 +141,51 @@ def update_order(order_id: str, order_data: dict):
     except Exception as e:
         print(f"[update_order] Supabase error: {e}")
         raise HTTPException(status_code=500, detail="Failed to update order")
+
+
+@router.post("/{order_id}/cancel")
+def cancel_order(order_id: str, body: dict = {}):
+    reason = body.get("reason", "")
+    try:
+        rows = db_select("orders", {"id": order_id})
+        if not rows:
+            raise HTTPException(status_code=404, detail="Order not found")
+        order = rows[0]
+
+        # Only allow cancel if not shipped/delivered
+        if order.get("status") in ("shipped", "delivered"):
+            raise HTTPException(status_code=400, detail="Cannot cancel a shipped or delivered order")
+
+        # Update status to cancelled
+        updates = {"status": "cancelled", "updated_at": datetime.utcnow().isoformat()}
+        db_update("orders", "id", order_id, updates)
+        cancelled_order = {**order, **updates}
+
+        # Send emails in background
+        def _send_emails():
+            try:
+                # Email to admin
+                send_email(
+                    ADMIN_EMAIL,
+                    f"⚠️ Order Cancelled #{order_id.upper()} — Action Required",
+                    order_cancellation_admin_email(cancelled_order, reason)
+                )
+                # Email to customer
+                customer_email = order.get("customer_email", "")
+                if customer_email:
+                    send_email(
+                        customer_email,
+                        f"Your Order #{order_id.upper()} Has Been Cancelled — Hampious",
+                        order_cancellation_customer_email(cancelled_order)
+                    )
+            except Exception as e:
+                print(f"[cancel_order] email error: {e}")
+
+        threading.Thread(target=_send_emails, daemon=True).start()
+        return {"message": "Order cancelled successfully", "order": cancelled_order}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[cancel_order] error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to cancel order")

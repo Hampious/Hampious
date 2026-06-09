@@ -355,3 +355,96 @@ def order_confirmation_email(order: dict) -> str:
       </div>
     </div>"""
     return _email_wrap(body)
+
+
+def order_cancellation_admin_email(order: dict, reason: str = "") -> str:
+    customer_name = (order.get("shipping_address") or {}).get("full_name") or order.get("customer_name", "Customer")
+    customer_email = order.get("customer_email", "")
+    customer_phone = order.get("customer_phone", "") or (order.get("shipping_address") or {}).get("phone", "")
+    order_id = str(order.get("id", "")).upper()
+    final_amount = order.get("final_amount") or order.get("total_amount") or 0
+    items = order.get("items", [])
+
+    items_html = "".join(f"""
+      <tr>
+        <td style="padding:8px 16px;border-bottom:1px solid #fdeef3;font-size:13px;color:#3D1A2A;">
+          {item.get('product_name') or item.get('name','Product')} × {item.get('quantity',1)}
+        </td>
+        <td style="padding:8px 16px;border-bottom:1px solid #fdeef3;font-size:13px;font-weight:700;color:#B84E78;text-align:right;">
+          ₹{int(float(item.get('price',0)) * int(item.get('quantity',1))):,}
+        </td>
+      </tr>""" for item in items)
+
+    reason_html = f"""
+      <div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:10px;padding:12px 16px;margin:1rem 0;font-size:13px;color:#92400E;">
+        <strong>Cancellation Reason:</strong> {reason}
+      </div>""" if reason else ""
+
+    body = f"""
+    <div style="padding:2rem 2rem 1.5rem;">
+      <div style="margin-bottom:1.25rem;">
+        <span style="background:#EF4444;color:#fff;border-radius:50px;padding:5px 16px;
+                     font-size:0.78rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">
+          ❌ Order Cancelled
+        </span>
+      </div>
+      <h2 style="color:#3D1A2A;font-size:1.35rem;margin:0 0 0.5rem;">Order Cancellation Request</h2>
+      <p style="color:rgba(30,26,23,0.6);font-size:0.9rem;margin:0 0 1rem;">
+        Order <strong style="color:#3D1A2A;">#{order_id}</strong> has been cancelled by the customer.
+      </p>
+
+      <div style="background:#FFF5F8;border:1px solid #f3d0dd;border-radius:12px;padding:16px;margin:1rem 0;">
+        <p style="margin:0 0 6px;font-size:13px;"><strong>Customer:</strong> {customer_name}</p>
+        <p style="margin:0 0 6px;font-size:13px;"><strong>Email:</strong> {customer_email}</p>
+        {f'<p style="margin:0 0 6px;font-size:13px;"><strong>Phone:</strong> {customer_phone}</p>' if customer_phone else ''}
+        <p style="margin:0;font-size:13px;"><strong>Order Value:</strong> ₹{int(float(final_amount)):,}</p>
+      </div>
+
+      {reason_html}
+
+      <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #f3d0dd;margin:1rem 0;">
+        {items_html}
+        <tr style="background:#FCEAF1;">
+          <td style="padding:12px 16px;font-weight:700;color:#1A0F15;">Total</td>
+          <td style="padding:12px 16px;font-weight:800;color:#B84E78;text-align:right;">₹{int(float(final_amount)):,}</td>
+        </tr>
+      </table>
+
+      <div style="text-align:center;margin-top:1.5rem;">
+        <a href="{FRONTEND_URL}/admin/orders"
+           style="display:inline-block;background:#D4789A;color:#FFFFFF;text-decoration:none;
+                  padding:0.85rem 2.5rem;border-radius:50px;font-size:0.88rem;font-weight:600;
+                  letter-spacing:0.06em;">View in Admin Portal →</a>
+      </div>
+    </div>"""
+    return _email_wrap(body)
+
+
+def order_cancellation_customer_email(order: dict) -> str:
+    customer_name = (order.get("shipping_address") or {}).get("full_name") or order.get("customer_name", "there")
+    order_id = str(order.get("id", "")).upper()
+    final_amount = order.get("final_amount") or order.get("total_amount") or 0
+
+    body = f"""
+    <div style="padding:2rem 2rem 1.5rem;text-align:center;">
+      <div style="margin-bottom:1.25rem;">
+        <span style="background:#6B7280;color:#fff;border-radius:50px;padding:5px 16px;
+                     font-size:0.78rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">
+          Order Cancelled
+        </span>
+      </div>
+      <h2 style="color:#3D1A2A;font-size:1.35rem;margin:0 0 0.5rem;">
+        Your order has been cancelled, {customer_name}.</h2>
+      <p style="color:rgba(30,26,23,0.6);font-size:0.9rem;margin:0 0 1rem;">
+        Order <strong style="color:#3D1A2A;">#{order_id}</strong> (₹{int(float(final_amount)):,}) has been successfully cancelled.
+      </p>
+      <p style="color:rgba(30,26,23,0.65);font-size:0.9rem;line-height:1.7;margin:0 0 1.5rem;">
+        If you paid online, your refund will be processed within 5–7 business days.<br/>
+        For any queries, reply to this email or contact us at <a href="mailto:{BREVO_SENDER_EMAIL}" style="color:#B84E78;">{BREVO_SENDER_EMAIL}</a>.
+      </p>
+      <a href="{FRONTEND_URL}/products"
+         style="display:inline-block;background:#D4789A;color:#FFFFFF;text-decoration:none;
+                padding:0.85rem 2.5rem;border-radius:50px;font-size:0.88rem;font-weight:600;
+                letter-spacing:0.06em;">Continue Shopping →</a>
+    </div>"""
+    return _email_wrap(body)
