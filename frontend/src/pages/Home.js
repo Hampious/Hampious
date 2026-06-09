@@ -255,8 +255,18 @@ export default function Home() {
   const [currentSlide, setCurrentSlide]         = useState(0);
 
   useEffect(() => {
-    const t = setInterval(() => setCurrentSlide(p => (p + 1) % heroSlides.length), 10000);
+    const t = setInterval(() => setCurrentSlide(p => (p + 1) % heroSlides.length), 6000);
     return () => clearInterval(t);
+  }, []);
+
+  // Preload all hero images on mount to avoid skeleton/flash
+  useEffect(() => {
+    heroSlides.forEach(slide => {
+      if (slide.bg.startsWith('/')) {
+        const img = new Image();
+        img.src = slide.bg;
+      }
+    });
   }, []);
   const nextSlide = useCallback(() => setCurrentSlide(p => (p + 1) % heroSlides.length), []);
   const prevSlide = useCallback(() => setCurrentSlide(p => (p - 1 + heroSlides.length) % heroSlides.length), []);
@@ -279,9 +289,13 @@ export default function Home() {
   };
 
   const handleOccasionClick = (keyword) => {
-    const cat = categories.find(c => c.name.toLowerCase().includes(keyword.toLowerCase()));
+    // First try to find category by ID from loaded categories
+    const cat = categories.find(c =>
+      c.name.toLowerCase().includes(keyword.toLowerCase()) ||
+      c.slug?.toLowerCase().includes(keyword.toLowerCase())
+    );
     if (cat) navigate(`/products?category=${cat.id}`);
-    else     navigate('/products');
+    else navigate(`/products?category=${keyword}`); // fallback to slug
   };
 
   return (
@@ -298,7 +312,7 @@ export default function Home() {
             initial={{ opacity: 0, scale: 1.04 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 2.2, ease: [0.19, 1, 0.22, 1] }}
+            transition={{ duration: 1.0, ease: [0.19, 1, 0.22, 1] }}
             className="absolute inset-0"
           >
             <div className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -355,7 +369,7 @@ export default function Home() {
               <div className="absolute bottom-10 md:bottom-16 left-0 right-0 z-10 flex flex-wrap justify-center gap-3 px-6">
                 <motion.button
                   initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.9 }}
-                  onClick={() => { const kw = heroSlides[currentSlide].category; if (kw && categories.length > 0) handleOccasionClick(kw); else navigate('/products'); }}
+                  onClick={() => { const kw = heroSlides[currentSlide].category; handleOccasionClick(kw || 'all'); }}
                   style={{ background: PINK, border: `1.5px solid ${PINK}`, color: '#fff', fontFamily: 'Jost, sans-serif', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', padding: '0.75rem 1.5rem', borderRadius: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', transition: 'all 0.35s ease' }}
                   onMouseEnter={e => { e.currentTarget.style.background = ROSE; }}
                   onMouseLeave={e => { e.currentTarget.style.background = PINK; }}
@@ -566,7 +580,7 @@ export default function Home() {
               Explore Collection <ArrowRight size={13} />
             </button>
             <button
-              onClick={() => document.getElementById('occasions')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => navigate('/products')}
               className="btn-ghost-gold" style={{ borderRadius: '2px' }}
             >
               Shop by Occasion
