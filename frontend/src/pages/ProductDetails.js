@@ -40,7 +40,6 @@ export default function ProductDetails() {
     fetchSimilarProducts();
     fetchReviews();
     if (user) checkCanReview();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user]);
 
   const fetchProduct = async () => {

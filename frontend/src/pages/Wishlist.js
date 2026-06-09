@@ -16,7 +16,6 @@ export default function Wishlist() {
 
   useEffect(() => {
     fetchProductDetails();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wishlist]);
 
   const fetchProductDetails = async () => {
