@@ -45,7 +45,8 @@
       "Bash(cp /private/tmp/hampious_clone/frontend/public/period-care-hero.png /Users/debashisbisoye/Hampious_New/frontend/public/period-care-hero.png && echo \"copied existing\")",
       "Bash(git add *)",
       "Bash(git push *)",
-      "Bash(git commit -m 'fix: add entrypoint to backend service in vercel.json *)"
+      "Bash(git commit -m 'fix: add entrypoint to backend service in vercel.json *)",
+      "Bash(git commit -m 'fix: mobile hero section - hide title badge, fix height and button sizing *)"
     ]
   }
 }

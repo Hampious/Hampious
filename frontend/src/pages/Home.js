@@ -291,7 +291,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════
           1 — HERO SLIDER
           ══════════════════════════════════════════════════════ */}
-      <section className="relative h-[92vh] overflow-hidden" data-testid="hero-slider">
+      <section className="relative overflow-hidden" style={{ height: 'min(92vh, 100svh)' }} data-testid="hero-slider">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
@@ -319,7 +319,7 @@ export default function Home() {
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.8, duration: 1.4, ease: [0.19, 1, 0.22, 1] }}
-                className="absolute top-10 right-10 z-10 text-right"
+                className="absolute top-10 right-6 z-10 text-right hidden md:block"
               >
                 <span style={{
                   display: 'inline-block',
@@ -352,11 +352,11 @@ export default function Home() {
 
             {/* Poster slides: buttons bottom-center */}
             {heroSlides[currentSlide].textSide === 'right' && (
-              <div className="absolute bottom-16 left-0 right-0 z-10 flex justify-center gap-4 px-8">
+              <div className="absolute bottom-10 md:bottom-16 left-0 right-0 z-10 flex flex-wrap justify-center gap-3 px-6">
                 <motion.button
                   initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.9 }}
                   onClick={() => { const kw = heroSlides[currentSlide].category; if (kw && categories.length > 0) handleOccasionClick(kw); else navigate('/products'); }}
-                  style={{ background: PINK, border: `1.5px solid ${PINK}`, color: '#fff', fontFamily: 'Jost, sans-serif', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', padding: '0.85rem 2.5rem', borderRadius: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.6rem', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', transition: 'all 0.35s ease' }}
+                  style={{ background: PINK, border: `1.5px solid ${PINK}`, color: '#fff', fontFamily: 'Jost, sans-serif', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', padding: '0.75rem 1.5rem', borderRadius: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', transition: 'all 0.35s ease' }}
                   onMouseEnter={e => { e.currentTarget.style.background = ROSE; }}
                   onMouseLeave={e => { e.currentTarget.style.background = PINK; }}
                 >
@@ -365,7 +365,7 @@ export default function Home() {
                 <motion.button
                   initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75, duration: 0.9 }}
                   onClick={() => navigate('/products')}
-                  style={{ background: 'rgba(255,255,255,0.18)', border: '1.5px solid rgba(255,255,255,0.95)', color: '#fff', fontFamily: 'Jost, sans-serif', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', padding: '0.85rem 2.5rem', borderRadius: '2px', cursor: 'pointer', backdropFilter: 'blur(8px)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', transition: 'all 0.35s ease' }}
+                  style={{ background: 'rgba(255,255,255,0.18)', border: '1.5px solid rgba(255,255,255,0.95)', color: '#fff', fontFamily: 'Jost, sans-serif', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', padding: '0.75rem 1.5rem', borderRadius: '2px', cursor: 'pointer', backdropFilter: 'blur(8px)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', transition: 'all 0.35s ease' }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.35)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
                 >
