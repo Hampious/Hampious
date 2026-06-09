@@ -253,6 +253,13 @@ export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loadingFeatured, setLoadingFeatured]   = useState(true);
   const [currentSlide, setCurrentSlide]         = useState(0);
+  const [isMobile, setIsMobile]                 = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => setCurrentSlide(p => (p + 1) % heroSlides.length), 6000);
@@ -315,8 +322,8 @@ export default function Home() {
             transition={{ duration: 1.0, ease: [0.19, 1, 0.22, 1] }}
             className="absolute inset-0"
           >
-            <div className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                 style={{ backgroundImage: `url(${heroSlides[currentSlide].bg})`, backgroundSize: 'cover', backgroundPosition: 'center top' }} />
+            <div className="absolute inset-0 bg-cover bg-no-repeat"
+                 style={{ backgroundImage: `url(${heroSlides[currentSlide].bg})`, backgroundSize: 'cover', backgroundPosition: isMobile ? 'right center' : 'center top' }} />
             {/* Gradient: left-dark for left-text slides, right-dark for right-text slides */}
             <div className="absolute inset-0" style={{
               background: heroSlides[currentSlide].textSide === 'right'
@@ -366,7 +373,7 @@ export default function Home() {
 
             {/* Poster slides: buttons bottom-center */}
             {heroSlides[currentSlide].textSide === 'right' && (
-              <div className="absolute bottom-10 md:bottom-16 left-0 right-0 z-10 flex flex-wrap justify-center gap-3 px-6">
+              <div className="absolute bottom-16 md:bottom-20 left-0 right-0 z-10 flex flex-wrap justify-center gap-3 px-6">
                 <motion.button
                   initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.9 }}
                   onClick={() => { const kw = heroSlides[currentSlide].category; handleOccasionClick(kw || 'all'); }}
@@ -543,7 +550,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════
           2 — TAGLINE / BRAND STATEMENT
           ══════════════════════════════════════════════════════ */}
-      <section id="tagline" className="py-32 md:py-44 px-6 md:px-12 lg:px-24 text-center"
+      <section id="tagline" className="py-16 md:py-44 px-6 md:px-12 lg:px-24 text-center"
                style={{ background: BLUSH }}>
         <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}>
           <motion.span variants={fadeUp} className="eyebrow">Premium Gift Hampers</motion.span>
@@ -600,7 +607,7 @@ export default function Home() {
           {valueProps.map(({ Icon, title, desc }, i) => (
             <motion.div
               key={i} variants={fadeUp}
-              className="group flex flex-col items-center text-center px-10 py-14"
+              className="group flex flex-col items-center text-center px-6 py-10 md:px-10 md:py-14"
               style={{
                 borderRight: i < 2 ? '1px solid rgba(212,120,154,0.15)' : 'none',
                 transition: 'background 0.4s ease',
@@ -651,7 +658,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════
           4 — SHOP BY OCCASION
           ══════════════════════════════════════════════════════ */}
-      <section id="occasions" className="py-32 md:py-40 px-6 md:px-12 lg:px-24"
+      <section id="occasions" className="py-16 md:py-40 px-6 md:px-12 lg:px-24"
                style={{ background: BLUSH }}>
         <motion.div variants={stagger} initial="hidden" whileInView="visible"
                     viewport={{ once: true, margin: '-80px' }} className="max-w-7xl mx-auto">
@@ -676,7 +683,7 @@ export default function Home() {
                   background: occ.grad,
                   border: `1.5px solid ${occ.border}`,
                   borderRadius: '20px',
-                  padding: '2.5rem 1.5rem 2rem',
+                  padding: isMobile ? '1.5rem 1rem 1.25rem' : '2.5rem 1.5rem 2rem',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -690,12 +697,12 @@ export default function Home() {
               >
                 {/* Emoji in soft circle */}
                 <div style={{
-                  width: '80px', height: '80px',
+                  width: isMobile ? '56px' : '80px', height: isMobile ? '56px' : '80px',
                   borderRadius: '50%',
                   background: 'rgba(255,255,255,0.7)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '2.4rem',
-                  marginBottom: '1.25rem',
+                  fontSize: isMobile ? '1.6rem' : '2.4rem',
+                  marginBottom: isMobile ? '0.75rem' : '1.25rem',
                   boxShadow: '0 4px 16px rgba(184,78,120,0.12)',
                 }}>
                   {occ.emoji}
@@ -704,7 +711,7 @@ export default function Home() {
                 <h3 style={{
                   fontFamily: "'Cormorant', Georgia, serif",
                   fontWeight: 600,
-                  fontSize: '1.3rem',
+                  fontSize: isMobile ? '1rem' : '1.3rem',
                   color: '#3D1A2A',
                   marginBottom: '0.4rem',
                   letterSpacing: '0.02em',
@@ -799,7 +806,7 @@ export default function Home() {
           6 — FEATURED PRODUCTS
           ══════════════════════════════════════════════════════ */}
       {!loadingFeatured && featuredProducts.length > 0 && (
-        <section className="py-32 md:py-40 px-6 md:px-12 lg:px-24"
+        <section className="py-16 md:py-40 px-6 md:px-12 lg:px-24"
                  style={{ background: '#F9E5EE' }}
                  data-testid="featured-products-section">
           <motion.div variants={stagger} initial="hidden" whileInView="visible"
@@ -835,7 +842,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════
           7 — FINAL CTA
           ══════════════════════════════════════════════════════ */}
-      <section className="py-32 md:py-44 px-6 md:px-12 lg:px-24 text-center"
+      <section className="py-16 md:py-44 px-6 md:px-12 lg:px-24 text-center"
                style={{ background: BLUSH, borderTop: '1px solid rgba(212,120,154,0.12)' }}>
         <motion.div
           initial={{ opacity: 0, y: 28 }}
