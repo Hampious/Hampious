@@ -49,18 +49,20 @@ export default function Products() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
+
+      // Show cached products immediately while backend wakes up
+      try {
+        const cached = JSON.parse(localStorage.getItem('hamp_products') || '[]');
+        if (cached.length > 0) setProducts(cached);
+      } catch {}
+
       const response = await API.get('/products');
       let data = Array.isArray(response.data) ? response.data : [];
 
-      // Merge in any locally-saved admin products (added when backend was unavailable)
-      try {
-        const localProducts = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-        if (localProducts.length > 0) {
-          const backendIds = new Set(data.map(p => String(p.id)));
-          const localOnly = localProducts.filter(p => !backendIds.has(String(p.id)));
-          data = [...data, ...localOnly];
-        }
-      } catch {}
+      // Cache fresh products for next visit (helps new users on cold start)
+      if (data.length > 0) {
+        try { localStorage.setItem('hamp_products', JSON.stringify(data)); } catch {}
+      }
 
       // Filter by category (frontend) — handle both category_id (int) and category (string slug)
       if (selectedCategory !== 'all') {
@@ -81,7 +83,7 @@ export default function Products() {
 
       setProducts(data);
     } catch (error) {
-      // Backend unreachable — show locally saved products
+      // Backend unreachable — show cached products
       try {
         const localProducts = JSON.parse(localStorage.getItem('hamp_products') || '[]');
         setProducts(localProducts);

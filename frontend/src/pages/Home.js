@@ -290,6 +290,10 @@ export default function Home() {
     try {
       const r = await API.get('/products');
       const all = Array.isArray(r.data) ? r.data : [];
+      // Cache all products so Collection page works instantly for new users
+      if (all.length > 0) {
+        try { localStorage.setItem('hamp_products', JSON.stringify(all)); } catch {}
+      }
       setFeaturedProducts(all.filter(p => p.is_active !== false && p.featured === true).slice(0, 6));
     } catch { setFeaturedProducts([]); }
     finally  { setLoadingFeatured(false); }
