@@ -391,7 +391,7 @@ export default function Checkout() {
 
     // Increment coupon usage count
     if (appliedCoupon?.code) {
-      fetch(`http://localhost:8000/api/coupons/use/${appliedCoupon.code}`, { method: 'POST' }).catch(() => {});
+      fetch(`${(process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api')}/coupons/use/${appliedCoupon.code}`, { method: 'POST' }).catch(() => {});
     }
 
     // Flag so the cart-empty useEffect doesn't redirect to /cart

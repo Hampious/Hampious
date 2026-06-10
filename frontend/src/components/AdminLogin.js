@@ -18,7 +18,7 @@ export default function AdminLogin() {
     try {
       console.log('Attempting login with:', email);
 
-      const response = await axios.post('http://localhost:8000/api/admin/login', {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL || `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api'}`}/admin/login`, {
         email,
         password
       }, {

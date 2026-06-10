@@ -130,7 +130,7 @@ function ProductModal({ product, onClose, onSave }) {
     setSaving(true);
     try {
       const token = localStorage.getItem('admin_token') || '';
-      const API = 'http://localhost:8000/api/admin';
+      const API = `${process.env.REACT_APP_BACKEND_URL || `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api'}`}/admin`;
 
       const payload = {
         name: form.name,

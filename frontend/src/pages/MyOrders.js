@@ -420,7 +420,7 @@ const OrderCard = ({ order, onRefresh }) => {
   const handleCancelOrder = async () => {
     setCancelling(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/orders/${order.id}/cancel`, {
+      const res = await fetch(`${(process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api')}/orders/${order.id}/cancel`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: cancelReason }),

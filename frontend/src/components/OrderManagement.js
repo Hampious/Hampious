@@ -20,7 +20,7 @@ export default function OrderManagement() {
         return;
       }
 
-      const response = await axios.get('http://localhost:8000/api/admin/orders', {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api'}/admin/orders`, {
         params: { token }
       });
       setOrders(response.data);
@@ -35,7 +35,7 @@ export default function OrderManagement() {
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
       const token = localStorage.getItem('admin_token');
-      await axios.put(`http://localhost:8000/api/admin/orders/${orderId}`,
+      await axios.put(`${(process.env.REACT_APP_BACKEND_URL || `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api'}`)}/admin/orders/${orderId}`,
         { status: newStatus },
         { params: { token } }
       );
@@ -49,7 +49,7 @@ export default function OrderManagement() {
     if (window.confirm('Are you sure?')) {
       try {
         const token = localStorage.getItem('admin_token');
-        await axios.delete(`http://localhost:8000/api/admin/orders/${id}`, {
+        await axios.delete(`${(process.env.REACT_APP_BACKEND_URL || `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api'}`)}/admin/orders/${id}`, {
           params: { token }
         });
         fetchOrders();

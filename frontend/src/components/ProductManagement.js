@@ -28,7 +28,7 @@ export default function ProductManagement() {
         return;
       }
 
-      const response = await axios.get('http://localhost:8000/api/admin/products', {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api'}/admin/products`, {
         params: { token }
       });
       setProducts(response.data);
@@ -44,7 +44,7 @@ export default function ProductManagement() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('admin_token');
-      await axios.post('http://localhost:8000/api/admin/products', formData, {
+      await axios.post(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api'}/admin/products`, formData, {
         params: { token }
       });
       fetchProducts();
@@ -65,7 +65,7 @@ export default function ProductManagement() {
     if (window.confirm('Are you sure?')) {
       try {
         const token = localStorage.getItem('admin_token');
-        await axios.delete(`http://localhost:8000/api/admin/products/${id}`, {
+        await axios.delete(`${(process.env.REACT_APP_BACKEND_URL || `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api'}`)}/admin/products/${id}`, {
           params: { token }
         });
         fetchProducts();

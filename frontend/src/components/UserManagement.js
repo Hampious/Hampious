@@ -20,7 +20,7 @@ export default function UserManagement() {
         return;
       }
 
-      const response = await axios.get('http://localhost:8000/api/admin/users', {
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api'}/admin/users`, {
         params: { token }
       });
       setUsers(response.data);
@@ -36,7 +36,7 @@ export default function UserManagement() {
     if (window.confirm('Are you sure? This action cannot be undone.')) {
       try {
         const token = localStorage.getItem('admin_token');
-        await axios.delete(`http://localhost:8000/api/admin/users/${id}`, {
+        await axios.delete(`${(process.env.REACT_APP_BACKEND_URL || `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api'}`)}/admin/users/${id}`, {
           params: { token }
         });
         fetchUsers();

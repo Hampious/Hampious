@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API = 'http://localhost:8000/api/admin';
+const API = `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api'}/admin`;
 
 // ── Local admin credentials (fallback when backend is offline) ────────────────
 const LOCAL_ADMIN_EMAIL    = process.env.REACT_APP_ADMIN_EMAIL    || 'team.hampious@gmail.com';

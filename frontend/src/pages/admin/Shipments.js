@@ -7,7 +7,7 @@ const PLUM  = '#1A0F15';
 const PINK  = '#D4789A';
 const ROSE  = '#B84E78';
 const BLUSH = '#FFF5F8';
-const API   = 'http://localhost:8000/api';
+const API   = `${(process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api')}`;
 
 const STATUS_CONFIG = {
   pending:    { bg: '#FEF3C7', color: '#92400E', label: 'Pending' },

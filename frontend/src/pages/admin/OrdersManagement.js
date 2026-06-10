@@ -85,7 +85,7 @@ function OrderDrawer({ order, onClose, onUpdated }) {
     setShipResult(null);
     const token = localStorage.getItem('admin_token') || '';
     try {
-      const res = await fetch(`http://localhost:8000/api/shiprocket/ship-order?token=${encodeURIComponent(token)}`, {
+      const res = await fetch(`${(process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api')}/shiprocket/ship-order?token=${encodeURIComponent(token)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ order }),
