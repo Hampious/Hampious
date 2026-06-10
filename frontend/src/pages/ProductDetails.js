@@ -27,8 +27,9 @@ export default function ProductDetails() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [canReview, setCanReview] = useState(false);
-  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '', images: [] });
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewImagePreviews, setReviewImagePreviews] = useState([]);
 
   // Reset image index when product ID changes
   useEffect(() => {
@@ -111,12 +112,24 @@ export default function ProductDetails() {
 
   const checkCanReview = async () => {
     try {
-      // Replaced axios with API
-      const response = await API.get(`/users/can-review/${id}`);
+      const response = await API.get(`/auth/can-review/${id}`);
       setCanReview(response.data.can_review);
     } catch (error) {
       setCanReview(false);
     }
+  };
+
+  const handleReviewImages = (e) => {
+    const files = Array.from(e.target.files).slice(0, 3); // max 3 images
+    const readers = files.map(file => new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = (ev) => resolve(ev.target.result);
+      reader.readAsDataURL(file);
+    }));
+    Promise.all(readers).then(base64s => {
+      setReviewImagePreviews(base64s);
+      setReviewForm(f => ({ ...f, images: base64s }));
+    });
   };
 
   const handleSubmitReview = async () => {
@@ -129,15 +142,14 @@ export default function ProductDetails() {
       toast.error('Please write a review comment');
       return;
     }
-    
     setSubmittingReview(true);
     try {
-      // Replaced axios with API
       await API.post(`/products/${id}/reviews`, reviewForm);
-      toast.success('Review submitted successfully!');
-      setReviewForm({ rating: 5, comment: '' });
+      toast.success('Review submitted! Thank you 🎉');
+      setReviewForm({ rating: 5, comment: '', images: [] });
+      setReviewImagePreviews([]);
       fetchReviews();
-      fetchProduct(); // Update avg rating
+      fetchProduct();
       setCanReview(false);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to submit review');
@@ -418,6 +430,23 @@ export default function ProductDetails() {
                       className="min-h-[100px] rounded-xl"
                     />
                   </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-2 block">
+                      Add Photos <span className="text-muted-foreground font-normal">(optional, up to 3)</span>
+                    </label>
+                    <input
+                      type="file" accept="image/*" multiple
+                      onChange={handleReviewImages}
+                      className="text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+                    />
+                    {reviewImagePreviews.length > 0 && (
+                      <div className="flex gap-2 mt-2">
+                        {reviewImagePreviews.map((src, i) => (
+                          <img key={i} src={src} alt="" className="w-16 h-16 object-cover rounded-lg border border-border" />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <Button onClick={handleSubmitReview} disabled={submittingReview} className="bg-primary hover:bg-primary/90 rounded-full">
                     {submittingReview ? 'Submitting...' : <><Send className="h-4 w-4 mr-2" /> Submit Review</>}
                   </Button>
@@ -441,6 +470,14 @@ export default function ProductDetails() {
                         </div>
                         {renderStars(review.rating)}
                         <p className="text-muted-foreground mt-2">{review.comment}</p>
+                        {review.images && review.images.length > 0 && (
+                          <div className="flex gap-2 mt-3 flex-wrap">
+                            {review.images.map((img, i) => (
+                              <img key={i} src={img} alt="" className="w-20 h-20 object-cover rounded-lg border border-border cursor-pointer"
+                                onClick={() => window.open(img, '_blank')} />
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </motion.div>

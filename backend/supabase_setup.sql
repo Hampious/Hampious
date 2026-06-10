@@ -114,3 +114,17 @@ create table if not exists coupons (
   expires_at       timestamptz,
   created_at       timestamptz default now()
 );
+
+-- Reviews table
+create table if not exists reviews (
+  id           bigserial primary key,
+  product_id   text not null,
+  user_email   text not null,
+  user_name    text,
+  rating       integer not null check (rating between 1 and 5),
+  comment      text not null,
+  images       jsonb default '[]',
+  is_approved  boolean default true,
+  created_at   timestamptz default now()
+);
+create index if not exists reviews_product_id_idx on reviews(product_id);

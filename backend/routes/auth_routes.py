@@ -318,6 +318,16 @@ def verify_otp(request: VerifyOtpRequest):
     }
 
 
+@router.get("/can-review/{product_id}")
+def can_review(product_id: str, request: Request):
+    """Any logged-in user can review — returns can_review: True if authenticated."""
+    from fastapi import Request
+    token = request.headers.get("authorization", "").replace("Bearer ", "").replace("bearer ", "").strip()
+    if not token or not token.startswith("token_"):
+        return {"can_review": False, "reason": "Please login to write a review"}
+    return {"can_review": True}
+
+
 @router.get("/test-email")
 def test_email(to: str = ""):
     """Verify Brevo/SMTP is working. Call /api/auth/test-email?to=your@email.com"""

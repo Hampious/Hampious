@@ -99,15 +99,16 @@ export default function AdminLogin() {
 
         <form onSubmit={handleLogin}>
           {[
-            { label: 'Email Address', type: 'email', value: email, setter: setEmail, placeholder: 'team.hampious@gmail.com' },
-            { label: 'Password', type: 'password', value: password, setter: setPassword, placeholder: '••••••••' },
-          ].map(({ label, type, value, setter, placeholder }) => (
+            { label: 'Email Address', type: 'email', value: email, setter: setEmail, placeholder: 'Enter admin email', autoComplete: 'off' },
+            { label: 'Password', type: 'password', value: password, setter: setPassword, placeholder: '••••••••', autoComplete: 'current-password' },
+          ].map(({ label, type, value, setter, placeholder, autoComplete }) => (
             <div key={label} style={{ marginBottom: '1.25rem' }}>
               <label style={{ display: 'block', color: 'rgba(255,245,248,0.6)', fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
                 {label}
               </label>
               <input
                 type={type} value={value} required
+                autoComplete={autoComplete}
                 onChange={e => setter(e.target.value)}
                 placeholder={placeholder}
                 style={{

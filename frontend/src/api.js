@@ -31,16 +31,17 @@ API.interceptors.response.use(
   async (error) => {
     const status = error.response?.status;
 
-    // If token expired or unauthorized → logout user
+    // Only redirect on 401 if user was actually logged in (token existed)
+    // Guests hitting a protected endpoint should NOT be redirected
     if (status === 401) {
-      console.warn("Unauthorized — logging out");
-
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-
-      // Prevent redirect loop
-      if (window.location.pathname !== "/auth") {
-        window.location.href = "/auth";
+      const token = localStorage.getItem("token");
+      if (token) {
+        console.warn("Token expired — logging out");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        if (window.location.pathname !== "/auth") {
+          window.location.href = "/auth";
+        }
       }
     }
 

@@ -55,7 +55,12 @@
       "Bash(curl -s \"http://127.0.0.1:8000/api/auth/test-email?to=debashisbisoye12@gmail.com\")",
       "Bash(git commit *)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-cujpco748-hampious-projects.vercel.app/\")",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-cujpco748-hampious-projects.vercel.app/index.html\")"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-cujpco748-hampious-projects.vercel.app/index.html\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-beta.vercel.app/\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-beta.vercel.app/admin\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-beta.vercel.app/products\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-fyzvj32i5-hampious-projects.vercel.app/\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-fyzvj32i5-hampious-projects.vercel.app/admin\")"
     ]
   }
 }
