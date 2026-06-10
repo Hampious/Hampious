@@ -4,9 +4,16 @@ from pathlib import Path
 # Load .env before anything else
 try:
     from dotenv import load_dotenv
+    # Try local .env first
     env_path = Path(__file__).parent / ".env"
-    load_dotenv(dotenv_path=env_path)
-    print(f"[startup] .env loaded from {env_path}")
+    if env_path.exists():
+        load_dotenv(dotenv_path=env_path)
+        print(f"[startup] .env loaded from {env_path}")
+    # Try Render secret file path
+    render_secret = Path("/etc/secrets/.env.vercel")
+    if render_secret.exists():
+        load_dotenv(dotenv_path=render_secret, override=True)
+        print(f"[startup] Render secret file loaded from {render_secret}")
 except ImportError:
     pass
 
