@@ -5,7 +5,7 @@ import secrets
 import os
 import random
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from database import db_select, db_insert, db_update, db_delete, db_upsert, get_db
 from email_utils import send_email, otp_email, reset_password_email, FRONTEND_URL, BREVO_API_KEY
@@ -15,8 +15,48 @@ router = APIRouter()
 # In-memory token store { token: { email, expires } }
 reset_tokens = {}
 
-# In-memory OTP store { contact: { otp, expires } }
-_otps: dict = {}
+# ── OTP helpers (Supabase-backed, memory fallback) ────────────────────────────
+
+# Memory fallback in case Supabase is unreachable
+_otps_memory: dict = {}
+
+def _save_otp(email: str, otp: str, expires_ts: float):
+    """Persist OTP in Supabase and memory."""
+    _otps_memory[email] = {"otp": otp, "expires": expires_ts}
+    try:
+        expires_iso = datetime.fromtimestamp(expires_ts, tz=timezone.utc).isoformat()
+        db_upsert("otps", {"email": email, "otp_code": otp, "expires_at": expires_iso}, on_conflict="email")
+    except Exception as e:
+        print(f"[otp] Supabase save failed (using memory): {e}")
+
+def _get_otp(email: str) -> dict | None:
+    """Retrieve OTP from Supabase first, fall back to memory."""
+    try:
+        rows = db_select("otps", {"email": email})
+        if rows:
+            row = rows[0]
+            # Parse expires_at back to unix timestamp
+            expires_str = row.get("expires_at", "")
+            if expires_str:
+                try:
+                    from dateutil import parser as dtparser
+                    expires_ts = dtparser.parse(expires_str).timestamp()
+                except Exception:
+                    # Fallback manual parse
+                    expires_ts = datetime.fromisoformat(expires_str.replace("Z", "+00:00")).timestamp()
+                return {"otp": row["otp_code"], "expires": expires_ts}
+    except Exception as e:
+        print(f"[otp] Supabase get failed (using memory): {e}")
+    # Memory fallback
+    return _otps_memory.get(email)
+
+def _delete_otp(email: str):
+    """Delete used/expired OTP."""
+    _otps_memory.pop(email, None)
+    try:
+        db_delete("otps", "email", email)
+    except Exception as e:
+        print(f"[otp] Supabase delete failed: {e}")
 
 
 def send_reset_email(to_email: str, reset_link: str):
@@ -206,11 +246,12 @@ def send_otp(request: SendOtpRequest):
         raise HTTPException(status_code=400, detail="Valid email required")
 
     if not BREVO_API_KEY:
-        raise HTTPException(status_code=500, detail="Email service not configured")
+        raise HTTPException(status_code=500, detail="Email service not configured. Contact support.")
 
-    # Generate 6-digit OTP
+    # Generate 6-digit OTP and persist (survives server restarts)
     otp = str(random.randint(100000, 999999))
-    _otps[email] = {"otp": otp, "expires": time.time() + 600}  # 10 min
+    expires_ts = time.time() + 600  # 10 minutes
+    _save_otp(email, otp, expires_ts)
 
     # Get user name from Supabase if exists
     name = request.name or "there"
@@ -226,7 +267,9 @@ def send_otp(request: SendOtpRequest):
         html_body=otp_email(otp, name),
     )
     if not sent:
-        raise HTTPException(status_code=500, detail="Failed to send OTP email")
+        # Clean up the OTP if email failed
+        _delete_otp(email)
+        raise HTTPException(status_code=500, detail="Failed to send OTP email. Please check your email address or try again later.")
 
     return {"message": "OTP sent to your email", "email": email}
 
@@ -234,18 +277,18 @@ def send_otp(request: SendOtpRequest):
 @router.post("/verify-otp")
 def verify_otp(request: VerifyOtpRequest):
     email = request.email.strip().lower()
-    entry = _otps.get(email)
+    entry = _get_otp(email)
 
     if not entry:
         raise HTTPException(status_code=400, detail="No OTP found. Please request a new one.")
     if time.time() > entry["expires"]:
-        del _otps[email]
+        _delete_otp(email)
         raise HTTPException(status_code=400, detail="OTP expired. Please request a new one.")
     if entry["otp"] != request.otp.strip():
         raise HTTPException(status_code=400, detail="Invalid OTP. Please try again.")
 
     # OTP valid — delete it
-    del _otps[email]
+    _delete_otp(email)
 
     # Get or create user in Supabase
     name = email.split("@")[0].title()
@@ -273,6 +316,18 @@ def verify_otp(request: VerifyOtpRequest):
         "token":   f"token_{email}",
         "user":    {"email": email, "name": name},
     }
+
+
+@router.get("/test-email")
+def test_email(to: str = ""):
+    """Verify Brevo/SMTP is working. Call /api/auth/test-email?to=your@email.com"""
+    target = to or BREVO_SENDER_EMAIL
+    ok = send_email(
+        to_email=target,
+        subject="✅ Hampious Email Test",
+        html_body=f"<p>Email delivery is working correctly. FRONTEND_URL = <b>{FRONTEND_URL}</b></p>"
+    )
+    return {"success": ok, "sent_to": target, "brevo_key_set": bool(BREVO_API_KEY), "frontend_url": FRONTEND_URL}
 
 
 @router.get("/profile")

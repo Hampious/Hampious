@@ -93,7 +93,15 @@ on conflict (slug) do nothing;
 -- alter table cart      enable row level security;
 -- alter table categories enable row level security;
 
--- 6. COUPONS
+-- 6. OTPs (persistent across restarts)
+create table if not exists otps (
+  email       text primary key,
+  otp_code    text not null,
+  expires_at  timestamptz not null,
+  created_at  timestamptz default now()
+);
+
+-- 7. COUPONS
 create table if not exists coupons (
   id               serial primary key,
   code             text unique not null,

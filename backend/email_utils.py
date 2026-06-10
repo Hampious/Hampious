@@ -7,7 +7,13 @@ import os
 BREVO_API_KEY      = os.environ.get("BREVO_API_KEY", "")
 BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL", "team.hampious@gmail.com")
 BREVO_SENDER_NAME  = os.environ.get("BREVO_SENDER_NAME", "Hampious")
-FRONTEND_URL       = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+FRONTEND_URL       = os.environ.get("FRONTEND_URL", "https://hampious-beta.vercel.app")
+
+# SMTP fallback (Gmail App Password)
+SMTP_HOST     = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+SMTP_PORT     = int(os.environ.get("EMAIL_PORT", "587"))
+SMTP_USER     = os.environ.get("EMAIL_USERNAME", BREVO_SENDER_EMAIL)
+SMTP_PASSWORD = os.environ.get("EMAIL_PASSWORD", "")
 
 # Logo URL — points to the logo served by the frontend.
 # Works when FRONTEND_URL is set to the live deployed domain.
@@ -55,27 +61,53 @@ def _email_wrap(body: str) -> str:
 # ── Brevo sender ──────────────────────────────────────────────────────────────
 
 def send_email(to_email: str, subject: str, html_body: str) -> bool:
-    """Send an email via Brevo. Returns True on success."""
-    if not BREVO_API_KEY:
-        print("[email] BREVO_API_KEY not set — email not sent")
-        return False
-    try:
-        import sib_api_v3_sdk
-        config = sib_api_v3_sdk.Configuration()
-        config.api_key["api-key"] = BREVO_API_KEY
-        api = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(config))
-        email_obj = sib_api_v3_sdk.SendSmtpEmail(
-            to=[{"email": to_email}],
-            sender={"name": BREVO_SENDER_NAME, "email": BREVO_SENDER_EMAIL},
-            subject=subject,
-            html_content=html_body,
-        )
-        api.send_transac_email(email_obj)
-        print(f"[email] Sent '{subject}' to {to_email}")
-        return True
-    except Exception as e:
-        print(f"[email] Brevo error: {e}")
-        return False
+    """Send via Brevo first, fall back to SMTP if Brevo fails."""
+
+    # ── 1. Try Brevo ──────────────────────────────────────────────────────────
+    if BREVO_API_KEY:
+        try:
+            import sib_api_v3_sdk
+            config = sib_api_v3_sdk.Configuration()
+            config.api_key["api-key"] = BREVO_API_KEY
+            api = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(config))
+            email_obj = sib_api_v3_sdk.SendSmtpEmail(
+                to=[{"email": to_email}],
+                sender={"name": BREVO_SENDER_NAME, "email": BREVO_SENDER_EMAIL},
+                subject=subject,
+                html_content=html_body,
+            )
+            api.send_transac_email(email_obj)
+            print(f"[email:brevo] ✓ Sent '{subject}' to {to_email}")
+            return True
+        except Exception as e:
+            print(f"[email:brevo] ✗ Error: {e} — trying SMTP fallback")
+    else:
+        print("[email:brevo] BREVO_API_KEY not set — trying SMTP fallback")
+
+    # ── 2. SMTP fallback (Gmail App Password) ─────────────────────────────────
+    if SMTP_PASSWORD:
+        try:
+            import smtplib
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"]    = f"{BREVO_SENDER_NAME} <{SMTP_USER}>"
+            msg["To"]      = to_email
+            msg.attach(MIMEText(html_body, "html"))
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                server.ehlo()
+                server.starttls()
+                server.login(SMTP_USER, SMTP_PASSWORD)
+                server.sendmail(SMTP_USER, to_email, msg.as_string())
+            print(f"[email:smtp] ✓ Sent '{subject}' to {to_email}")
+            return True
+        except Exception as e:
+            print(f"[email:smtp] ✗ Error: {e}")
+    else:
+        print("[email:smtp] EMAIL_PASSWORD not set — email not sent")
+
+    return False
 
 
 # ── Email templates ───────────────────────────────────────────────────────────
