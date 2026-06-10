@@ -113,16 +113,47 @@ def create_order(order_data: dict):
         except Exception as e:
             print(f"[create_order] customer upsert error: {e}")
 
-    # Send order confirmation email in background
+    # Send emails in background — confirmation to customer + alert to admin
     customer_email = order_data.get("customer_email")
-    if customer_email:
-        def _send_confirmation():
+    def _send_emails():
+        order_id   = str(saved_order.get('id', '')).upper()
+        cust_name  = saved_order.get('customer_name', 'Customer')
+        total      = saved_order.get('final_amount') or saved_order.get('total_amount') or 0
+        items      = saved_order.get('items', [])
+
+        # 1. Confirmation to customer
+        if customer_email:
             try:
                 html = order_confirmation_email(saved_order)
-                send_email(customer_email, f"Order Confirmed #{str(saved_order.get('id','')).upper()} — Hampious 🎁", html)
+                send_email(customer_email, f"Order Confirmed #{order_id} — Hampious 🎁", html)
             except Exception as e:
-                print(f"[create_order] confirmation email error: {e}")
-        threading.Thread(target=_send_confirmation, daemon=True).start()
+                print(f"[create_order] customer email error: {e}")
+
+        # 2. New order alert to admin
+        try:
+            items_text = "\n".join(
+                f"  • {i.get('product_name') or i.get('name','Item')} x{i.get('quantity',1)} — ₹{i.get('price','')}"
+                for i in items
+            )
+            admin_html = f"""
+            <div style="padding:2rem;font-family:'Georgia',serif;">
+              <h2 style="color:#B84E78;">🛍️ New Order Received — #{order_id}</h2>
+              <p><strong>Customer:</strong> {cust_name} ({customer_email})</p>
+              <p><strong>Phone:</strong> {saved_order.get('customer_phone','N/A')}</p>
+              <p><strong>Total:</strong> ₹{int(float(total)):,}</p>
+              <p><strong>Payment:</strong> {(saved_order.get('payment_method') or '').upper()}</p>
+              <pre style="background:#FFF5F8;padding:1rem;border-radius:8px;font-size:13px;">{items_text}</pre>
+              <a href="https://hampious-beta.vercel.app/admin/dashboard"
+                 style="display:inline-block;background:#D4789A;color:#fff;padding:10px 24px;border-radius:50px;text-decoration:none;font-weight:600;margin-top:1rem;">
+                View in Admin →
+              </a>
+            </div>"""
+            from email_utils import _email_wrap
+            send_email(ADMIN_EMAIL, f"🛍️ New Order #{order_id} — ₹{int(float(total)):,} from {cust_name}", _email_wrap(admin_html))
+        except Exception as e:
+            print(f"[create_order] admin email error: {e}")
+
+    threading.Thread(target=_send_emails, daemon=True).start()
 
     return saved_order
 

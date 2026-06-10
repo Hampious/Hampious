@@ -312,7 +312,11 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════
           1 — HERO SLIDER
           ══════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden" style={{ height: isMobile ? '100vw' : 'min(92vh, 100svh)' }} data-testid="hero-slider">
+      <section
+        className="relative overflow-hidden"
+        style={{ height: isMobile ? 'auto' : 'min(92vh, 100svh)' }}
+        data-testid="hero-slider"
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
@@ -320,25 +324,40 @@ export default function Home() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
-            className="absolute inset-0"
+            className={isMobile ? 'relative w-full' : 'absolute inset-0'}
           >
-            <div className="absolute inset-0 bg-no-repeat"
-                 style={{
-                   backgroundImage: imagesLoaded[currentSlide] ? `url(${heroSlides[currentSlide].bg})` : 'none',
-                   backgroundSize: isMobile ? 'contain' : 'cover',
-                   backgroundPosition: 'center center',
-                   backgroundColor: '#FCEAF1',
-                   transition: 'background-image 0.3s',
-                 }} />
-            {/* Gradient: left-dark for left-text slides, right-dark for right-text slides */}
-            <div className="absolute inset-0" style={{
-              background: heroSlides[currentSlide].textSide === 'right'
-                ? 'linear-gradient(to left, rgba(10,5,8,0.75) 0%, rgba(10,5,8,0.45) 40%, rgba(10,5,8,0.05) 70%)'
-                : 'linear-gradient(110deg, rgba(26,15,21,0.68) 0%, rgba(26,15,21,0.32) 55%, rgba(26,15,21,0.02) 100%)'
-            }} />
-            {/* Bottom fade — stronger on mobile to keep buttons legible */}
-            <div className="absolute bottom-0 left-0 right-0"
-                 style={{ height: isMobile ? '140px' : '112px', background: isMobile ? `linear-gradient(to top, rgba(10,5,8,0.72) 0%, rgba(10,5,8,0.3) 60%, transparent 100%)` : `linear-gradient(to top, ${BLUSH}, transparent)` }} />
+            {/* Mobile: real <img> tag so full image always shows */}
+            {isMobile ? (
+              <div style={{ position: 'relative', width: '100%', backgroundColor: '#FCEAF1' }}>
+                <img
+                  src={heroSlides[currentSlide].bg}
+                  alt={heroSlides[currentSlide].title}
+                  style={{ width: '100%', height: 'auto', display: 'block' }}
+                />
+              </div>
+            ) : (
+              /* Desktop: background-image with cover */
+              <div className="absolute inset-0 bg-no-repeat"
+                   style={{
+                     backgroundImage: imagesLoaded[currentSlide] ? `url(${heroSlides[currentSlide].bg})` : 'none',
+                     backgroundSize: 'cover',
+                     backgroundPosition: 'center top',
+                     backgroundColor: '#FCEAF1',
+                     transition: 'background-image 0.3s',
+                   }} />
+            )}
+            {/* Gradients — desktop only, the img tag on mobile doesn't need overlays */}
+            {!isMobile && (
+              <>
+                <div className="absolute inset-0" style={{
+                  background: heroSlides[currentSlide].textSide === 'right'
+                    ? 'linear-gradient(to left, rgba(10,5,8,0.75) 0%, rgba(10,5,8,0.45) 40%, rgba(10,5,8,0.05) 70%)'
+                    : 'linear-gradient(110deg, rgba(26,15,21,0.68) 0%, rgba(26,15,21,0.32) 55%, rgba(26,15,21,0.02) 100%)'
+                }} />
+                <div className="absolute bottom-0 left-0 right-0 h-28"
+                     style={{ background: `linear-gradient(to top, ${BLUSH}, transparent)` }} />
+              </>
+            )}
 
             {/* Poster slides: title badge top-right */}
             {heroSlides[currentSlide].textSide === 'right' && (
@@ -478,28 +497,45 @@ export default function Home() {
           </motion.div>
         </AnimatePresence>
 
-        {/* CTA buttons — outside AnimatePresence so they're never blocked by exiting slides */}
-        <div className="absolute bottom-16 md:bottom-20 left-0 right-0 z-30 flex flex-wrap justify-center gap-3 px-6">
-          <button
-            onClick={() => { const kw = heroSlides[currentSlide].category; handleOccasionClick(kw || 'all'); }}
-            style={{ background: PINK, border: `1.5px solid ${PINK}`, color: '#fff', fontFamily: 'Jost, sans-serif', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', padding: '0.75rem 1.5rem', borderRadius: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', transition: 'all 0.35s ease' }}
-            onMouseEnter={e => { e.currentTarget.style.background = ROSE; }}
-            onMouseLeave={e => { e.currentTarget.style.background = PINK; }}
-          >
-            {heroSlides[currentSlide].cta} <ArrowRight size={14} />
-          </button>
-          <button
-            onClick={() => navigate('/products')}
-            style={{ background: 'rgba(255,255,255,0.18)', border: '1.5px solid rgba(255,255,255,0.95)', color: '#fff', fontFamily: 'Jost, sans-serif', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', padding: '0.75rem 1.5rem', borderRadius: '2px', cursor: 'pointer', backdropFilter: 'blur(8px)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', transition: 'all 0.35s ease' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.35)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
-          >
-            All Products
-          </button>
-        </div>
+        {/* CTA buttons — desktop: absolute overlay | mobile: flow below image */}
+        {isMobile ? (
+          <div style={{ display: 'flex', gap: 12, padding: '14px 16px', background: BLUSH, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => { const kw = heroSlides[currentSlide].category; handleOccasionClick(kw || 'all'); }}
+              style={{ flex: 1, minWidth: 140, background: PINK, border: 'none', color: '#fff', fontFamily: 'Jost, sans-serif', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0.8rem 1rem', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
+            >
+              {heroSlides[currentSlide].cta} <ArrowRight size={13} />
+            </button>
+            <button
+              onClick={() => navigate('/products')}
+              style={{ flex: 1, minWidth: 140, background: 'transparent', border: `1.5px solid ${ROSE}`, color: ROSE, fontFamily: 'Jost, sans-serif', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0.8rem 1rem', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              All Products
+            </button>
+          </div>
+        ) : (
+          <div className="absolute bottom-20 left-0 right-0 z-30 flex flex-wrap justify-center gap-3 px-6">
+            <button
+              onClick={() => { const kw = heroSlides[currentSlide].category; handleOccasionClick(kw || 'all'); }}
+              style={{ background: PINK, border: `1.5px solid ${PINK}`, color: '#fff', fontFamily: 'Jost, sans-serif', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', padding: '0.75rem 1.5rem', borderRadius: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', transition: 'all 0.35s ease' }}
+              onMouseEnter={e => { e.currentTarget.style.background = ROSE; }}
+              onMouseLeave={e => { e.currentTarget.style.background = PINK; }}
+            >
+              {heroSlides[currentSlide].cta} <ArrowRight size={14} />
+            </button>
+            <button
+              onClick={() => navigate('/products')}
+              style={{ background: 'rgba(255,255,255,0.18)', border: '1.5px solid rgba(255,255,255,0.95)', color: '#fff', fontFamily: 'Jost, sans-serif', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', padding: '0.75rem 1.5rem', borderRadius: '2px', cursor: 'pointer', backdropFilter: 'blur(8px)', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', transition: 'all 0.35s ease' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.35)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)'; }}
+            >
+              All Products
+            </button>
+          </div>
+        )}
 
-        {/* Slide arrows */}
-        {[{ fn: prevSlide, side: 'left-4 md:left-8', Icon: ChevronLeft, test: 'slider-prev' },
+        {/* Slide arrows — desktop only */}
+        {!isMobile && [{ fn: prevSlide, side: 'left-4 md:left-8', Icon: ChevronLeft, test: 'slider-prev' },
           { fn: nextSlide, side: 'right-4 md:right-8', Icon: ChevronRight, test: 'slider-next' }].map(({ fn, side, Icon, test }) => (
           <button
             key={test}
@@ -520,25 +556,37 @@ export default function Home() {
           </button>
         ))}
 
-        {/* Dots */}
-        <div className="absolute bottom-4 md:bottom-10 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-          {heroSlides.map((_, i) => (
-            <button key={i} onClick={() => setCurrentSlide(i)}
-              style={{
-                height: '1px', border: 'none',
-                width: i === currentSlide ? '2rem' : '0.75rem',
-                background: i === currentSlide ? 'rgba(212,120,154,0.9)' : 'rgba(212,120,154,0.3)',
-                transition: 'all 0.5s ease',
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Progress bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'rgba(212,120,154,0.12)' }}>
-          <motion.div key={currentSlide} style={{ background: PINK, height: '100%' }}
-            initial={{ width: '0%' }} animate={{ width: '100%' }} transition={{ duration: 4, ease: 'linear' }} />
-        </div>
+        {/* Dots + progress bar — desktop only */}
+        {!isMobile && (
+          <>
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+              {heroSlides.map((_, i) => (
+                <button key={i} onClick={() => setCurrentSlide(i)}
+                  style={{
+                    height: '1px', border: 'none',
+                    width: i === currentSlide ? '2rem' : '0.75rem',
+                    background: i === currentSlide ? 'rgba(212,120,154,0.9)' : 'rgba(212,120,154,0.3)',
+                    transition: 'all 0.5s ease',
+                  }}
+                />
+              ))}
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'rgba(212,120,154,0.12)' }}>
+              <motion.div key={currentSlide} style={{ background: PINK, height: '100%' }}
+                initial={{ width: '0%' }} animate={{ width: '100%' }} transition={{ duration: 4, ease: 'linear' }} />
+            </div>
+          </>
+        )}
+        {/* Mobile: dots below buttons */}
+        {isMobile && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '8px 0 12px', background: BLUSH }}>
+            {heroSlides.map((_, i) => (
+              <button key={i} onClick={() => setCurrentSlide(i)}
+                style={{ height: '2px', border: 'none', borderRadius: 2, width: i === currentSlide ? '2rem' : '0.75rem', background: i === currentSlide ? PINK : 'rgba(212,120,154,0.3)', transition: 'all 0.5s ease', cursor: 'pointer' }}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Scroll cue — desktop only */}
         {!isMobile && (
