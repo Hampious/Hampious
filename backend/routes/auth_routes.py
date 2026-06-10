@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Request
 from pydantic import BaseModel
 from typing import Optional
 import secrets
@@ -321,7 +321,6 @@ def verify_otp(request: VerifyOtpRequest):
 @router.get("/can-review/{product_id}")
 def can_review(product_id: str, request: Request):
     """Any logged-in user can review — returns can_review: True if authenticated."""
-    from fastapi import Request
     token = request.headers.get("authorization", "").replace("Bearer ", "").replace("bearer ", "").strip()
     if not token or not token.startswith("token_"):
         return {"can_review": False, "reason": "Please login to write a review"}
