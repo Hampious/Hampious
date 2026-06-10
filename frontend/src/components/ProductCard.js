@@ -48,12 +48,13 @@ export const ProductCard = ({ product }) => {
     navigate(`/products/${product.id}`);
   };
 
-  // Use same price logic as ProductDetails: discount_price → original_price → price
-  const displayPrice    = Number(product.discount_price || product.original_price || product.price || 0);
-  const basePrice       = Number(product.original_price || product.price || 0);
-  const hasDiscount     = product.discount_price && Number(product.discount_price) < basePrice;
+  // Selling price = discount_price if set, otherwise price
+  // MRP (crossed-out) = original_price if higher than selling price
+  const displayPrice    = Number(product.discount_price || product.price || 0);
+  const mrpPrice        = Number(product.original_price || 0);
+  const hasDiscount     = mrpPrice > 0 && mrpPrice > displayPrice;
   const discountPercent = hasDiscount
-    ? Math.round(((basePrice - Number(product.discount_price)) / basePrice) * 100) : 0;
+    ? Math.round(((mrpPrice - displayPrice) / mrpPrice) * 100) : 0;
 
   return (
     <motion.div
@@ -201,7 +202,13 @@ export const ProductCard = ({ product }) => {
           {hasDiscount && (
             <span className="text-[0.82rem] line-through"
                   style={{ color: 'rgba(30,26,23,0.38)', fontFamily: 'Jost, sans-serif' }}>
-              ₹{Number(basePrice).toLocaleString('en-IN')}
+              ₹{Number(mrpPrice).toLocaleString('en-IN')}
+            </span>
+          )}
+          {hasDiscount && (
+            <span className="text-[0.7rem] font-bold px-1.5 py-0.5 rounded"
+                  style={{ background: 'rgba(184,78,120,0.12)', color: '#B84E78', fontFamily: 'Jost, sans-serif' }}>
+              {discountPercent}% off
             </span>
           )}
         </div>

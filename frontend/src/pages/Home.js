@@ -152,8 +152,8 @@ function TopRatedSection({ navigate }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(260px, 100%), 1fr))', gap: 24 }}>
           {products.map((product, i) => {
             const image    = product.images?.[0] || product.image_url || null;
-            const price    = Number(product.discount_price || product.original_price || product.price || 0);
-            const original = Number(product.original_price || product.price || 0);
+            const price    = Number(product.discount_price || product.price || 0);
+            const original = Number(product.original_price || 0);
             const hasDisc  = original > price && price > 0;
             const pct      = hasDisc ? Math.round((original - price) / original * 100) : 0;
             const stock    = Number(product.stock || 0);

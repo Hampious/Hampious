@@ -249,10 +249,12 @@ export default function ProductDetails() {
     );
   }
 
-  const displayPrice = Number(product.discount_price || product.original_price || product.price || 0);
-  const basePrice   = Number(product.price || 0);
-  const hasDiscount = displayPrice > 0 && basePrice > 0 && displayPrice < basePrice;
-  const discountPercent = hasDiscount ? Math.round(((basePrice - displayPrice) / basePrice) * 100) : 0;
+  // Selling price = discount_price if set, otherwise price field
+  // MRP (crossed-out) = original_price if higher than selling price
+  const displayPrice    = Number(product.discount_price || product.price || 0);
+  const mrpPrice        = Number(product.original_price || 0);
+  const hasDiscount     = mrpPrice > 0 && mrpPrice > displayPrice;
+  const discountPercent = hasDiscount ? Math.round(((mrpPrice - displayPrice) / mrpPrice) * 100) : 0;
   const avgRating = product.average_rating || 0;
   const reviewCount = product.review_count || reviews.length;
   
@@ -321,7 +323,8 @@ export default function ProductDetails() {
               )}
               <div className="flex items-baseline gap-4 mb-4">
                 <span className="font-body text-3xl font-bold text-primary">₹{Number(displayPrice).toFixed(0)}</span>
-                {hasDiscount && <span className="text-xl text-muted-foreground line-through">₹{Number(basePrice).toFixed(0)}</span>}
+                {hasDiscount && <span className="text-xl text-muted-foreground line-through">₹{Number(mrpPrice).toFixed(0)}</span>}
+                {hasDiscount && <span className="text-sm font-bold px-2 py-1 rounded" style={{ background: 'rgba(184,78,120,0.12)', color: '#B84E78' }}>{discountPercent}% off</span>}
               </div>
               {product.stock > 0 ? (
                 <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full text-sm font-medium">
