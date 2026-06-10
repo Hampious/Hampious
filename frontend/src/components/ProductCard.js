@@ -48,10 +48,12 @@ export const ProductCard = ({ product }) => {
     navigate(`/products/${product.id}`);
   };
 
-  const displayPrice    = product.discount_price || product.price;
-  const hasDiscount     = product.discount_price && product.discount_price < product.price;
+  // Use same price logic as ProductDetails: discount_price → original_price → price
+  const displayPrice    = Number(product.discount_price || product.original_price || product.price || 0);
+  const basePrice       = Number(product.original_price || product.price || 0);
+  const hasDiscount     = product.discount_price && Number(product.discount_price) < basePrice;
   const discountPercent = hasDiscount
-    ? Math.round(((product.price - product.discount_price) / product.price) * 100) : 0;
+    ? Math.round(((basePrice - Number(product.discount_price)) / basePrice) * 100) : 0;
 
   return (
     <motion.div
@@ -190,16 +192,16 @@ export const ProductCard = ({ product }) => {
 
         <div className="flex items-center gap-3 pt-1">
           <span
-            className="font-heading font-light text-[1.1rem]"
-            style={{ color: ROSE }}
+            className="font-heading text-[1.35rem] font-semibold"
+            style={{ color: ROSE, fontFamily: 'Jost, sans-serif', fontWeight: 700 }}
             data-testid={`product-price-${product.id}`}
           >
             ₹{Number(displayPrice).toLocaleString('en-IN')}
           </span>
           {hasDiscount && (
-            <span className="text-[0.72rem] line-through"
-                  style={{ color: 'rgba(30,26,23,0.28)', fontFamily: 'Jost, sans-serif' }}>
-              ₹{Number(product.price).toLocaleString('en-IN')}
+            <span className="text-[0.82rem] line-through"
+                  style={{ color: 'rgba(30,26,23,0.38)', fontFamily: 'Jost, sans-serif' }}>
+              ₹{Number(basePrice).toLocaleString('en-IN')}
             </span>
           )}
         </div>
