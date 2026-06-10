@@ -312,7 +312,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════
           1 — HERO SLIDER
           ══════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden" style={{ height: isMobile ? '60vh' : 'min(92vh, 100svh)' }} data-testid="hero-slider">
+      <section className="relative overflow-hidden" style={{ height: isMobile ? '100vw' : 'min(92vh, 100svh)' }} data-testid="hero-slider">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
@@ -325,8 +325,8 @@ export default function Home() {
             <div className="absolute inset-0 bg-no-repeat"
                  style={{
                    backgroundImage: imagesLoaded[currentSlide] ? `url(${heroSlides[currentSlide].bg})` : 'none',
-                   backgroundSize: 'cover',
-                   backgroundPosition: isMobile ? 'center center' : 'center top',
+                   backgroundSize: isMobile ? 'contain' : 'cover',
+                   backgroundPosition: 'center center',
                    backgroundColor: '#FCEAF1',
                    transition: 'background-image 0.3s',
                  }} />

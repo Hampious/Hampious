@@ -3,7 +3,7 @@ import axios from "axios";
 // Base URL from ENV (fallback to localhost)
 const API = axios.create({
   baseURL: process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:8000/api",
-  timeout: 15000, // 15s timeout safety
+  timeout: 60000, // 60s — allows for Render cold start (~50s on free tier)
 });
 
 // ==============================
