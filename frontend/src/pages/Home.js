@@ -605,7 +605,12 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════════
-          2 — TAGLINE / BRAND STATEMENT
+          2 — TOP RATED PRODUCTS (moved above tagline)
+          ══════════════════════════════════════════════════════ */}
+      <TopRatedSection navigate={navigate} />
+
+      {/* ══════════════════════════════════════════════════════
+          3 — TAGLINE / BRAND STATEMENT
           ══════════════════════════════════════════════════════ */}
       <section id="tagline" className="py-16 md:py-44 px-6 md:px-12 lg:px-24 text-center"
                style={{ background: BLUSH }}>
@@ -790,11 +795,6 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
-
-      {/* ══════════════════════════════════════════════════════
-          TOP RATED PRODUCTS
-          ══════════════════════════════════════════════════════ */}
-      <TopRatedSection navigate={navigate} />
 
       {/* ══════════════════════════════════════════════════════
           5 — EDITORIAL BANNER (Period Care)
