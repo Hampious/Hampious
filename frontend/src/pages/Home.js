@@ -75,7 +75,7 @@ const stagger = {
   visible: { opacity: 1, transition: { staggerChildren: 0.22, delayChildren: 0.2 } },
 };
 
-/* ── Top Rated Products Section ─────────────────────────────────────────── */
+/* ── Top Selling Products Section ─────────────────────────────────────────── */
 function TopRatedSection({ navigate }) {
   const { addToCart } = useCart();
   const { user }      = useAuth();
@@ -131,10 +131,10 @@ function TopRatedSection({ navigate }) {
           style={{ marginBottom: 48, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
           <div>
             <span style={{ fontSize: 11, letterSpacing: '0.25em', textTransform: 'uppercase', color: PINK, fontFamily: 'Jost, sans-serif', fontWeight: 600 }}>
-              Customer Favourites
+              Best Sellers
             </span>
             <h2 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 500, color: PLUM, margin: '8px 0 0', lineHeight: 1.05 }}>
-              Top Rated Products
+              Top Selling Products
             </h2>
             {/* Stars decoration */}
             <div style={{ display: 'flex', gap: 3, marginTop: 10 }}>
