@@ -113,10 +113,10 @@ export const Footer = () => (
           <div className="gold-line-left mb-5" style={{ width: '1.5rem' }} />
           <div className="space-y-4">
             {[
-              { Icon: Mail,  href: 'mailto:support@hampious.com', text: 'support@hampious.com' },
-              { Icon: Phone, href: 'tel:+917428601664',          text: '+91 7428601664' },
-              { Icon: Clock, href: null,                         text: 'Mon – Sun: 10 AM – 7 PM' },
-              { Icon: MapPin,href: null,                         text: 'Mumbai, Maharashtra, India' },
+              { Icon: Mail,  href: 'mailto:team.hampious@gmail.com', text: 'team.hampious@gmail.com' },
+              { Icon: Phone, href: 'tel:+917076138777',            text: '+91 7076138777' },
+              { Icon: Clock, href: null,                           text: 'Mon – Sun: 10 AM – 7 PM' },
+              { Icon: MapPin,href: null,                           text: 'Koramangala, Bangalore' },
             ].map(({ Icon, href, text }, i) => {
               const content = (
                 <span className="footer-link flex items-start gap-3 group">
