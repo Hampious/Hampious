@@ -19,16 +19,6 @@ def _stock_info(p):
     return item
 
 
-def _strip_large_images(p: dict) -> dict:
-    """Replace base64 images with empty list in list views — speeds up collection page 10x."""
-    item = dict(p)
-    images = item.get("images") or []
-    if isinstance(images, list):
-        # Keep only non-base64 images (URLs are short; base64 is thousands of chars)
-        item["images"] = [img for img in images if isinstance(img, str) and not img.startswith("data:")]
-    return item
-
-
 @router.get("/")
 def get_products(category: Optional[str] = None, featured: Optional[bool] = None, skip: int = 0, limit: int = 50):
     try:
@@ -38,7 +28,7 @@ def get_products(category: Optional[str] = None, featured: Optional[bool] = None
         if featured is not None:
             filters["is_featured"] = featured
         products = db_select("products", filters if filters else None)
-        return [_strip_large_images(_stock_info(p)) for p in products[skip:skip + limit]]
+        return [_stock_info(p) for p in products[skip:skip + limit]]
     except Exception as e:
         print(f"[get_products] Supabase error: {e}")
         return []

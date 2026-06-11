@@ -48,20 +48,34 @@ export default function Products() {
 
   const fetchProducts = async () => {
     try {
-      // Show cached products immediately — only show spinner if no cache
+      // Always show cached products instantly — no loading state if cache exists
       const cached = (() => { try { return JSON.parse(localStorage.getItem('hamp_products') || '[]'); } catch { return []; } })();
       if (cached.length > 0) {
         setProducts(cached);
-        setLoading(false); // show cache instantly, refresh silently
+        setLoading(false);
       } else {
-        setLoading(true);
+        setLoading(true); // only show skeleton on very first ever visit
       }
 
       const response = await API.get('/products');
       let data = Array.isArray(response.data) ? response.data : [];
 
-      // Cache fresh products for next visit (helps new users on cold start)
+      // Merge with cached to preserve images if new response somehow lacks them
       if (data.length > 0) {
+        const cachedMap = (() => {
+          try {
+            const c = JSON.parse(localStorage.getItem('hamp_products') || '[]');
+            return Object.fromEntries(c.map(p => [p.id, p]));
+          } catch { return {}; }
+        })();
+        data = data.map(p => {
+          const cached = cachedMap[p.id];
+          // Use cached images if new product has none
+          if ((!p.images || !p.images.length) && cached?.images?.length) {
+            return { ...p, images: cached.images };
+          }
+          return p;
+        });
         try { localStorage.setItem('hamp_products', JSON.stringify(data)); } catch {}
       }
 
