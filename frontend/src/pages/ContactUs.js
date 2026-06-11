@@ -28,15 +28,15 @@ const contactInfo = [
   {
     icon: Mail,
     title: 'Email',
-    value: 'support@hampious.com',
-    href: 'mailto:support@hampious.com',
+    value: 'team.hampious@gmail.com',
+    href: 'mailto:team.hampious@gmail.com',
     description: 'Send us an email anytime'
   },
   {
     icon: Phone,
     title: 'Phone',
-    value: '+91 7428601664',
-    href: 'tel:+917428601664',
+    value: '+91 7076138777',
+    href: 'tel:+917076138777',
     description: 'Call us for instant support'
   },
   {
@@ -49,7 +49,7 @@ const contactInfo = [
   {
     icon: MapPin,
     title: 'Location',
-    value: 'Mumbai, Maharashtra, India',
+    value: 'Koramangala, Bangalore',
     href: null,
     description: 'Our headquarters'
   }
