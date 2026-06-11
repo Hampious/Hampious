@@ -139,7 +139,7 @@ export default function AboutUs() {
               boxShadow: '0 20px 60px rgba(184,78,120,0.15)',
             }}>
               <img
-                src="https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=800&auto=format&fit=crop&q=80"
+                src="/About.png"
                 alt="Hampious luxury gift hamper"
                 style={{ width: '100%', aspectRatio: '4/5', objectFit: 'cover', display: 'block' }}
               />
