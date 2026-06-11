@@ -48,13 +48,14 @@ export default function Products() {
 
   const fetchProducts = async () => {
     try {
-      setLoading(true);
-
-      // Show cached products immediately while backend wakes up
-      try {
-        const cached = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-        if (cached.length > 0) setProducts(cached);
-      } catch {}
+      // Show cached products immediately — only show spinner if no cache
+      const cached = (() => { try { return JSON.parse(localStorage.getItem('hamp_products') || '[]'); } catch { return []; } })();
+      if (cached.length > 0) {
+        setProducts(cached);
+        setLoading(false); // show cache instantly, refresh silently
+      } else {
+        setLoading(true);
+      }
 
       const response = await API.get('/products');
       let data = Array.isArray(response.data) ? response.data : [];
@@ -199,8 +200,17 @@ export default function Products() {
 
         {/* Products Grid */}
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="spinner-premium" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="rounded-sm overflow-hidden bg-card border border-border/30 animate-pulse">
+                <div className="aspect-square bg-muted" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-muted rounded w-3/4" />
+                  <div className="h-3 bg-muted rounded w-1/2" />
+                  <div className="h-5 bg-muted rounded w-1/3" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8" data-testid="products-grid">

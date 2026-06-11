@@ -115,6 +115,8 @@ export const ProductCard = ({ product }) => {
           <img
             src={product.images?.[0] || product.image_url}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
             className={`w-full h-full object-cover ${isOutOfStock ? 'grayscale opacity-60' : ''}`}
             onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'flex'; }}
             style={{ transition: 'transform 1.2s cubic-bezier(0.19,1,0.22,1)' }}

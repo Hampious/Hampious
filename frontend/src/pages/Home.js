@@ -67,12 +67,12 @@ const valueProps = [
 ];
 
 const fadeUp = {
-  hidden:  { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: [0.19, 1, 0.22, 1] } },
+  hidden:  { opacity: 0, y: 28 },
+  visible: { opacity: 1, y: 0, transition: { duration: 1.6, ease: [0.19, 1, 0.22, 1] } },
 };
 const stagger = {
   hidden:  { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.13, delayChildren: 0.15 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.22, delayChildren: 0.2 } },
 };
 
 /* ── Top Rated Products Section ─────────────────────────────────────────── */
@@ -263,7 +263,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const t = setInterval(() => setCurrentSlide(p => (p + 1) % heroSlides.length), 4000);
+    const t = setInterval(() => setCurrentSlide(p => (p + 1) % heroSlides.length), 5500);
     return () => clearInterval(t);
   }, []);
 
@@ -577,7 +577,7 @@ export default function Home() {
             </div>
             <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'rgba(212,120,154,0.12)' }}>
               <motion.div key={currentSlide} style={{ background: PINK, height: '100%' }}
-                initial={{ width: '0%' }} animate={{ width: '100%' }} transition={{ duration: 4, ease: 'linear' }} />
+                initial={{ width: '0%' }} animate={{ width: '100%' }} transition={{ duration: 5.5, ease: 'linear' }} />
             </div>
           </>
         )}

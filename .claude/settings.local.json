@@ -60,7 +60,19 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-beta.vercel.app/admin\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-beta.vercel.app/products\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-fyzvj32i5-hampious-projects.vercel.app/\")",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-fyzvj32i5-hampious-projects.vercel.app/admin\")"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-fyzvj32i5-hampious-projects.vercel.app/admin\")",
+      "Bash(curl -s \"https://hampious.onrender.com/api/products/2/reviews\")",
+      "Bash(curl -s \"https://hampious.onrender.com/\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-beta.vercel.app/periods.png\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-beta.vercel.app/iloveyou.png\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-beta.vercel.app/birthday.png\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious-beta.vercel.app/sorry.png\")",
+      "Bash(git mv *)",
+      "Bash(curl -s \"https://hampious.onrender.com/api/products/\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://hampious.onrender.com/api/products/\")",
+      "Bash(curl -s \"https://hampious-beta.vercel.app/static/js/main.*.js\")",
+      "Bash(curl -s \"https://hampious-beta.vercel.app/\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(f'Product {p[\\\\\"id\\\\\"]}: image size = {len\\(str\\(p.get\\(\\\\\"images\\\\\",[\\\\\"\\\\\"]\\)[0] if p.get\\(\\\\\"images\\\\\"\\) else \\\\\"\\\\\"\\)\\)//1024}KB'\\) for p in d]\")"
     ]
   }
 }
