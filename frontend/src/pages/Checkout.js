@@ -718,11 +718,6 @@ export default function Checkout() {
                           </div>
                           <span style={{ fontSize: 15, fontWeight: 800, color: '#B84E78' }}>₹{(price * qty).toLocaleString('en-IN')}</span>
                         </div>
-                        {stock <= 3 && stock > 0 && (
-                          <p style={{ fontSize: 10, color: '#92400E', background: '#FEF3C7', borderRadius: 6, padding: '2px 8px', display: 'inline-block', marginTop: 5, fontWeight: 600 }}>
-                            ⚡ Only {stock} left
-                          </p>
-                        )}
                       </div>
                     </motion.div>
                   );

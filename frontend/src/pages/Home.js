@@ -130,17 +130,9 @@ function TopRatedSection({ navigate }) {
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           style={{ marginBottom: 48, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <span style={{ fontSize: 11, letterSpacing: '0.25em', textTransform: 'uppercase', color: PINK, fontFamily: 'Jost, sans-serif', fontWeight: 600 }}>
-              Best Sellers
-            </span>
             <h2 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 500, color: PLUM, margin: '8px 0 0', lineHeight: 1.05 }}>
-              Top Selling Products
+              Best Sellers
             </h2>
-            {/* Stars decoration */}
-            <div style={{ display: 'flex', gap: 3, marginTop: 10 }}>
-              {[1,2,3,4,5].map(i => <Star key={i} size={16} fill="#D4789A" color="#D4789A" />)}
-              <span style={{ fontSize: 12, color: '#7c5a6a', marginLeft: 6, fontFamily: 'Jost, sans-serif' }}>Loved by 1000+ customers</span>
-            </div>
           </div>
           <button onClick={() => navigate('/products')}
             style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: `1.5px solid ${PINK}`, borderRadius: 50, padding: '10px 22px', cursor: 'pointer', color: ROSE, fontFamily: 'Jost, sans-serif', fontSize: 13, fontWeight: 600, letterSpacing: '0.05em' }}>
@@ -181,11 +173,6 @@ function TopRatedSection({ navigate }) {
                   {hasDisc && !isOut && (
                     <div style={{ position: 'absolute', top: 12, left: 12, background: ROSE, color: '#fff', borderRadius: 20, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
                       -{pct}%
-                    </div>
-                  )}
-                  {stock > 0 && stock <= 3 && (
-                    <div style={{ position: 'absolute', top: 12, right: 12, background: '#FEF3C7', color: '#92400E', borderRadius: 20, padding: '3px 10px', fontSize: 10, fontWeight: 700 }}>
-                      ⚡ Only {stock} left
                     </div>
                   )}
                   {isOut && (

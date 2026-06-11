@@ -340,7 +340,7 @@ export default function ProductDetails() {
               </div>
               {product.stock > 0 ? (
                 <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full text-sm font-medium">
-                  <Package className="h-4 w-4" /> In Stock ({product.stock} available)
+                  <Package className="h-4 w-4" /> In Stock
                 </div>
               ) : (
                 <div className="inline-flex items-center gap-2 bg-red-50 text-red-700 px-3 py-1.5 rounded-full text-sm font-medium">Out of Stock</div>
@@ -359,7 +359,7 @@ export default function ProductDetails() {
               </div>
               <div className="flex items-center gap-3 p-4 bg-secondary/50 rounded-xl">
                 <Shield className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium text-foreground">7 Days Return</span>
+                <span className="text-sm font-medium text-foreground">3 Days Return</span>
               </div>
               <div className="flex items-center gap-3 p-4 bg-secondary/50 rounded-xl">
                 <Package className="h-5 w-5 text-primary" />
