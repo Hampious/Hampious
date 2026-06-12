@@ -282,7 +282,6 @@ export default function Home() {
   };
 
   const handleOccasionClick = (keyword) => {
-    window.scrollTo(0, 0);
     // First try to find category by ID from loaded categories
     const cat = categories.find(c =>
       c.name.toLowerCase().includes(keyword.toLowerCase()) ||

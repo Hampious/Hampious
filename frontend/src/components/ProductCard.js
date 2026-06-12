@@ -45,7 +45,6 @@ export const ProductCard = ({ product }) => {
 
   const handleCardClick = (e) => {
     if (e.target.closest('button')) return;
-    window.scrollTo(0, 0);
     navigate(`/products/${product.id}`);
   };
 
