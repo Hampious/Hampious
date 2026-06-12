@@ -30,6 +30,16 @@ export const ProductCard = ({ product }) => {
     } catch { toast.error('Failed to add to cart'); }
   };
 
+  const handleBuyNow = async (e) => {
+    e.stopPropagation();
+    if (isOutOfStock) { toast.error('This product is out of stock'); return; }
+    if (!user) { toast.error('Please sign in to continue'); navigate('/auth'); return; }
+    try {
+      await addToCart(product.id, 1, product.discount_price || product.price);
+      navigate('/checkout');
+    } catch { toast.error('Failed to proceed'); }
+  };
+
   const handleWishlistToggle = async (e) => {
     e.stopPropagation();
     if (wishlistLoading) return;
@@ -57,81 +67,104 @@ export const ProductCard = ({ product }) => {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="cursor-pointer bg-white rounded-xl overflow-hidden"
-      style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)', border: '1px solid rgba(212,120,154,0.12)' }}
+      className="cursor-pointer bg-white rounded-2xl overflow-hidden"
+      style={{ boxShadow: '0 2px 16px rgba(212,120,154,0.13)', border: '1px solid rgba(212,120,154,0.15)' }}
       onClick={handleCardClick}
       data-testid={`product-card-${product.id}`}
     >
       {/* Image */}
-      <div className="relative overflow-hidden" style={{ aspectRatio: '3/4', background: '#FFF5F8' }}>
+      <div className="relative overflow-hidden" style={{ width: '100%', paddingBottom: '100%', background: '#FFF5F8', position: 'relative' }}>
+        <div style={{ position: 'absolute', inset: 0 }}>
 
-        {/* Wishlist button */}
-        <button
-          onClick={handleWishlistToggle}
-          disabled={wishlistLoading}
-          aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-          data-testid={`wishlist-btn-${product.id}`}
-          className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full flex items-center justify-center"
-          style={{
-            background: isWishlisted ? PINK : 'rgba(255,255,255,0.9)',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
-          }}
-        >
-          <Heart size={13} style={{ color: isWishlisted ? '#fff' : PINK, fill: isWishlisted ? '#fff' : 'none' }} />
-        </button>
+          {/* Wishlist button */}
+          <button
+            onClick={handleWishlistToggle}
+            disabled={wishlistLoading}
+            aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+            data-testid={`wishlist-btn-${product.id}`}
+            style={{
+              position: 'absolute', top: 8, right: 8, zIndex: 20,
+              width: 30, height: 30, borderRadius: '50%',
+              background: isWishlisted ? PINK : 'rgba(255,255,255,0.92)',
+              border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+            }}
+          >
+            <Heart size={14} style={{ color: isWishlisted ? '#fff' : PINK, fill: isWishlisted ? '#fff' : 'none' }} />
+          </button>
 
-        {/* Discount badge */}
-        {hasDiscount && !isOutOfStock && (
-          <div className="absolute top-2 left-2 z-20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
-               style={{ background: ROSE }}>
-            -{discountPercent}%
-          </div>
-        )}
+          {/* Discount badge */}
+          {hasDiscount && !isOutOfStock && (
+            <div style={{
+              position: 'absolute', top: 8, left: 8, zIndex: 20,
+              background: ROSE, color: '#fff', fontSize: 10, fontWeight: 700,
+              padding: '2px 8px', borderRadius: 20, fontFamily: 'Jost, sans-serif',
+            }}>
+              -{discountPercent}%
+            </div>
+          )}
 
-        {/* Out of stock overlay */}
-        {isOutOfStock && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center"
-               style={{ background: 'rgba(255,245,248,0.75)' }}>
-            <span className="text-[10px] tracking-widest uppercase font-medium px-3 py-1 rounded"
-                  style={{ color: '#B84E78', border: '1px solid rgba(212,120,154,0.3)' }}>
-              Out of Stock
-            </span>
-          </div>
-        )}
+          {/* Out of stock overlay */}
+          {isOutOfStock && (
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 30,
+              background: 'rgba(255,245,248,0.78)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <span style={{ fontSize: 10, letterSpacing: '0.15em', textTransform: 'uppercase',
+                             color: '#B84E78', border: '1px solid rgba(212,120,154,0.3)',
+                             padding: '4px 10px', borderRadius: 4, fontFamily: 'Jost, sans-serif' }}>
+                Out of Stock
+              </span>
+            </div>
+          )}
 
-        {/* Product image */}
-        {(product.images?.[0] || product.image_url) ? (
-          <img
-            src={product.images?.[0] || product.image_url}
-            alt={product.name}
-            className={`w-full h-full object-cover ${isOutOfStock ? 'grayscale opacity-60' : ''}`}
-            style={{ transition: 'transform 0.4s ease' }}
-            onError={e => { e.currentTarget.style.display = 'none'; }}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center"
-               style={{ background: 'linear-gradient(135deg,#FFF5F8,#FCEAF1)' }}>
-            <span style={{ fontSize: 11, color: PINK, fontFamily: 'Jost,sans-serif', letterSpacing: '0.1em' }}>HAMPIOUS</span>
-          </div>
-        )}
+          {/* Product image */}
+          {(product.images?.[0] || product.image_url) ? (
+            <img
+              src={product.images?.[0] || product.image_url}
+              alt={product.name}
+              style={{
+                width: '100%', height: '100%', objectFit: 'cover',
+                objectPosition: 'center top',
+                filter: isOutOfStock ? 'grayscale(0.5) opacity(0.7)' : 'none',
+              }}
+              onError={e => { e.currentTarget.style.display = 'none'; }}
+            />
+          ) : (
+            <div style={{
+              width: '100%', height: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'linear-gradient(135deg,#FFF5F8,#FCEAF1)',
+            }}>
+              <span style={{ fontSize: 11, color: PINK, fontFamily: 'Jost,sans-serif', letterSpacing: '0.1em' }}>HAMPIOUS</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Info */}
       <div style={{ padding: '10px 10px 12px' }}>
-        <h3 style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, fontWeight: 600, color: '#1A0F15',
-                     lineHeight: 1.3, marginBottom: 6, overflow: 'hidden', display: '-webkit-box',
-                     WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
-            data-testid={`product-name-${product.id}`}>
+        {/* Name */}
+        <h3 style={{
+          fontFamily: 'Jost, sans-serif', fontSize: 13, fontWeight: 600, color: '#1A0F15',
+          lineHeight: 1.35, marginBottom: 5,
+          overflow: 'hidden', display: '-webkit-box',
+          WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+        }}
+          data-testid={`product-name-${product.id}`}>
           {product.name}
         </h3>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+        {/* Price row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 10 }}>
           <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 15, fontWeight: 800, color: ROSE }}
                 data-testid={`product-price-${product.id}`}>
             ₹{Number(displayPrice).toLocaleString('en-IN')}
           </span>
           {hasDiscount && (
-            <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#999', textDecoration: 'line-through' }}>
+            <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#aaa', textDecoration: 'line-through' }}>
               ₹{Number(mrpPrice).toLocaleString('en-IN')}
             </span>
           )}
@@ -143,18 +176,33 @@ export const ProductCard = ({ product }) => {
           )}
         </div>
 
-        {/* Add to Cart button */}
+        {/* Buttons */}
         {!isOutOfStock && (
-          <button
-            onClick={handleAddToCart}
-            data-testid={`add-to-cart-btn-${product.id}`}
-            className="w-full flex items-center justify-center gap-1.5"
-            style={{ background: '#FFF0F5', border: `1px solid ${PINK}`, borderRadius: 8,
-                     padding: '7px 0', fontFamily: 'Jost, sans-serif', fontSize: 12,
-                     fontWeight: 700, color: ROSE, cursor: 'pointer' }}>
-            <ShoppingCart size={12} />
-            Add to Cart
-          </button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              onClick={handleAddToCart}
+              data-testid={`add-to-cart-btn-${product.id}`}
+              style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                background: '#fff', border: `1.5px solid ${PINK}`, borderRadius: 10,
+                padding: '8px 0', fontFamily: 'Jost, sans-serif', fontSize: 11,
+                fontWeight: 700, color: ROSE, cursor: 'pointer',
+              }}>
+              <ShoppingCart size={11} />
+              Cart
+            </button>
+            <button
+              onClick={handleBuyNow}
+              style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: `linear-gradient(135deg, ${PINK}, ${ROSE})`,
+                border: 'none', borderRadius: 10,
+                padding: '8px 0', fontFamily: 'Jost, sans-serif', fontSize: 11,
+                fontWeight: 700, color: '#fff', cursor: 'pointer',
+              }}>
+              Buy Now
+            </button>
+          </div>
         )}
       </div>
     </motion.div>
