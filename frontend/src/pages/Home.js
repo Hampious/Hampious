@@ -120,8 +120,33 @@ function TopRatedSection({ navigate }) {
     } catch { toast.error('Failed to proceed'); }
   };
 
-  if (loading) return null;
-  if (!products.length) return null;
+  if (!products.length && !loading) return null;
+
+  /* ── Skeleton shimmer ── */
+  if (loading) return (
+    <section style={{ background: '#fff', padding: 'clamp(2.5rem, 8vw, 5rem) clamp(1rem, 4vw, 1.5rem)' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ width: 100, height: 12, background: '#f0e0e8', borderRadius: 6, marginBottom: 12 }} />
+          <div style={{ width: 200, height: 32, background: '#f0e0e8', borderRadius: 6 }} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+          {[1,2,3,4].map(i => (
+            <div key={i} style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid #f5e0ea' }}>
+              <div style={{ width: '100%', paddingBottom: '100%', background: 'linear-gradient(90deg,#fde8f0 25%,#fef0f5 50%,#fde8f0 75%)', backgroundSize: '200% 100%',
+                animation: 'shimmer 1.4s infinite', position: 'relative' }} />
+              <div style={{ padding: 10 }}>
+                <div style={{ height: 12, background: '#f5e0ea', borderRadius: 4, marginBottom: 8, width: '80%' }} />
+                <div style={{ height: 10, background: '#f5e0ea', borderRadius: 4, width: '50%', marginBottom: 12 }} />
+                <div style={{ height: 32, background: '#f5e0ea', borderRadius: 10 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+    </section>
+  );
 
   return (
     <section style={{ background: '#fff', padding: 'clamp(2.5rem, 8vw, 5rem) clamp(1rem, 4vw, 1.5rem)' }}>
