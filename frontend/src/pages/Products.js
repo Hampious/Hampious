@@ -29,6 +29,15 @@ export default function Products() {
     fetchProducts();
   }, [selectedCategory, sortBy]);
 
+  const DEFAULT_CATEGORIES = [
+    { id: 'period',   name: 'Period Care' },
+    { id: 'love',     name: 'I Love You' },
+    { id: 'birthday', name: 'Birthday' },
+    { id: 'sorry',    name: 'Sorry' },
+    { id: 'selfcare', name: 'Self Care' },
+    { id: 'festive',  name: 'Festive' },
+  ];
+
   const fetchCategories = async () => {
     try {
       const response = await API.get('/categories');
@@ -36,13 +45,12 @@ export default function Products() {
       if (list.length > 0) {
         setCategories(list);
       } else {
-        // Fall back to admin-saved categories
         const local = JSON.parse(localStorage.getItem('hamp_categories') || '[]');
-        setCategories(local);
+        setCategories(local.length > 0 ? local : DEFAULT_CATEGORIES);
       }
     } catch (error) {
       const local = JSON.parse(localStorage.getItem('hamp_categories') || '[]');
-      setCategories(local);
+      setCategories(local.length > 0 ? local : DEFAULT_CATEGORIES);
     }
   };
 

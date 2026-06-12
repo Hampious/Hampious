@@ -134,18 +134,18 @@ export default function ReturnPolicy() {
           </h3>
           <div className="flex flex-col md:flex-row items-center justify-center gap-6">
             <a 
-              href="mailto:support@hampious.com" 
+              href="mailto:team.hampious@gmail.com"
               className="flex items-center gap-2 text-primary hover:underline"
             >
               <Mail className="h-5 w-5" />
-              support@hampious.com
+              team.hampious@gmail.com
             </a>
             <a 
-              href="tel:+917428601664" 
+              href="tel:+917076138777"
               className="flex items-center gap-2 text-primary hover:underline"
             >
               <Phone className="h-5 w-5" />
-              +91 7428601664
+              +91 7076138777
             </a>
           </div>
         </motion.div>

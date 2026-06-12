@@ -39,7 +39,7 @@ export default function PrivacyPolicy() {
           
           <h2 className="font-heading text-2xl font-normal text-foreground mt-8 mb-4">Contact Us</h2>
           <p>
-            If you have any questions about this Privacy Policy, please contact us at privacy@hamptious.com
+            If you have any questions about this Privacy Policy, please contact us at <a href="mailto:team.hampious@gmail.com" className="text-primary hover:underline">team.hampious@gmail.com</a>
           </p>
         </div>
       </motion.div>
