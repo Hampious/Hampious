@@ -85,18 +85,22 @@ function TopRatedSection({ navigate }) {
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true);
+      // Only show skeleton if no cached products at all
+      // Never setLoading(true) if we already have products showing
       try {
-        const r    = await API.get('/products');
-        const all  = Array.isArray(r.data) ? r.data : [];
-        // Top rated = featured OR highest stock → take first 4
-        const top  = all.filter(p => p.stock > 0).slice(0, 4);
-        setProducts(top.length ? top : all.slice(0, 4));
+        const r   = await API.get('/products');
+        const all = Array.isArray(r.data) ? r.data : [];
+        const top = all.filter(p => p.stock > 0).slice(0, 4);
+        const result = top.length ? top : all.slice(0, 4);
+        if (result.length > 0) {
+          try { localStorage.setItem('hamp_products', JSON.stringify(all)); } catch {}
+          setProducts(result);
+        }
       } catch {
-        // Fallback: localStorage products
-        const local = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-        setProducts(local.filter(p => Number(p.stock || 0) > 0).slice(0, 4));
-      } finally { setLoading(false); }
+        // Keep showing whatever is already in state (from cache)
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, []);
