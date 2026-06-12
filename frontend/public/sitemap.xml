@@ -1,56 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://hampious.com/</loc>
-    <lastmod>2026-06-09</lastmod>
+    <loc>https://www.hampious.com/</loc>
+    <lastmod>2026-06-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://hampious.com/products</loc>
-    <lastmod>2026-06-09</lastmod>
+    <loc>https://www.hampious.com/products</loc>
+    <lastmod>2026-06-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://hampious.com/products?category=birthday</loc>
-    <lastmod>2026-06-09</lastmod>
+    <loc>https://www.hampious.com/products?category=birthday</loc>
+    <lastmod>2026-06-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://hampious.com/products?category=period</loc>
-    <lastmod>2026-06-09</lastmod>
+    <loc>https://www.hampious.com/products?category=period</loc>
+    <lastmod>2026-06-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://hampious.com/products?category=love</loc>
-    <lastmod>2026-06-09</lastmod>
+    <loc>https://www.hampious.com/products?category=love</loc>
+    <lastmod>2026-06-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://hampious.com/products?category=sorry</loc>
-    <lastmod>2026-06-09</lastmod>
+    <loc>https://www.hampious.com/products?category=sorry</loc>
+    <lastmod>2026-06-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://hampious.com/products?category=festive</loc>
-    <lastmod>2026-06-09</lastmod>
+    <loc>https://www.hampious.com/products?category=festive</loc>
+    <lastmod>2026-06-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://hampious.com/about</loc>
-    <lastmod>2026-06-09</lastmod>
+    <loc>https://www.hampious.com/about</loc>
+    <lastmod>2026-06-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://hampious.com/contact</loc>
-    <lastmod>2026-06-09</lastmod>
+    <loc>https://www.hampious.com/contact</loc>
+    <lastmod>2026-06-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
