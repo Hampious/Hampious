@@ -24,10 +24,12 @@ const DEFAULT_CATEGORIES = [
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [allProducts, setAllProducts]   = useState([]); // full list — never filtered
-  const [products, setProducts]         = useState([]); // displayed list
+  // Init from cache immediately — no skeleton flash on revisit
+  const cachedProducts = (() => { try { return JSON.parse(localStorage.getItem('hamp_products') || '[]'); } catch { return []; } })();
+  const [allProducts, setAllProducts]   = useState(cachedProducts);
+  const [products, setProducts]         = useState(cachedProducts);
   const [categories, setCategories]     = useState([]);
-  const [loading, setLoading]           = useState(true);
+  const [loading, setLoading]           = useState(cachedProducts.length === 0); // only show skeleton on first ever visit
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [sortBy, setSortBy]             = useState('created_at');
 

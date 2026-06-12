@@ -79,8 +79,9 @@ const stagger = {
 function TopRatedSection({ navigate }) {
   const { addToCart } = useCart();
   const { user }      = useAuth();
-  const [products, setProducts] = useState([]);
-  const [loading,  setLoading]  = useState(true);
+  const cachedProds = (() => { try { return JSON.parse(localStorage.getItem('hamp_products') || '[]').filter(p => Number(p.stock||0) > 0).slice(0,4); } catch { return []; } })();
+  const [products, setProducts] = useState(cachedProds);
+  const [loading,  setLoading]  = useState(cachedProds.length === 0);
 
   useEffect(() => {
     const load = async () => {

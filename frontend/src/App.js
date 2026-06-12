@@ -1,13 +1,18 @@
 import React, { useEffect, useLayoutEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 
+// Disable browser scroll restoration so WE control it
+if ('scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual';
+}
+
 function ScrollToTop() {
   const { pathname } = useLocation();
-  // useLayoutEffect fires before paint — prevents flash of bottom content
   useLayoutEffect(() => {
+    // Triple-force scroll for all browsers including iOS Safari
     document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0; // Safari fix
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.body.scrollTop = 0;
+    window.scrollTo(0, 0);
   }, [pathname]);
   return null;
 }
