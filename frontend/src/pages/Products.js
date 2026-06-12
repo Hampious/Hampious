@@ -13,104 +13,85 @@ import {
 } from '../components/ui/select';
 
 
+const DEFAULT_CATEGORIES = [
+  { id: 'period',   name: 'Period Care' },
+  { id: 'love',     name: 'I Love You' },
+  { id: 'birthday', name: 'Birthday' },
+  { id: 'sorry',    name: 'Sorry' },
+  { id: 'selfcare', name: 'Self Care' },
+  { id: 'festive',  name: 'Festive' },
+];
+
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [allProducts, setAllProducts]   = useState([]); // full list — never filtered
+  const [products, setProducts]         = useState([]); // displayed list
+  const [categories, setCategories]     = useState([]);
+  const [loading, setLoading]           = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
-  const [sortBy, setSortBy] = useState('created_at');
+  const [sortBy, setSortBy]             = useState('created_at');
 
+  // Fetch products ONCE on mount
   useEffect(() => {
     fetchCategories();
+    fetchAllProducts();
   }, []);
 
+  // Filter + sort instantly in memory whenever category/sort changes
   useEffect(() => {
-    fetchProducts();
-  }, [selectedCategory, sortBy]);
+    applyFilterSort(allProducts, selectedCategory, sortBy);
+  }, [selectedCategory, sortBy, allProducts]);
 
-  const DEFAULT_CATEGORIES = [
-    { id: 'period',   name: 'Period Care' },
-    { id: 'love',     name: 'I Love You' },
-    { id: 'birthday', name: 'Birthday' },
-    { id: 'sorry',    name: 'Sorry' },
-    { id: 'selfcare', name: 'Self Care' },
-    { id: 'festive',  name: 'Festive' },
-  ];
+  const applyFilterSort = (data, category, sort) => {
+    let filtered = [...data];
+    if (category !== 'all') {
+      filtered = filtered.filter(p =>
+        p.category_id == category ||
+        p.category === category ||
+        (p.category || '').toLowerCase() === category.toLowerCase()
+      );
+    }
+    if (sort === 'created_at') {
+      filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    } else if (sort === 'price_asc') {
+      filtered.sort((a, b) => (a.discount_price || a.price || 0) - (b.discount_price || b.price || 0));
+    } else if (sort === 'price_desc') {
+      filtered.sort((a, b) => (b.discount_price || b.price || 0) - (a.discount_price || a.price || 0));
+    }
+    setProducts(filtered);
+  };
 
   const fetchCategories = async () => {
     try {
       const response = await API.get('/categories');
       const list = Array.isArray(response.data) ? response.data : [];
-      if (list.length > 0) {
-        setCategories(list);
-      } else {
-        const local = JSON.parse(localStorage.getItem('hamp_categories') || '[]');
-        setCategories(local.length > 0 ? local : DEFAULT_CATEGORIES);
-      }
-    } catch (error) {
+      setCategories(list.length > 0 ? list : DEFAULT_CATEGORIES);
+    } catch {
       const local = JSON.parse(localStorage.getItem('hamp_categories') || '[]');
       setCategories(local.length > 0 ? local : DEFAULT_CATEGORIES);
     }
   };
 
-  const fetchProducts = async () => {
+  const fetchAllProducts = async () => {
+    // Show cached immediately
     try {
-      // Always show cached products instantly — no loading state if cache exists
-      const cached = (() => { try { return JSON.parse(localStorage.getItem('hamp_products') || '[]'); } catch { return []; } })();
+      const cached = JSON.parse(localStorage.getItem('hamp_products') || '[]');
       if (cached.length > 0) {
-        setProducts(cached);
+        setAllProducts(cached);
         setLoading(false);
-      } else {
-        setLoading(true); // only show skeleton on very first ever visit
       }
+    } catch {}
 
+    try {
       const response = await API.get('/products');
       let data = Array.isArray(response.data) ? response.data : [];
-
-      // Merge with cached to preserve images if new response somehow lacks them
       if (data.length > 0) {
-        const cachedMap = (() => {
-          try {
-            const c = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-            return Object.fromEntries(c.map(p => [p.id, p]));
-          } catch { return {}; }
-        })();
-        data = data.map(p => {
-          const cached = cachedMap[p.id];
-          // Use cached images if new product has none
-          if ((!p.images || !p.images.length) && cached?.images?.length) {
-            return { ...p, images: cached.images };
-          }
-          return p;
-        });
         try { localStorage.setItem('hamp_products', JSON.stringify(data)); } catch {}
+        setAllProducts(data);
       }
-
-      // Filter by category (frontend) — handle both category_id (int) and category (string slug)
-      if (selectedCategory !== 'all') {
-        data = data.filter(product =>
-          product.category_id == selectedCategory ||
-          product.category === selectedCategory
-        );
-      }
-
-      // Sorting (frontend)
-      if (sortBy === 'created_at') {
-        data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-      } else if (sortBy === 'price_asc') {
-        data.sort((a, b) => (a.discount_price || a.original_price || a.price) - (b.discount_price || b.original_price || b.price));
-      } else if (sortBy === 'price_desc') {
-        data.sort((a, b) => (b.discount_price || b.original_price || b.price) - (a.discount_price || a.original_price || a.price));
-      }
-
-      setProducts(data);
-    } catch (error) {
-      // Backend unreachable — show cached products
-      try {
-        const localProducts = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-        setProducts(localProducts);
-      } catch { setProducts([]); }
+    } catch {
+      const local = JSON.parse(localStorage.getItem('hamp_products') || '[]');
+      if (local.length > 0) setAllProducts(local);
     } finally {
       setLoading(false);
     }
@@ -119,11 +100,8 @@ export default function Products() {
   const handleCategoryChange = (value) => {
     setSelectedCategory(value);
     const params = new URLSearchParams(searchParams);
-    if (value === 'all') {
-      params.delete('category');
-    } else {
-      params.set('category', value);
-    }
+    if (value === 'all') params.delete('category');
+    else params.set('category', value);
     setSearchParams(params);
   };
 
