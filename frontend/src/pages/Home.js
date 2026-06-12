@@ -918,6 +918,53 @@ export default function Home() {
         </motion.div>
       </section>
 
+      {/* ══════════════════════════════════════════════════════
+          TESTIMONIALS
+          ══════════════════════════════════════════════════════ */}
+      <section style={{ background: '#fff', padding: 'clamp(3rem, 8vw, 5rem) clamp(1rem, 4vw, 1.5rem)' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            style={{ textAlign: 'center', marginBottom: 48 }}>
+            <span style={{ fontSize: 11, letterSpacing: '0.25em', textTransform: 'uppercase', color: PINK, fontFamily: 'Jost, sans-serif', fontWeight: 600 }}>
+              Happy Customers
+            </span>
+            <h2 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 500, color: PLUM, margin: '8px 0 0', lineHeight: 1.1 }}>
+              What They Say
+            </h2>
+          </motion.div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px,100%), 1fr))', gap: 24 }}>
+            {[
+              { name: 'Priya S.', location: 'Bangalore', text: 'Ordered the birthday hamper for my best friend — she literally cried happy tears! The packaging was so beautiful and everything inside felt so premium. Will definitely order again.', stars: 5 },
+              { name: 'Riya M.', location: 'Bangalore', text: 'The period care hamper is such a thoughtful idea. Sent it to my sister and she loved every single item. Delivery was super fast and the box looked gorgeous.', stars: 5 },
+              { name: 'Sneha K.', location: 'Bangalore', text: 'Got the I Love You hamper for my boyfriend\'s birthday. He was totally surprised! The handwritten card touch made it extra special. 10/10 experience.', stars: 5 },
+              { name: 'Anjali R.', location: 'Bangalore', text: 'Hampious made gifting so easy. I didn\'t know what to get my mom and the hamper was perfect. Customer service was also very responsive. Highly recommend!', stars: 5 },
+            ].map((review, i) => (
+              <motion.div key={i}
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                style={{ background: BLUSH, borderRadius: 16, padding: '28px 24px', border: '1px solid rgba(212,120,154,0.15)' }}>
+                <div style={{ display: 'flex', gap: 3, marginBottom: 14 }}>
+                  {[...Array(review.stars)].map((_, j) => <Star key={j} size={14} fill="#D4789A" color="#D4789A" />)}
+                </div>
+                <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 14, color: '#4a3040', lineHeight: 1.7, marginBottom: 18 }}>
+                  "{review.text}"
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg, ${PINK}, ${ROSE})`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: 'Jost, sans-serif', fontWeight: 700, fontSize: 14 }}>
+                    {review.name[0]}
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: 'Jost, sans-serif', fontWeight: 700, fontSize: 13, color: PLUM }}>{review.name}</div>
+                    <div style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#9a7080' }}>{review.location}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
     </div>
   );
 }
