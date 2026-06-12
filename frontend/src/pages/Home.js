@@ -208,7 +208,7 @@ function TopRatedSection({ navigate }) {
                 </div>
 
                 {/* Info */}
-                <div style={{ padding: '18px 18px 20px' }}>
+                <div style={{ padding: '10px 10px 12px' }}>
                   <p style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 17, fontWeight: 600, color: PLUM, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {product.name}
                   </p>
@@ -224,22 +224,25 @@ function TopRatedSection({ navigate }) {
                   </div>
                   {/* Buttons */}
                   {!isOut ? (
-                    <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={e => handleAddToCart(e, product)}
-                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: '#FFF5F8', color: ROSE, border: `1.5px solid ${PINK}`, borderRadius: 10, padding: '10px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Jost, sans-serif', transition: 'all 0.2s' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = PINK; e.currentTarget.style.color = '#fff'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = '#FFF5F8'; e.currentTarget.style.color = ROSE; }}>
-                        <ShoppingCart size={13} /> Add to Cart
+                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                                 background: '#fff', border: `1.5px solid ${PINK}`, borderRadius: 10,
+                                 padding: '8px 0', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                                 fontFamily: 'Jost, sans-serif', color: ROSE }}>
+                        <ShoppingCart size={11} /> Cart
                       </button>
                       <button onClick={e => handleBuyNow(e, product)}
-                        style={{ flex: 1, background: ROSE, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 0', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Jost, sans-serif', transition: 'all 0.2s' }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#9b3d63'}
-                        onMouseLeave={e => e.currentTarget.style.background = ROSE}>
+                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                 background: `linear-gradient(135deg, ${PINK}, ${ROSE})`,
+                                 border: 'none', borderRadius: 10,
+                                 padding: '8px 0', fontSize: 11, fontWeight: 700,
+                                 cursor: 'pointer', fontFamily: 'Jost, sans-serif', color: '#fff' }}>
                         Buy Now
                       </button>
                     </div>
                   ) : (
-                    <button disabled style={{ width: '100%', background: '#f3f4f6', color: '#9ca3af', border: 'none', borderRadius: 10, padding: '10px', fontSize: 12, fontWeight: 600, cursor: 'not-allowed', fontFamily: 'Jost, sans-serif' }}>
+                    <button disabled style={{ width: '100%', background: '#f3f4f6', color: '#9ca3af', border: 'none', borderRadius: 10, padding: '8px', fontSize: 11, fontWeight: 600, cursor: 'not-allowed', fontFamily: 'Jost, sans-serif' }}>
                       Out of Stock
                     </button>
                   )}
