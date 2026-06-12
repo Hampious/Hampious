@@ -222,7 +222,7 @@ export default function Products() {
 
         {/* Products Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="rounded-sm overflow-hidden bg-card border border-border/30 animate-pulse">
                 <div className="aspect-square bg-muted" />
@@ -235,7 +235,7 @@ export default function Products() {
             ))}
           </div>
         ) : products.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8" data-testid="products-grid">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6" data-testid="products-grid">
             {products.map((product, index) => (
               <motion.div
                 key={product.id}

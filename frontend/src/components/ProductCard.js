@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Heart } from 'lucide-react';
+import { Heart, ShoppingCart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 
 const PINK = '#D4789A';
 const ROSE = '#B84E78';
-const BLUSH = '#FFF5F8';
 
 export const ProductCard = ({ product }) => {
   const navigate = useNavigate();
@@ -48,65 +47,55 @@ export const ProductCard = ({ product }) => {
     navigate(`/products/${product.id}`);
   };
 
-  // Selling price = discount_price if set, otherwise price
-  // MRP (crossed-out) = original_price if higher than selling price
   const displayPrice    = Number(product.discount_price || product.price || 0);
   const mrpPrice        = Number(product.original_price || 0);
   const hasDiscount     = mrpPrice > 0 && mrpPrice > displayPrice;
-  const discountPercent = hasDiscount
-    ? Math.round(((mrpPrice - displayPrice) / mrpPrice) * 100) : 0;
+  const discountPercent = hasDiscount ? Math.round(((mrpPrice - displayPrice) / mrpPrice) * 100) : 0;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, ease: [0.19, 1, 0.22, 1] }}
-      className="group cursor-pointer card-luxury rounded-sm overflow-hidden"
+      transition={{ duration: 0.5 }}
+      className="cursor-pointer bg-white rounded-xl overflow-hidden"
+      style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)', border: '1px solid rgba(212,120,154,0.12)' }}
       onClick={handleCardClick}
       data-testid={`product-card-${product.id}`}
     >
       {/* Image */}
-      <div className="relative aspect-square img-zoom overflow-hidden" style={{ background: '#FCEAF1' }}>
-
-        {/* Out of stock */}
-        {isOutOfStock && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-[rgba(255,245,248,0.82)]">
-            <span className="text-[0.62rem] tracking-[0.2em] uppercase font-medium"
-                  style={{ color: 'rgba(30,26,23,0.4)', border: '1px solid rgba(212,120,154,0.2)', padding: '0.3rem 0.8rem', borderRadius: '2px' }}>
-              Out of Stock
-            </span>
-          </div>
-        )}
+      <div className="relative overflow-hidden" style={{ aspectRatio: '3/4', background: '#FFF5F8' }}>
 
         {/* Wishlist button */}
-        <motion.button
+        <button
           onClick={handleWishlistToggle}
           disabled={wishlistLoading}
           aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-          whileHover={{ scale: 1.12 }}
-          whileTap={{ scale: 0.9 }}
           data-testid={`wishlist-btn-${product.id}`}
-          className="absolute top-3 right-3 z-20 w-8 h-8 rounded-sm flex items-center justify-center transition-all duration-300"
+          className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full flex items-center justify-center"
           style={{
-            background: isWishlisted ? 'rgba(212,120,154,0.9)' : 'rgba(255,245,248,0.9)',
-            border: isWishlisted ? '1px solid transparent' : '1px solid rgba(212,120,154,0.3)',
-            backdropFilter: 'blur(6px)',
-            boxShadow: '0 2px 10px rgba(30,26,23,0.07)',
+            background: isWishlisted ? PINK : 'rgba(255,255,255,0.9)',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.12)',
           }}
         >
-          <Heart
-            size={13}
-            style={{
-              color: isWishlisted ? '#FFF5F8' : PINK,
-              fill: isWishlisted ? '#FFF5F8' : 'none',
-            }}
-          />
-        </motion.button>
+          <Heart size={13} style={{ color: isWishlisted ? '#fff' : PINK, fill: isWishlisted ? '#fff' : 'none' }} />
+        </button>
 
         {/* Discount badge */}
         {hasDiscount && !isOutOfStock && (
-          <div className="absolute top-3 left-3 z-20 badge-discount">
+          <div className="absolute top-2 left-2 z-20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
+               style={{ background: ROSE }}>
             -{discountPercent}%
+          </div>
+        )}
+
+        {/* Out of stock overlay */}
+        {isOutOfStock && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center"
+               style={{ background: 'rgba(255,245,248,0.75)' }}>
+            <span className="text-[10px] tracking-widest uppercase font-medium px-3 py-1 rounded"
+                  style={{ color: '#B84E78', border: '1px solid rgba(212,120,154,0.3)' }}>
+              Out of Stock
+            </span>
           </div>
         )}
 
@@ -116,102 +105,57 @@ export const ProductCard = ({ product }) => {
             src={product.images?.[0] || product.image_url}
             alt={product.name}
             className={`w-full h-full object-cover ${isOutOfStock ? 'grayscale opacity-60' : ''}`}
-            onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'flex'; }}
-            style={{ transition: 'transform 1.2s cubic-bezier(0.19,1,0.22,1)' }}
+            style={{ transition: 'transform 0.4s ease' }}
+            onError={e => { e.currentTarget.style.display = 'none'; }}
           />
-        ) : null}
-        {/* Fallback placeholder when no image */}
-        <div
-          style={{
-            display: (product.images?.[0] || product.image_url) ? 'none' : 'flex',
-            position: 'absolute', inset: 0,
-            flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            background: 'linear-gradient(135deg, #FFF5F8 0%, #FCEAF1 100%)',
-          }}
-        >
-          <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="56" height="56" rx="16" fill="#F9DDE8"/>
-            <path d="M14 38l10-14 7 9 5-6 10 11H14z" fill="#D4789A" fillOpacity="0.35"/>
-            <circle cx="38" cy="20" r="4" fill="#D4789A" fillOpacity="0.5"/>
-          </svg>
-          <span style={{ fontSize: 10, color: '#D4789A', marginTop: 8, fontFamily: 'Jost,sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.7 }}>
-            Hampious
-          </span>
-        </div>
-
-        {/* Hover overlay — Add to Cart */}
-        {!isOutOfStock && (
-          <motion.div
-            className="absolute inset-0 z-10 flex flex-col justify-end p-4"
-            style={{ background: 'linear-gradient(to top, rgba(26,15,21,0.72) 0%, rgba(26,15,21,0.22) 55%, transparent 100%)' }}
-            initial={{ opacity: 0 }}
-            whileHover={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <motion.button
-              onClick={handleAddToCart}
-              initial={{ y: 12, opacity: 0 }}
-              whileHover={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.35, ease: [0.19, 1, 0.22, 1] }}
-              data-testid={`add-to-cart-btn-${product.id}`}
-              className="w-full flex items-center justify-center gap-2 text-[0.65rem] font-semibold tracking-[0.18em] uppercase transition-all duration-300"
-              style={{
-                background: 'rgba(255,245,248,0.96)',
-                border: '1px solid rgba(255,245,248,0.5)',
-                color: '#1A0F15',
-                padding: '0.65rem 1rem',
-                borderRadius: '2px',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = PINK; e.currentTarget.style.borderColor = PINK; e.currentTarget.style.color = '#FFF5F8'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,245,248,0.96)'; e.currentTarget.style.borderColor = 'rgba(255,245,248,0.5)'; e.currentTarget.style.color = '#1A0F15'; }}
-            >
-              <ShoppingCart size={13} />
-              Add to Cart
-            </motion.button>
-          </motion.div>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center"
+               style={{ background: 'linear-gradient(135deg,#FFF5F8,#FCEAF1)' }}>
+            <span style={{ fontSize: 11, color: PINK, fontFamily: 'Jost,sans-serif', letterSpacing: '0.1em' }}>HAMPIOUS</span>
+          </div>
         )}
       </div>
 
       {/* Info */}
-      <div className="px-4 py-4 space-y-2 bg-white" style={{ borderTop: '1px solid rgba(212,120,154,0.08)' }}>
-        <h3
-          className="font-heading font-light text-[1.1rem] leading-tight line-clamp-2 transition-colors duration-400"
-          style={{ color: 'rgba(30,26,23,0.82)' }}
-          onMouseEnter={e => (e.currentTarget.style.color = ROSE)}
-          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(30,26,23,0.82)')}
-          data-testid={`product-name-${product.id}`}
-        >
+      <div style={{ padding: '10px 10px 12px' }}>
+        <h3 style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, fontWeight: 600, color: '#1A0F15',
+                     lineHeight: 1.3, marginBottom: 6, overflow: 'hidden', display: '-webkit-box',
+                     WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
+            data-testid={`product-name-${product.id}`}>
           {product.name}
         </h3>
 
-        {product.description && (
-          <p className="text-[0.74rem] leading-relaxed line-clamp-2"
-             style={{ color: 'rgba(30,26,23,0.38)', fontFamily: 'Jost, sans-serif' }}>
-            {product.description}
-          </p>
-        )}
-
-        <div className="flex items-center gap-3 pt-1">
-          <span
-            className="font-heading text-[1.35rem] font-semibold"
-            style={{ color: ROSE, fontFamily: 'Jost, sans-serif', fontWeight: 700 }}
-            data-testid={`product-price-${product.id}`}
-          >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+          <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 15, fontWeight: 800, color: ROSE }}
+                data-testid={`product-price-${product.id}`}>
             ₹{Number(displayPrice).toLocaleString('en-IN')}
           </span>
           {hasDiscount && (
-            <span className="text-[0.82rem] line-through"
-                  style={{ color: 'rgba(30,26,23,0.38)', fontFamily: 'Jost, sans-serif' }}>
+            <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 11, color: '#999', textDecoration: 'line-through' }}>
               ₹{Number(mrpPrice).toLocaleString('en-IN')}
             </span>
           )}
           {hasDiscount && (
-            <span className="text-[0.7rem] font-bold px-1.5 py-0.5 rounded"
-                  style={{ background: 'rgba(184,78,120,0.12)', color: '#B84E78', fontFamily: 'Jost, sans-serif' }}>
+            <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 10, fontWeight: 700,
+                           color: '#2e7d32', background: '#e8f5e9', borderRadius: 4, padding: '1px 5px' }}>
               {discountPercent}% off
             </span>
           )}
         </div>
+
+        {/* Add to Cart button */}
+        {!isOutOfStock && (
+          <button
+            onClick={handleAddToCart}
+            data-testid={`add-to-cart-btn-${product.id}`}
+            className="w-full flex items-center justify-center gap-1.5"
+            style={{ background: '#FFF0F5', border: `1px solid ${PINK}`, borderRadius: 8,
+                     padding: '7px 0', fontFamily: 'Jost, sans-serif', fontSize: 12,
+                     fontWeight: 700, color: ROSE, cursor: 'pointer' }}>
+            <ShoppingCart size={12} />
+            Add to Cart
+          </button>
+        )}
       </div>
     </motion.div>
   );
