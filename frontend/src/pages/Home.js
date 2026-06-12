@@ -180,11 +180,6 @@ function TopRatedSection({ navigate }) {
                       <span style={{ fontSize: 11, color: 'rgba(26,15,21,0.5)', border: '1px solid rgba(212,120,154,0.25)', padding: '4px 12px', borderRadius: 4, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Out of Stock</span>
                     </div>
                   )}
-                  {/* Rating stars */}
-                  <div style={{ position: 'absolute', bottom: 10, left: 10, display: 'flex', alignItems: 'center', gap: 3, background: 'rgba(255,255,255,0.92)', borderRadius: 20, padding: '3px 8px' }}>
-                    {[1,2,3,4,5].map(s => <Star key={s} size={10} fill="#D4789A" color="#D4789A" />)}
-                    <span style={{ fontSize: 10, color: '#7c5a6a', fontFamily: 'Jost, sans-serif', marginLeft: 2 }}>5.0</span>
-                  </div>
                 </div>
 
                 {/* Info */}
