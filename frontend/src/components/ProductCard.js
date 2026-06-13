@@ -54,8 +54,6 @@ export const ProductCard = ({ product }) => {
 
   const handleCardClick = (e) => {
     if (e.target.closest('button')) return;
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
     navigate(`/products/${product.id}`);
   };
 

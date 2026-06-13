@@ -8,12 +8,21 @@ if ('scrollRestoration' in window.history) {
 
 function ScrollToTop() {
   const { pathname } = useLocation();
+
+  // useLayoutEffect — fires before browser paint (prevents flash)
   useLayoutEffect(() => {
-    // Triple-force scroll for all browsers including iOS Safari
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
     window.scrollTo(0, 0);
   }, [pathname]);
+
+  // useEffect — backup for Safari/iOS which sometimes ignores useLayoutEffect
+  useEffect(() => {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   return null;
 }
 import { Toaster } from './components/ui/sonner';

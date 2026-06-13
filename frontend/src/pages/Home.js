@@ -184,7 +184,7 @@ function TopRatedSection({ navigate }) {
             return (
               <motion.div key={product.id} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.6 }}
-                onClick={() => { document.documentElement.scrollTop = 0; document.body.scrollTop = 0; navigate(`/products/${product.id}`); }}
+                onClick={() => navigate(`/products/${product.id}`)}
                 style={{ background: '#fff', borderRadius: 20, border: '1px solid rgba(212,120,154,0.15)', overflow: 'hidden', cursor: 'pointer', boxShadow: '0 2px 16px rgba(26,15,21,0.06)', transition: 'all 0.3s ease' }}
                 onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 12px 40px rgba(184,78,120,0.18)'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 2px 16px rgba(26,15,21,0.06)'; e.currentTarget.style.transform = 'translateY(0)'; }}
@@ -315,8 +315,6 @@ export default function Home() {
   };
 
   const handleOccasionClick = (keyword) => {
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
     const cat = categories.find(c =>
       c.name.toLowerCase().includes(keyword.toLowerCase()) ||
       c.slug?.toLowerCase().includes(keyword.toLowerCase())
