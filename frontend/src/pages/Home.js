@@ -270,6 +270,7 @@ export default function Home() {
   const [currentSlide, setCurrentSlide]         = useState(0);
   const [isMobile, setIsMobile]                 = useState(window.innerWidth < 768);
   const [imagesLoaded, setImagesLoaded]         = useState({});
+  const autoPlayRef = React.useRef(null);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -277,10 +278,16 @@ export default function Home() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  useEffect(() => {
-    const t = setInterval(() => setCurrentSlide(p => (p + 1) % heroSlides.length), 5500);
-    return () => clearInterval(t);
+  // Auto-play — restarts when user manually changes slide
+  const startAutoPlay = React.useCallback(() => {
+    if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+    autoPlayRef.current = setInterval(() => setCurrentSlide(p => (p + 1) % heroSlides.length), 5500);
   }, []);
+
+  useEffect(() => {
+    startAutoPlay();
+    return () => clearInterval(autoPlayRef.current);
+  }, [startAutoPlay]);
 
   // Preload all hero images eagerly and track when they're ready
   useEffect(() => {
@@ -290,8 +297,8 @@ export default function Home() {
       img.src = slide.bg;
     });
   }, []);
-  const nextSlide = useCallback(() => setCurrentSlide(p => (p + 1) % heroSlides.length), []);
-  const prevSlide = useCallback(() => setCurrentSlide(p => (p - 1 + heroSlides.length) % heroSlides.length), []);
+  const nextSlide = useCallback(() => { setCurrentSlide(p => (p + 1) % heroSlides.length); startAutoPlay(); }, [startAutoPlay]);
+  const prevSlide = useCallback(() => { setCurrentSlide(p => (p - 1 + heroSlides.length) % heroSlides.length); startAutoPlay(); }, [startAutoPlay]);
 
   useEffect(() => { fetchCategories(); fetchFeaturedProducts(); }, []);
 
@@ -552,25 +559,26 @@ export default function Home() {
           </div>
         )}
 
-        {/* Slide arrows — desktop only */}
-        {!isMobile && [{ fn: prevSlide, side: 'left-4 md:left-8', Icon: ChevronLeft, test: 'slider-prev' },
-          { fn: nextSlide, side: 'right-4 md:right-8', Icon: ChevronRight, test: 'slider-next' }].map(({ fn, side, Icon, test }) => (
+        {/* Slide arrows — all devices */}
+        {[{ fn: prevSlide, side: 'left-3 md:left-8', Icon: ChevronLeft, test: 'slider-prev' },
+          { fn: nextSlide, side: 'right-3 md:right-8', Icon: ChevronRight, test: 'slider-next' }].map(({ fn, side, Icon, test }) => (
           <button
             key={test}
             onClick={fn}
             data-testid={test}
-            className={`absolute ${side} top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center transition-all duration-300`}
+            className={`absolute ${side} top-1/2 -translate-y-1/2 z-20 flex items-center justify-center transition-all duration-300`}
             style={{
-              border: '1px solid rgba(255,245,248,0.25)',
-              background: 'rgba(26,15,21,0.35)',
+              width: isMobile ? 36 : 40,
+              height: isMobile ? 36 : 40,
+              border: '1px solid rgba(255,245,248,0.35)',
+              background: 'rgba(26,15,21,0.45)',
               backdropFilter: 'blur(8px)',
-              borderRadius: '2px',
-              color: 'rgba(255,245,248,0.7)',
+              borderRadius: '50%',
+              color: 'rgba(255,245,248,0.9)',
+              cursor: 'pointer',
             }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = PINK; e.currentTarget.style.color = PINK; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,245,248,0.25)'; e.currentTarget.style.color = 'rgba(255,245,248,0.7)'; }}
           >
-            <Icon size={16} />
+            <Icon size={isMobile ? 18 : 16} />
           </button>
         ))}
 
@@ -579,7 +587,7 @@ export default function Home() {
           <>
             <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex gap-2">
               {heroSlides.map((_, i) => (
-                <button key={i} onClick={() => setCurrentSlide(i)}
+                <button key={i} onClick={() => { setCurrentSlide(i); startAutoPlay(); }}
                   style={{
                     height: '1px', border: 'none',
                     width: i === currentSlide ? '2rem' : '0.75rem',
@@ -599,7 +607,7 @@ export default function Home() {
         {isMobile && (
           <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '8px 0 12px', background: BLUSH }}>
             {heroSlides.map((_, i) => (
-              <button key={i} onClick={() => setCurrentSlide(i)}
+              <button key={i} onClick={() => { setCurrentSlide(i); startAutoPlay(); }}
                 style={{ height: '2px', border: 'none', borderRadius: 2, width: i === currentSlide ? '2rem' : '0.75rem', background: i === currentSlide ? PINK : 'rgba(212,120,154,0.3)', transition: 'all 0.5s ease', cursor: 'pointer' }}
               />
             ))}
