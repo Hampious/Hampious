@@ -20,7 +20,7 @@ const stagger = {
 const values = [
   { Icon: Heart,    title: 'Made with Love',    desc: 'Every hamper curated with genuine care and thoughtful intention.' },
   { Icon: Star,     title: 'Premium Quality',   desc: 'Only the finest, hand-picked products make it into our collections.' },
-  { Icon: Truck,    title: 'Swift Delivery',    desc: 'Express shipping across India with Cash on Delivery available.' },
+  { Icon: Truck,    title: 'Express Delivery',  desc: 'Express shipping across India with Cash on Delivery available.' },
   { Icon: Users,    title: 'Customer First',    desc: 'Dedicated support to make your gifting experience truly perfect.' },
 ];
 
