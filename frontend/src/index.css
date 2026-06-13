@@ -63,7 +63,7 @@
   }
 
   html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto; /* smooth causes visible scroll animation on page navigation — keep auto */
     -webkit-text-size-adjust: 100%; /* prevents iOS font zoom */
     text-size-adjust: 100%;
     overflow-x: hidden;
