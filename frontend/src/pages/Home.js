@@ -356,7 +356,7 @@ export default function Home() {
               <div style={{ position: 'relative', width: '100%', backgroundColor: '#FCEAF1' }}>
                 <img
                   src={heroSlides[currentSlide].bg}
-                  alt={heroSlides[currentSlide].title}
+                  alt={`${heroSlides[currentSlide].title} ${heroSlides[currentSlide].subtitle} - Premium Gift Hamper in Bangalore by Hampious`}
                   style={{ width: '100%', height: 'auto', display: 'block' }}
                 />
               </div>
@@ -997,6 +997,34 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════
+          SEO CONTENT SECTION — keyword rich text for Google
+          ══════════════════════════════════════════════════════ */}
+      <section style={{ background: BLUSH, padding: 'clamp(2rem, 6vw, 4rem) clamp(1rem, 4vw, 1.5rem)' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <h2 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', fontWeight: 500, color: PLUM, marginBottom: 20, textAlign: 'center' }}>
+            Premium Gift Hampers in Bangalore
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px,100%), 1fr))', gap: 24 }}>
+            {[
+              { title: '🎂 Birthday Gift Hampers', text: 'Make birthdays unforgettable with our curated birthday gift hampers in Bangalore. Packed with chocolates, teddy bears, scented candles, and luxury items — delivered to your doorstep with same-day delivery.' },
+              { title: '🌸 Period Care Hampers', text: 'Show her you care with our period care hampers — thoughtfully assembled with comfort essentials, snacks, skincare, and wellness products. The perfect self-care gift hamper for women in India.' },
+              { title: '💝 Sorry Gift Hampers', text: 'Sometimes words aren\'t enough. Our sorry gift hampers in Bangalore are designed to mend bonds and express heartfelt apologies through premium curated gifts delivered with love.' },
+              { title: '❤️ Love & Anniversary Hampers', text: 'Express your love with our romantic gift hampers for her. Perfect for anniversaries, Valentine\'s Day, or just because — beautifully packed and delivered across Bangalore with COD available.' },
+            ].map((item, i) => (
+              <div key={i} style={{ background: '#fff', borderRadius: 12, padding: '20px 20px', border: '1px solid rgba(212,120,154,0.12)' }}>
+                <h3 style={{ fontFamily: 'Jost, sans-serif', fontSize: 15, fontWeight: 700, color: PLUM, marginBottom: 10 }}>{item.title}</h3>
+                <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, color: '#6b4a5a', lineHeight: 1.7, margin: 0 }}>{item.text}</p>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, color: '#9a7080', textAlign: 'center', marginTop: 24, lineHeight: 1.8 }}>
+            Hampious is a premium gift hamper brand based in <strong>Koramangala, Bangalore</strong>. We deliver curated gift hampers across Bangalore and all major cities in India.
+            Cash on Delivery (COD) available. Same-day delivery in Bangalore. <strong>Order your gift hamper today!</strong>
+          </p>
         </div>
       </section>
 

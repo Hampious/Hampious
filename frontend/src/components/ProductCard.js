@@ -124,7 +124,7 @@ export const ProductCard = ({ product }) => {
           {(product.images?.[0] || product.image_url) ? (
             <img
               src={product.images?.[0] || product.image_url}
-              alt={product.name}
+              alt={`${product.name} - Gift Hamper in Bangalore | Hampious`}
               style={{
                 width: '100%', height: '100%', objectFit: 'cover',
                 objectPosition: 'center top',
