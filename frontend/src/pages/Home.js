@@ -971,9 +971,11 @@ export default function Home() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(300px,100%), 1fr))', gap: 24 }}>
             {[
               { name: 'Priya S.', location: 'Bangalore', text: 'Ordered the birthday hamper for my best friend — she literally cried happy tears! The packaging was so beautiful and everything inside felt so premium. Will definitely order again.', stars: 5 },
-              { name: 'Riya M.', location: 'Bangalore', text: 'The period care hamper is such a thoughtful idea. Sent it to my sister and she loved every single item. Delivery was super fast and the box looked gorgeous.', stars: 5 },
+              { name: 'Rahul M.', location: 'Bangalore', text: 'Ordered the I Love You hamper for my girlfriend\'s birthday and she absolutely loved it! Everything was perfectly packed and delivered on time. Hampious made me look like the best boyfriend ever! 😄', stars: 5 },
               { name: 'Sneha K.', location: 'Bangalore', text: 'Got the I Love You hamper for my boyfriend\'s birthday. He was totally surprised! The handwritten card touch made it extra special. 10/10 experience.', stars: 5 },
+              { name: 'Arjun T.', location: 'Bangalore', text: 'I was completely clueless about what gift to get for my sister. Hampious made it so simple — ordered the sorry hamper and she was moved to tears. Premium quality, fast delivery. Highly recommended!', stars: 5 },
               { name: 'Anjali R.', location: 'Bangalore', text: 'Hampious made gifting so easy. I didn\'t know what to get my mom and the hamper was perfect. Customer service was also very responsive. Highly recommend!', stars: 5 },
+              { name: 'Karthik V.', location: 'Bangalore', text: 'Surprised my wife with the self-care hamper on our anniversary. The packaging was stunning and the products inside were top quality. She was so happy! Will definitely order again for special occasions.', stars: 5 },
             ].map((review, i) => (
               <motion.div key={i}
                 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
