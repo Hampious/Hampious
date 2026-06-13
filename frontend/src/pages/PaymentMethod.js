@@ -10,7 +10,7 @@ const PINK  = '#D4789A';
 const PLUM  = '#1A0F15';
 const BLUSH = '#FFF5F8';
 
-const RAZORPAY_KEY_ID = process.env.REACT_APP_RAZORPAY_KEY_ID || '';
+const RAZORPAY_KEY_ID = process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_live_SwaqpwcGpYEzEj';
 
 export default function PaymentMethod() {
   const navigate  = useNavigate();
@@ -59,36 +59,39 @@ export default function PaymentMethod() {
 
   // ── Complete order (after payment or COD) ──────────────────────────────────
   const completeOrder = async (paymentId = 'cod', paymentMethod = 'cod') => {
-    const orderCompletedRef = { current: true };
     const fullPayload = {
       ...orderData,
-      final_amount:   finalTotal,
-      total:          finalTotal,
+      final_amount:    finalTotal,
+      total:           finalTotal,
       discount_amount: discount,
-      coupon_code:    appliedCode || null,
-      payment_method: paymentMethod,
-      payment_id:     paymentId,
-      payment_status: paymentMethod === 'cod' ? 'pending' : 'paid',
-      status:         'processing',
-      created_at:     new Date().toISOString(),
+      coupon_code:     appliedCode || null,
+      payment_method:  paymentMethod,
+      payment_id:      paymentId,
+      payment_status:  paymentMethod === 'cod' ? 'pending' : 'paid',
+      status:          'processing',
+      created_at:      new Date().toISOString(),
     };
 
-    // Save to localStorage
-    const orderId     = fullPayload.id || `ORD-${Date.now()}`;
-    fullPayload.id    = orderId;
-    const localOrders = JSON.parse(localStorage.getItem('hamp_orders') || '[]');
-    const idx         = localOrders.findIndex(o => String(o.id) === String(orderId));
-    if (idx >= 0) localOrders[idx] = fullPayload;
-    else localOrders.push(fullPayload);
-    localStorage.setItem('hamp_orders', JSON.stringify(localOrders));
+    const orderId  = fullPayload.id || `ORD-${Date.now()}`;
+    fullPayload.id = orderId;
 
-    // Try backend
-    try { await API.post('/orders/create', fullPayload); } catch {}
+    // 1. Save to localStorage immediately — never fails
+    try {
+      const localOrders = JSON.parse(localStorage.getItem('hamp_orders') || '[]');
+      const idx = localOrders.findIndex(o => String(o.id) === String(orderId));
+      if (idx >= 0) localOrders[idx] = fullPayload;
+      else localOrders.push(fullPayload);
+      localStorage.setItem('hamp_orders', JSON.stringify(localOrders));
+    } catch {}
 
+    // 2. Navigate to success immediately — don't wait for API
     sessionStorage.removeItem('pending_order');
-    await clearCart();
+    clearCart().catch(() => {}); // fire and forget
     toast.success('🎉 Order placed successfully!');
     navigate(`/order-success?order_id=${orderId}`);
+
+    // 3. Send to backend in background — doesn't block the user
+    API.post('/orders/create', fullPayload).catch(() => {});
   };
 
   // ── Load Razorpay script ───────────────────────────────────────────────────
@@ -129,19 +132,16 @@ export default function PaymentMethod() {
       theme: { color: '#D4789A' },
       modal: { ondismiss: () => { setLoading(false); toast.error('Payment cancelled.'); }, animation: true },
       handler: async (response) => {
-        try {
-          if (rzpOrderId) {
-            await API.post('/payment/verify', {
-              payment_id:        response.razorpay_payment_id,
-              razorpay_order_id: response.razorpay_order_id,
-              signature:         response.razorpay_signature,
-            }).catch(() => {});
-          }
-          await completeOrder(response.razorpay_payment_id, method === 'upi' ? 'upi' : 'card');
-        } catch {
-          setLoading(false);
-          toast.error(`Payment received (ID: ${response.razorpay_payment_id}). Contact support.`);
+        // Verify in background — don't block success flow
+        if (rzpOrderId) {
+          API.post('/payment/verify', {
+            payment_id:        response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            signature:         response.razorpay_signature,
+          }).catch(() => {});
         }
+        // Complete order immediately
+        await completeOrder(response.razorpay_payment_id, method === 'upi' ? 'upi' : 'card');
       },
     };
     if (rzpOrderId) options.order_id = rzpOrderId;
