@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { adminGet, adminPut, handleUnauth } from '../../utils/adminApi';
+import { toast } from 'sonner';
 
 const PLUM  = '#1A0F15';
 const PINK  = '#D4789A';
@@ -386,7 +387,25 @@ export default function Shipments() {
   const [error, setError]             = useState('');
   const [openBookId, setOpenBookId]   = useState(null);
   const [trackingAwb, setTrackingAwb] = useState(null);
+  const [editAwbId, setEditAwbId]     = useState(null);
+  const [awbInput, setAwbInput]       = useState('');
   const navigate = useNavigate();
+
+  const saveManualAwb = async (orderId) => {
+    if (!awbInput.trim()) return;
+    try {
+      const token = localStorage.getItem('admin_token') || '';
+      await fetch(`${API}/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: 'shipped', tracking_id: awbInput.trim() }),
+      });
+      toast.success('Tracking number saved!');
+      setEditAwbId(null);
+      setAwbInput('');
+      fetchOrders();
+    } catch { toast.error('Failed to save tracking number'); }
+  };
 
   useEffect(() => {
     if (!localStorage.getItem('admin_token')) { navigate('/admin'); return; }
@@ -606,13 +625,41 @@ export default function Shipments() {
                           <span style={{ fontWeight: 700, color: ROSE, fontSize: 15 }}>
                             ₹{(order.final_amount || order.total || 0).toLocaleString('en-IN')}
                           </span>
-                          {awb && (
+                          {awb ? (
                             <button
                               onClick={() => setTrackingAwb(awb)}
                               style={{ background: BLUSH, color: ROSE, border: `1px solid ${PINK}`, borderRadius: 9, padding: '8px 16px', cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'Jost, sans-serif' }}
                             >
                               📍 Live Track
                             </button>
+                          ) : (
+                            editAwbId === order.id ? (
+                              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                <input
+                                  value={awbInput}
+                                  onChange={e => setAwbInput(e.target.value)}
+                                  placeholder="Enter AWB / tracking no."
+                                  style={{ border: `1px solid ${PINK}`, borderRadius: 8, padding: '6px 10px', fontSize: 12, fontFamily: 'Jost, sans-serif', width: 160, outline: 'none' }}
+                                  onKeyDown={e => e.key === 'Enter' && saveManualAwb(order.id)}
+                                  autoFocus
+                                />
+                                <button onClick={() => saveManualAwb(order.id)}
+                                  style={{ background: ROSE, color: '#fff', border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                                  Save
+                                </button>
+                                <button onClick={() => { setEditAwbId(null); setAwbInput(''); }}
+                                  style={{ background: '#f3f4f6', color: '#6b7280', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 12 }}>
+                                  ✕
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => { setEditAwbId(order.id); setAwbInput(''); }}
+                                style={{ background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A', borderRadius: 9, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'Jost, sans-serif' }}
+                              >
+                                ➕ Add Tracking No.
+                              </button>
+                            )
                           )}
                           {order.label_url && (
                             <a href={order.label_url} target="_blank" rel="noreferrer"
