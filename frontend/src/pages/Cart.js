@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import API from '../api';
-import { Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Trash2, ShoppingBag, ArrowRight, Plus, Minus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useCart } from '../context/CartContext';
 import { toast } from 'sonner';
 
 export default function Cart() {
   const navigate = useNavigate();
-  const { cart, removeFromCart, fetchCart, getCartTotal } = useCart();
+  const { cart, removeFromCart, updateQuantity, fetchCart, getCartTotal } = useCart();
   const [products, setProducts] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -137,16 +137,32 @@ export default function Cart() {
 
                     <div className="flex-1 min-w-0">
                       <h3 className="font-heading text-lg font-medium text-foreground mb-1 truncate">{name}</h3>
-                      <p className="text-sm text-muted-foreground mb-3">Quantity: {qty}</p>
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold text-lg text-primary">
+                      <p className="text-sm text-muted-foreground mb-3">₹{price.toFixed(0)} each</p>
+
+                      {/* Quantity controls + price */}
+                      <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => qty <= 1 ? handleRemove(item.product_id) : updateQuantity(item.product_id, qty - 1)}
+                            className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors"
+                            style={{ borderColor: '#D4789A', color: '#B84E78', background: '#fff' }}
+                            data-testid={`decrease-qty-${item.product_id}`}
+                          >
+                            <Minus size={13} />
+                          </button>
+                          <span className="w-8 text-center font-semibold text-foreground">{qty}</span>
+                          <button
+                            onClick={() => updateQuantity(item.product_id, qty + 1)}
+                            className="w-8 h-8 rounded-full flex items-center justify-center border transition-colors"
+                            style={{ borderColor: '#D4789A', color: '#fff', background: '#D4789A' }}
+                            data-testid={`increase-qty-${item.product_id}`}
+                          >
+                            <Plus size={13} />
+                          </button>
+                        </div>
+                        <span className="font-bold text-lg" style={{ color: '#B84E78' }}>
                           ₹{(price * qty).toFixed(0)}
                         </span>
-                        {qty > 1 && (
-                          <span className="text-sm text-muted-foreground">
-                            (₹{price.toFixed(0)} each)
-                          </span>
-                        )}
                       </div>
                     </div>
 
