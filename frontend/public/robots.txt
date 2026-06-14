@@ -1,5 +1,12 @@
 User-agent: *
 Allow: /
+Allow: /products
+Allow: /about
+Allow: /contact
+Allow: /return-policy
+Allow: /privacy
+Allow: /terms
+
 Disallow: /admin
 Disallow: /admin/
 Disallow: /api/
@@ -7,5 +14,14 @@ Disallow: /cart
 Disallow: /checkout
 Disallow: /profile
 Disallow: /my-orders
+Disallow: /wishlist
+Disallow: /order-success
+Disallow: /payment
+Disallow: /auth
+Disallow: /reset-password
 
-Sitemap: https://hampious.com/sitemap.xml
+# Sitemap
+Sitemap: https://www.hampious.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1

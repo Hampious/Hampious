@@ -1030,6 +1030,31 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ══════════════════════════════════════════════════════
+          FAQ SECTION — targets "People Also Ask" on Google
+          ══════════════════════════════════════════════════════ */}
+      <section style={{ background: '#fff', padding: 'clamp(2rem, 6vw, 4rem) clamp(1rem, 4vw, 1.5rem)' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
+          <h2 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: 500, color: PLUM, marginBottom: 24, textAlign: 'center' }}>
+            Frequently Asked Questions
+          </h2>
+          {[
+            { q: 'Where can I buy gift hampers in Bangalore?', a: 'You can buy premium gift hampers in Bangalore from Hampious at hampious.com. We offer birthday hampers, period care hampers, sorry hampers, love hampers and self-care hampers with same-day delivery across Bangalore. COD available.' },
+            { q: 'What is included in a gift hamper?', a: 'Hampious gift hampers include a curated selection of premium items like chocolates, teddy bears, scented candles, skincare products, Ferrero Rocher, handwritten cards and more — all beautifully packed in a premium gift box.' },
+            { q: 'Does Hampious offer same-day delivery in Bangalore?', a: 'Yes! Hampious offers same-day delivery for gift hampers in Bangalore. We also offer Cash on Delivery (COD) and fast delivery across all major cities in India.' },
+            { q: 'What is the price of gift hampers at Hampious?', a: 'Gift hampers at Hampious start from ₹499. All hampers include free shipping and are available with Cash on Delivery (COD) across India.' },
+            { q: 'Can I personalise my gift hamper?', a: 'Yes! Hampious offers personalised gift hampers with custom handwritten cards and Spotify QR code music dedication. Contact us at team.hampious@gmail.com or WhatsApp 7076138777.' },
+          ].map((faq, i) => (
+            <details key={i} style={{ borderBottom: '1px solid rgba(212,120,154,0.15)', padding: '16px 0' }}>
+              <summary style={{ fontFamily: 'Jost, sans-serif', fontSize: 15, fontWeight: 700, color: PLUM, cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {faq.q} <span style={{ color: PINK, fontSize: 20, fontWeight: 300 }}>+</span>
+              </summary>
+              <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 14, color: '#6b4a5a', lineHeight: 1.7, marginTop: 12, marginBottom: 0 }}>{faq.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
     </div>
   );
 }
