@@ -48,7 +48,7 @@ razorpay_client = razorpay.Client(auth=(os.environ.get('RAZORPAY_KEY_ID'), os.en
 RAZORPAY_WEBHOOK_SECRET = os.environ.get('RAZORPAY_WEBHOOK_SECRET', '')
 
 # Global Configs
-SUPPORT_PHONE = os.environ.get('SUPPORT_PHONE', '+91 7428601664')
+SUPPORT_PHONE = os.environ.get('SUPPORT_PHONE', '+91 7377173717')
 SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'noreply@hampious.com')
 
 # Resend email configuration

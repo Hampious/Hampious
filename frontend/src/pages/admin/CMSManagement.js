@@ -358,7 +358,7 @@ export default function CMSManagement() {
                   <Input
                     value={settings.contact_phone}
                     onChange={(e) => handleChange('contact_phone', e.target.value)}
-                    placeholder="+91 7428601664"
+                    placeholder="+91 7377173717"
                     className="mt-2"
                   />
                 </div>

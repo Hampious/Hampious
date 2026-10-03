@@ -46,7 +46,7 @@ export const Footer = () => (
             {[
               { Icon: Instagram,   href: 'https://www.instagram.com/hampious/',                        label: 'Instagram' },
               { Icon: Facebook,    href: 'https://www.facebook.com/profile.php?id=61589181085568',    label: 'Facebook'  },
-              { Icon: WhatsAppIcon,href: 'https://wa.me/917076138777',                                label: 'WhatsApp'  },
+              { Icon: WhatsAppIcon,href: 'https://wa.me/917377173717',                                label: 'WhatsApp'  },
             ].map(({ Icon, href, label }) => (
               <motion.a
                 key={label}
@@ -114,7 +114,7 @@ export const Footer = () => (
           <div className="space-y-4">
             {[
               { Icon: Mail,  href: 'mailto:team.hampious@gmail.com', text: 'team.hampious@gmail.com' },
-              { Icon: Phone, href: 'tel:+917076138777',            text: '+91 7076138777' },
+              { Icon: Phone, href: 'tel:+917377173717',            text: '+91 7377173717' },
               { Icon: Clock, href: null,                           text: 'Mon – Sun: 10 AM – 7 PM' },
               { Icon: MapPin,href: null,                           text: 'Koramangala, Bangalore' },
             ].map(({ Icon, href, text }, i) => {

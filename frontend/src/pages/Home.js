@@ -1057,7 +1057,7 @@ export default function Home() {
             { q: 'What is included in a gift hamper?', a: 'Hampious gift hampers include a curated selection of premium items like chocolates, teddy bears, scented candles, skincare products, Ferrero Rocher, handwritten cards and more — all beautifully packed in a premium gift box.' },
             { q: 'Does Hampious offer same-day delivery in Bangalore?', a: 'Yes! Hampious offers same-day delivery for gift hampers in Bangalore. We also offer Cash on Delivery (COD) and fast delivery across all major cities in India.' },
             { q: 'What is the price of gift hampers at Hampious?', a: 'Gift hampers at Hampious start from ₹499. All hampers include free shipping and are available with Cash on Delivery (COD) across India.' },
-            { q: 'Can I personalise my gift hamper?', a: 'Yes! Hampious offers personalised gift hampers with custom handwritten cards and Spotify QR code music dedication. Contact us at team.hampious@gmail.com or WhatsApp 7076138777.' },
+            { q: 'Can I personalise my gift hamper?', a: 'Yes! Hampious offers personalised gift hampers with custom handwritten cards and Spotify QR code music dedication. Contact us at team.hampious@gmail.com or WhatsApp 7377173717.' },
           ].map((faq, i) => (
             <details key={i} style={{ borderBottom: '1px solid rgba(212,120,154,0.15)', padding: '16px 0' }}>
               <summary style={{ fontFamily: 'Jost, sans-serif', fontSize: 15, fontWeight: 700, color: PLUM, cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

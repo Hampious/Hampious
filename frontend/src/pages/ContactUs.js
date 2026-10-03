@@ -35,8 +35,8 @@ const contactInfo = [
   {
     icon: Phone,
     title: 'Phone',
-    value: '+91 7076138777',
-    href: 'tel:+917076138777',
+    value: '+91 7377173717',
+    href: 'tel:+917377173717',
     description: 'Call us for instant support'
   },
   {

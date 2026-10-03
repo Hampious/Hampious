@@ -141,11 +141,11 @@ export default function ReturnPolicy() {
               team.hampious@gmail.com
             </a>
             <a 
-              href="tel:+917076138777"
+              href="tel:+917377173717"
               className="flex items-center gap-2 text-primary hover:underline"
             >
               <Phone className="h-5 w-5" />
-              +91 7076138777
+              +91 7377173717
             </a>
           </div>
         </motion.div>
