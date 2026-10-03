@@ -48,6 +48,16 @@ export default function Products() {
     fetchAllProducts();
   }, []);
 
+  // Sync category state from URL query searchParams
+  useEffect(() => {
+    const cat = searchParams.get('category');
+    if (cat) {
+      setSelectedCategory(cat);
+    } else {
+      setSelectedCategory('all');
+    }
+  }, [searchParams]);
+
   // Filter + sort instantly in memory whenever category/sort changes
   useEffect(() => {
     applyFilterSort(allProducts, selectedCategory, sortBy);
@@ -60,12 +70,17 @@ export default function Products() {
     if (isFeaturedQuery) {
       const featuredItems = filtered.filter(p => p.is_featured === true || p.featured === true || String(p.is_featured) === 'true' || String(p.featured) === 'true');
       filtered = featuredItems.length > 0 ? featuredItems : filtered;
-    } else if (category !== 'all') {
-      filtered = filtered.filter(p =>
-        p.category_id == category ||
-        p.category === category ||
-        (p.category || '').toLowerCase() === category.toLowerCase()
-      );
+    } else if (category && category !== 'all') {
+      const target = String(category).toLowerCase().trim().replace(/[\s_-]+/g, '');
+      filtered = filtered.filter(p => {
+        const pCat = String(p.category || '').toLowerCase().trim().replace(/[\s_-]+/g, '');
+        const pCatId = String(p.category_id || '').toLowerCase().trim().replace(/[\s_-]+/g, '');
+        return (
+          pCatId === target ||
+          pCat === target ||
+          (pCat && target && (pCat.includes(target) || target.includes(pCat)))
+        );
+      });
     }
     if (sort === 'created_at') {
       filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));

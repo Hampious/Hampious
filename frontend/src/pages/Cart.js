@@ -5,7 +5,7 @@ import API from '../api';
 import { Trash2, ShoppingBag, ArrowRight, Plus, Minus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useCart } from '../context/CartContext';
-import { toast } from 'sonner';
+import { DEFAULT_PRODUCTS } from '../data/defaultProducts';
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -23,11 +23,14 @@ export default function Cart() {
 
       const productIds = cart.items.map(item => item.product_id);
 
-      // Load localStorage products as base fallback
+      // Load DEFAULT_PRODUCTS and localStorage products as base fallback
       const localProducts = JSON.parse(localStorage.getItem('hamp_products') || '[]');
+      const pool = [...DEFAULT_PRODUCTS, ...localProducts];
       const productsMap = {};
-      localProducts.forEach(p => {
+      pool.forEach(p => {
         productsMap[String(p.id)] = p;
+        const cleanId = String(p.id).replace(/^prod-/, '');
+        productsMap[cleanId] = p;
       });
 
       // Try backend for each product (overrides localStorage if found)

@@ -56,11 +56,18 @@ export default function ProductDetails() {
         if (response.data) found = response.data;
       } catch {}
 
-      // 2. Fallback: search hamp_products localStorage or DEFAULT_PRODUCTS
+      // 2. Fallback: search hamp_products localStorage and DEFAULT_PRODUCTS
       if (!found) {
         const local = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-        const pool  = local.length > 0 ? local : DEFAULT_PRODUCTS;
-        found = pool.find(p => String(p.id) === String(id)) || null;
+        const pool  = [...local, ...DEFAULT_PRODUCTS];
+        const targetId = String(id).toLowerCase().trim();
+        const cleanTargetId = targetId.replace(/^prod-/, '');
+
+        found = pool.find(p => {
+          const pId = String(p.id).toLowerCase().trim();
+          const cleanPId = pId.replace(/^prod-/, '');
+          return pId === targetId || cleanPId === cleanTargetId;
+        }) || null;
       }
 
       if (found) {

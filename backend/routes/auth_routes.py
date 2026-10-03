@@ -29,7 +29,7 @@ def _save_otp(email: str, otp: str, expires_ts: float):
     except Exception as e:
         print(f"[otp] Supabase save failed (using memory): {e}")
 
-def _get_otp(email: str) -> dict | None:
+def _get_otp(email: str) -> Optional[dict]:
     """Retrieve OTP from Supabase first, fall back to memory."""
     try:
         rows = db_select("otps", {"email": email})

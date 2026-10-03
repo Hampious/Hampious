@@ -1,8 +1,15 @@
 import axios from "axios";
 
-// Base URL from ENV — hardcoded Render URL as fallback so Vercel always points to backend
+const getBaseURL = () => {
+  if (process.env.REACT_APP_BACKEND_URL) return process.env.REACT_APP_BACKEND_URL;
+  if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+    return "http://localhost:8000/api";
+  }
+  return "https://hampious.onrender.com/api";
+};
+
 const API = axios.create({
-  baseURL: process.env.REACT_APP_BACKEND_URL || "https://hampious.onrender.com/api",
+  baseURL: getBaseURL(),
   timeout: 12000, // 12s — show fallback fast, update when backend wakes
 });
 
