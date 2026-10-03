@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { ProductCard } from '../components/ProductCard';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { DEFAULT_PRODUCTS } from '../data/defaultProducts';
 
 /* ─────────────────────────────────────────────────── */
 const BLUSH   = '#FFF5F8';
@@ -79,25 +80,29 @@ const stagger = {
 function TopRatedSection({ navigate }) {
   const { addToCart } = useCart();
   const { user }      = useAuth();
-  const cachedProds = (() => { try { return JSON.parse(localStorage.getItem('hamp_products') || '[]').filter(p => Number(p.stock||0) > 0).slice(0,4); } catch { return []; } })();
+  const cachedProds = (() => {
+    try {
+      const local = JSON.parse(localStorage.getItem('hamp_products') || '[]');
+      const source = local.length > 0 ? local : DEFAULT_PRODUCTS;
+      return source.filter(p => Number(p.stock ?? 1) > 0).slice(0, 4);
+    } catch {
+      return DEFAULT_PRODUCTS.slice(0, 4);
+    }
+  })();
   const [products, setProducts] = useState(cachedProds);
   const [loading,  setLoading]  = useState(cachedProds.length === 0);
 
   useEffect(() => {
     const load = async () => {
-      // Only show skeleton if no cached products at all
-      // Never setLoading(true) if we already have products showing
       try {
         const r   = await API.get('/products');
-        const all = Array.isArray(r.data) ? r.data : [];
-        const top = all.filter(p => p.stock > 0).slice(0, 4);
+        const all = Array.isArray(r.data) && r.data.length > 0 ? r.data : DEFAULT_PRODUCTS;
+        const top = all.filter(p => Number(p.stock ?? 1) > 0).slice(0, 4);
         const result = top.length ? top : all.slice(0, 4);
-        if (result.length > 0) {
-          try { localStorage.setItem('hamp_products', JSON.stringify(all)); } catch {}
-          setProducts(result);
-        }
+        try { localStorage.setItem('hamp_products', JSON.stringify(all)); } catch {}
+        setProducts(result.length ? result : DEFAULT_PRODUCTS.slice(0, 4));
       } catch {
-        // Keep showing whatever is already in state (from cache)
+        setProducts(DEFAULT_PRODUCTS.slice(0, 4));
       } finally {
         setLoading(false);
       }
@@ -311,13 +316,22 @@ export default function Home() {
     setLoadingFeatured(true);
     try {
       const r = await API.get('/products');
-      const all = Array.isArray(r.data) ? r.data : [];
-      // Cache all products so Collection page works instantly for new users
+      const apiData = Array.isArray(r.data) && r.data.length > 0 ? r.data : null;
+      const all = apiData || (JSON.parse(localStorage.getItem('hamp_products') || '[]').length > 0
+        ? JSON.parse(localStorage.getItem('hamp_products') || '[]')
+        : DEFAULT_PRODUCTS);
+
       if (all.length > 0) {
         try { localStorage.setItem('hamp_products', JSON.stringify(all)); } catch {}
       }
-      setFeaturedProducts(all.filter(p => p.is_active !== false && p.featured === true).slice(0, 6));
-    } catch { setFeaturedProducts([]); }
+
+      const featured = all.filter(p => p.is_active !== false && (p.is_featured === true || p.featured === true || String(p.is_featured) === 'true' || String(p.featured) === 'true'));
+      setFeaturedProducts(featured.length > 0 ? featured.slice(0, 6) : all.slice(0, 6));
+    } catch {
+      const fallback = DEFAULT_PRODUCTS;
+      try { localStorage.setItem('hamp_products', JSON.stringify(fallback)); } catch {}
+      setFeaturedProducts(fallback.slice(0, 6));
+    }
     finally  { setLoadingFeatured(false); }
   };
 

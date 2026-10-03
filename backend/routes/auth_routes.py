@@ -245,13 +245,16 @@ def send_otp(request: SendOtpRequest):
     if not email or "@" not in email:
         raise HTTPException(status_code=400, detail="Valid email required")
 
-    if not BREVO_API_KEY:
+    brevo_key = os.environ.get("BREVO_API_KEY") or BREVO_API_KEY
+    smtp_pass = os.environ.get("EMAIL_PASSWORD")
+    if not brevo_key and not smtp_pass:
         raise HTTPException(status_code=500, detail="Email service not configured. Contact support.")
 
     # Generate 6-digit OTP and persist (survives server restarts)
     otp = str(random.randint(100000, 999999))
     expires_ts = time.time() + 600  # 10 minutes
     _save_otp(email, otp, expires_ts)
+    print(f"[OTP LOG] Generated OTP for {email}: {otp}")
 
     # Get user name from Supabase if exists
     name = request.name or "there"

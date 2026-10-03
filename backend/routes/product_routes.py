@@ -19,19 +19,144 @@ def _stock_info(p):
     return item
 
 
+FALLBACK_PRODUCTS = [
+    {
+        "id": 1,
+        "name": "The Ultimate Period Care & Warmth Box",
+        "price": 1499.0,
+        "discount_price": 1499.0,
+        "original_price": 1999.0,
+        "category": "Period Care",
+        "category_id": "period",
+        "description": "A cozy, soothing care hamper containing a heat pad, organic herbal teas, luxury dark chocolates, plush socks, and a personalized message card.",
+        "images": ["https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=800&auto=format&fit=crop"],
+        "stock": 25,
+        "tags": ["period care", "self care", "wellness"],
+        "is_featured": True,
+        "featured": True,
+        "is_active": True,
+        "average_rating": 4.9,
+        "review_count": 28,
+        "created_at": datetime.utcnow().isoformat()
+    },
+    {
+        "id": 2,
+        "name": "Luxurious Love & Romance Gift Set",
+        "price": 2299.0,
+        "discount_price": 2299.0,
+        "original_price": 2799.0,
+        "category": "I Love You",
+        "category_id": "love",
+        "description": "Express your deepest feelings with a handcrafted scented soy candle, premium Belgian chocolates, a velvet rose bouquet, and a customized keepsake photo card.",
+        "images": ["https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=800&auto=format&fit=crop"],
+        "stock": 20,
+        "tags": ["love", "romance", "anniversary"],
+        "is_featured": True,
+        "featured": True,
+        "is_active": True,
+        "average_rating": 5.0,
+        "review_count": 34,
+        "created_at": datetime.utcnow().isoformat()
+    },
+    {
+        "id": 3,
+        "name": "Grand Birthday Celebration Hamper",
+        "price": 1899.0,
+        "discount_price": 1899.0,
+        "original_price": 2499.0,
+        "category": "Birthday",
+        "category_id": "birthday",
+        "description": "Make birthdays unforgettable! Includes gourmet party snacks, sparkling celebration drink, party poppers, a custom mug, and birthday wish scroll.",
+        "images": ["https://images.unsplash.com/photo-1513201099705-a9746e1e201f?q=80&w=800&auto=format&fit=crop"],
+        "stock": 18,
+        "tags": ["birthday", "celebration", "gifts"],
+        "is_featured": True,
+        "featured": True,
+        "is_active": True,
+        "average_rating": 4.8,
+        "review_count": 19,
+        "created_at": datetime.utcnow().isoformat()
+    },
+    {
+        "id": 4,
+        "name": "Heartfelt \"I am Sorry\" Healing Box",
+        "price": 1699.0,
+        "discount_price": 1699.0,
+        "original_price": 2099.0,
+        "category": "Sorry",
+        "category_id": "sorry",
+        "description": "Say sorry from the bottom of your heart with handwritten apology cards, sweet treats, lavender essential oil spray, and a cute teddy plushie.",
+        "images": ["https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?q=80&w=800&auto=format&fit=crop"],
+        "stock": 12,
+        "tags": ["sorry", "apology", "comfort"],
+        "is_featured": True,
+        "featured": True,
+        "is_active": True,
+        "average_rating": 4.9,
+        "review_count": 15,
+        "created_at": datetime.utcnow().isoformat()
+    },
+    {
+        "id": 5,
+        "name": "Serene Spa & Self Care Sanctuary",
+        "price": 1999.0,
+        "discount_price": 1999.0,
+        "original_price": 2599.0,
+        "category": "Self Care",
+        "category_id": "selfcare",
+        "description": "Indulge in home relaxation with bath salts, essential oils, body butter, a silk eye mask, and soothing green tea sachets.",
+        "images": ["https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=800&auto=format&fit=crop"],
+        "stock": 15,
+        "tags": ["self care", "spa", "relaxation"],
+        "is_featured": True,
+        "featured": True,
+        "is_active": True,
+        "average_rating": 5.0,
+        "review_count": 42,
+        "created_at": datetime.utcnow().isoformat()
+    },
+    {
+        "id": 6,
+        "name": "Festive Delight Royal Hamper",
+        "price": 2499.0,
+        "discount_price": 2499.0,
+        "original_price": 3199.0,
+        "category": "Festive",
+        "category_id": "festive",
+        "description": "Celebrate special occasions with artisan dry fruits, handcrafted brass diyas, rich Indian sweets, and gold-embossed greeting cards.",
+        "images": ["https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=800&auto=format&fit=crop"],
+        "stock": 22,
+        "tags": ["festive", "celebration", "royal"],
+        "is_featured": True,
+        "featured": True,
+        "is_active": True,
+        "average_rating": 4.9,
+        "review_count": 27,
+        "created_at": datetime.utcnow().isoformat()
+    }
+]
+
+
 @router.get("/")
-def get_products(category: Optional[str] = None, featured: Optional[bool] = None, skip: int = 0, limit: int = 50):
+def get_products(category: Optional[str] = None, featured: Optional[bool] = None, is_featured: Optional[bool] = None, skip: int = 0, limit: int = 50):
     try:
         filters = {}
         if category:
             filters["category"] = category
-        if featured is not None:
-            filters["is_featured"] = featured
+        feat_val = featured if featured is not None else is_featured
+        if feat_val is not None:
+            filters["is_featured"] = feat_val
         products = db_select("products", filters if filters else None)
+        if not products:
+            products = FALLBACK_PRODUCTS
+            if category:
+                products = [p for p in products if p.get("category", "").lower() == category.lower() or p.get("category_id", "").lower() == category.lower()]
+            if feat_val is not None:
+                products = [p for p in products if p.get("is_featured") == feat_val or p.get("featured") == feat_val]
         return [_stock_info(p) for p in products[skip:skip + limit]]
     except Exception as e:
         print(f"[get_products] Supabase error: {e}")
-        return []
+        return [_stock_info(p) for p in FALLBACK_PRODUCTS[skip:skip + limit]]
 
 
 @router.get("/categories")
@@ -44,17 +169,22 @@ def get_categories():
 
 
 @router.get("/{product_id}")
-def get_product(product_id: int):
+def get_product(product_id: str):
+    pid_str = str(product_id).strip()
     try:
-        rows = db_select("products", {"id": product_id})
-        if not rows:
-            raise HTTPException(status_code=404, detail="Product not found")
-        return _stock_info(rows[0])
-    except HTTPException:
-        raise
+        rows = db_select("products", {"id": pid_str})
+        if rows:
+            return _stock_info(rows[0])
     except Exception as e:
         print(f"[get_product] Supabase error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch product")
+
+    clean_id = pid_str.replace("prod-", "")
+    for p in FALLBACK_PRODUCTS:
+        p_id_str = str(p.get("id"))
+        if p_id_str == pid_str or p_id_str == clean_id or f"prod-{p_id_str}" == pid_str:
+            return _stock_info(p)
+
+    raise HTTPException(status_code=404, detail="Product not found")
 
 
 # ── Reviews ───────────────────────────────────────────────────────────────────

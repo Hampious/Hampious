@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { adminGet, handleUnauth } from '../../utils/adminApi';
+import { DEFAULT_PRODUCTS } from '../../data/defaultProducts';
 
 const PLUM = '#1A0F15';
 const PINK = '#D4789A';
@@ -77,7 +78,8 @@ export default function Dashboard() {
   // Build stats from localStorage when backend is offline
   const buildLocalStats = () => {
     const orders    = JSON.parse(localStorage.getItem('hamp_orders')    || '[]');
-    const products  = JSON.parse(localStorage.getItem('hamp_products')  || '[]');
+    const localProds= JSON.parse(localStorage.getItem('hamp_products')  || '[]');
+    const products  = localProds.length > 0 ? localProds : DEFAULT_PRODUCTS;
     const customers = JSON.parse(localStorage.getItem('hamp_customers') || '[]');
     const revenue   = orders.filter(o => o.payment_status === 'paid')
                             .reduce((s, o) => s + Number(o.final_amount || o.total || 0), 0);

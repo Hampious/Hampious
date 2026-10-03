@@ -13,6 +13,8 @@ import { toast } from 'sonner';
 
 // Removed const API_URL = process.env.REACT_APP_BACKEND_URL;
 
+import { DEFAULT_PRODUCTS } from '../data/defaultProducts';
+
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -44,20 +46,21 @@ export default function ProductDetails() {
   }, [id, user]);
 
   const fetchProduct = async () => {
-    try {
-      setLoading(true);
-      let found = null;
+    setLoading(true);
+    let found = null;
 
+    try {
       // 1. Try backend
       try {
         const response = await API.get(`/products/${id}`);
         if (response.data) found = response.data;
       } catch {}
 
-      // 2. Fallback: search hamp_products localStorage
+      // 2. Fallback: search hamp_products localStorage or DEFAULT_PRODUCTS
       if (!found) {
         const local = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-        found = local.find(p => String(p.id) === String(id)) || null;
+        const pool  = local.length > 0 ? local : DEFAULT_PRODUCTS;
+        found = pool.find(p => String(p.id) === String(id)) || null;
       }
 
       if (found) {
@@ -85,19 +88,24 @@ export default function ProductDetails() {
 
   const fetchSimilarProducts = async () => {
     try {
-      // Try backend; fall back to products in same category from localStorage
+      // Try backend; fall back to products in same category from localStorage or DEFAULT_PRODUCTS
       const response = await API.get(`/products/${id}/similar`);
-      setSimilarProducts(Array.isArray(response.data) ? response.data : []);
-    } catch {
-      try {
-        const local  = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-        const cur    = local.find(p => String(p.id) === String(id));
-        const similar = cur
-          ? local.filter(p => String(p.id) !== String(id) && p.category === cur.category).slice(0, 4)
-          : [];
-        setSimilarProducts(similar);
-      } catch {}
-    }
+      const apiSimilar = Array.isArray(response.data) ? response.data : [];
+      if (apiSimilar.length > 0) {
+        setSimilarProducts(apiSimilar);
+        return;
+      }
+    } catch {}
+
+    try {
+      const local  = JSON.parse(localStorage.getItem('hamp_products') || '[]');
+      const pool   = local.length > 0 ? local : DEFAULT_PRODUCTS;
+      const cur    = pool.find(p => String(p.id) === String(id));
+      const similar = cur
+        ? pool.filter(p => String(p.id) !== String(id) && (p.category === cur.category || p.category_id === cur.category_id)).slice(0, 4)
+        : pool.filter(p => String(p.id) !== String(id)).slice(0, 4);
+      setSimilarProducts(similar);
+    } catch {}
   };
 
   const fetchReviews = async () => {

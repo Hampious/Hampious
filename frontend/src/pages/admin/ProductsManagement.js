@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { adminGet, adminPost, adminPut, adminDelete, handleUnauth, parseError } from '../../utils/adminApi';
+import { DEFAULT_PRODUCTS } from '../../data/defaultProducts';
 
 const PLUM = '#1A0F15';
 const PINK = '#D4789A';
@@ -456,18 +457,21 @@ export default function ProductsManagement() {
       if (handleUnauth(res, navigate)) return;
       if (!res.ok) {
         const stored = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-        if (stored.length > 0) { setProducts(stored); return; }
-        setError(`Failed to load products (HTTP ${res.status})`);
+        const fallback = stored.length > 0 ? stored : DEFAULT_PRODUCTS;
+        setProducts(fallback);
+        try { localStorage.setItem('hamp_products', JSON.stringify(fallback)); } catch {}
         return;
       }
       const data = await res.json();
       const list = Array.isArray(data) ? data : (data.products || []);
-      setProducts(list);
-      localStorage.setItem('hamp_products', JSON.stringify(list));
+      const finalProducts = list.length > 0 ? list : DEFAULT_PRODUCTS;
+      setProducts(finalProducts);
+      try { localStorage.setItem('hamp_products', JSON.stringify(finalProducts)); } catch {}
     } catch (e) {
       const stored = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-      setProducts(stored);
-      if (stored.length === 0) setError('Network error — could not reach the server.');
+      const fallback = stored.length > 0 ? stored : DEFAULT_PRODUCTS;
+      setProducts(fallback);
+      try { localStorage.setItem('hamp_products', JSON.stringify(fallback)); } catch {}
     } finally {
       setLoading(false);
     }

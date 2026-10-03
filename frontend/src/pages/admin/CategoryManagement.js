@@ -239,6 +239,15 @@ export default function CategoryManagement() {
     fetchCategories();
   }, [navigate]);
 
+const DEFAULT_CATEGORIES_LIST = [
+  { id: 'period', name: 'Period Care', slug: 'period', description: 'Period care & wellness hampers', icon: '🌸' },
+  { id: 'love', name: 'I Love You', slug: 'love', description: 'Love & romantic hampers', icon: '❤️' },
+  { id: 'birthday', name: 'Birthday', slug: 'birthday', description: 'Birthday celebration hampers', icon: '🎂' },
+  { id: 'sorry', name: 'Sorry', slug: 'sorry', description: 'Apology & healing hampers', icon: '💔' },
+  { id: 'selfcare', name: 'Self Care', slug: 'self-care', description: 'Self care & spa hampers', icon: '💆' },
+  { id: 'festive', name: 'Festive', slug: 'festive', description: 'Festive & holiday hampers', icon: '🎉' },
+];
+
   const fetchCategories = async () => {
     setLoading(true);
     setError('');
@@ -246,31 +255,24 @@ export default function CategoryManagement() {
       const res = await adminGet('/categories');
       if (handleUnauth(res, navigate)) return;
 
-      if (res.status === 404 || res.status === 405 || res.status === 422) {
-        // Old backend — load from localStorage
-        const stored = JSON.parse(localStorage.getItem('hamp_categories') || '[]');
-        setCategories(stored);
-        return;
-      }
-
       if (!res.ok) {
-        // Try localStorage fallback
         const stored = JSON.parse(localStorage.getItem('hamp_categories') || '[]');
-        if (stored.length > 0) { setCategories(stored); return; }
-        setError(`Failed to load categories (HTTP ${res.status})`);
+        const fallback = stored.length > 0 ? stored : DEFAULT_CATEGORIES_LIST;
+        setCategories(fallback);
+        try { localStorage.setItem('hamp_categories', JSON.stringify(fallback)); } catch {}
         return;
       }
 
       const data = await res.json();
       const list = Array.isArray(data) ? data : (data.categories || []);
-      setCategories(list);
-      // Sync to localStorage
-      localStorage.setItem('hamp_categories', JSON.stringify(list));
+      const finalCats = list.length > 0 ? list : DEFAULT_CATEGORIES_LIST;
+      setCategories(finalCats);
+      try { localStorage.setItem('hamp_categories', JSON.stringify(finalCats)); } catch {}
     } catch (e) {
-      // Network error — use localStorage
       const stored = JSON.parse(localStorage.getItem('hamp_categories') || '[]');
-      setCategories(stored);
-      if (stored.length === 0) setError('Network error — could not reach the server.');
+      const fallback = stored.length > 0 ? stored : DEFAULT_CATEGORIES_LIST;
+      setCategories(fallback);
+      try { localStorage.setItem('hamp_categories', JSON.stringify(fallback)); } catch {}
     } finally {
       setLoading(false);
     }

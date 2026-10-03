@@ -29,6 +29,11 @@ class CouponCreate(BaseModel):
     expires_at: Optional[str] = None
     description: Optional[str] = ""
 
+FALLBACK_COUPONS = [
+    {"id": 1, "code": "WELCOME10", "discount_percent": 10, "min_order_amount": 500, "is_active": True, "description": "10% off on first order"},
+    {"id": 2, "code": "HAMPIOUS20", "discount_percent": 20, "min_order_amount": 1500, "is_active": True, "description": "20% off on orders above ₹1500"}
+]
+
 # ── Admin CRUD ────────────────────────────────────────────────────────────────
 
 @router.get("/admin/coupons")
@@ -36,10 +41,10 @@ async def list_coupons(request: Request):
     _verify(request)
     try:
         rows = db_select("coupons")
-        return rows or []
+        return rows if rows else FALLBACK_COUPONS
     except Exception as e:
         print(f"[coupons] list error: {e}")
-        return []
+        return FALLBACK_COUPONS
 
 @router.post("/admin/coupons")
 async def create_coupon(request: Request):

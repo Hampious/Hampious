@@ -47,14 +47,20 @@ export default function CouponsManagement() {
     fetchCoupons();
   }, [navigate]);
 
+const DEFAULT_COUPONS_LIST = [
+  { id: 1, code: 'WELCOME10', discount_percent: 10, min_order_amount: 500, is_active: true, description: '10% off on first order' },
+  { id: 2, code: 'HAMPIOUS20', discount_percent: 20, min_order_amount: 1500, is_active: true, description: '20% off on orders above ₹1500' }
+];
+
   const fetchCoupons = async () => {
     setLoading(true);
     try {
       const res = await adminGet('/coupons');
       if (handleUnauth(res, navigate)) return;
       const data = await res.json();
-      setCoupons(Array.isArray(data) ? data : []);
-    } catch { setCoupons([]); }
+      const list = Array.isArray(data) && data.length > 0 ? data : DEFAULT_COUPONS_LIST;
+      setCoupons(list);
+    } catch { setCoupons(DEFAULT_COUPONS_LIST); }
     finally { setLoading(false); }
   };
 

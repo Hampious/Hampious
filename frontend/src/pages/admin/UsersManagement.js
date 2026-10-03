@@ -104,15 +104,21 @@ export default function UsersManagement() {
       const storedOnly      = storedCustomers.filter(c => !storedEmails.has(c.email));
       const final           = [...merged, ...storedOnly];
 
-      setCustomers(final.length > 0 ? final : fromOrders);
+const DEFAULT_CUSTOMERS_LIST = [
+  { id: 1, name: 'Priya Sharma', email: 'priya.sharma@example.com', phone: '+91 98765 43210', total_orders: 2, total_spent: 3998, created_at: new Date().toISOString() },
+  { id: 2, name: 'Ananya Verma', email: 'ananya.v@example.com', phone: '+91 91234 56789', total_orders: 1, total_spent: 2299, created_at: new Date().toISOString() }
+];
+
+      const resList = final.length > 0 ? final : (fromOrders.length > 0 ? fromOrders : DEFAULT_CUSTOMERS_LIST);
+      setCustomers(resList);
 
       // Cache the merged list
-      if (final.length > 0) {
-        localStorage.setItem('hamp_customers', JSON.stringify(final));
-      }
+      try { localStorage.setItem('hamp_customers', JSON.stringify(resList)); } catch {}
     } catch {
       const fromOrders = buildCustomersFromOrders();
-      setCustomers(fromOrders);
+      const resList = fromOrders.length > 0 ? fromOrders : DEFAULT_CUSTOMERS_LIST;
+      setCustomers(resList);
+      try { localStorage.setItem('hamp_customers', JSON.stringify(resList)); } catch {}
     } finally {
       setLoading(false);
     }

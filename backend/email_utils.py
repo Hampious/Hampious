@@ -3,6 +3,16 @@ Shared email utilities for Hampious.
 All emails go through Brevo transactional API.
 """
 import os
+from pathlib import Path
+
+# Load .env file automatically
+try:
+    from dotenv import load_dotenv
+    env_path = Path(__file__).parent / ".env"
+    if env_path.exists():
+        load_dotenv(dotenv_path=env_path)
+except ImportError:
+    pass
 
 BREVO_API_KEY      = os.environ.get("BREVO_API_KEY", "")
 BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL", "team.hampious@gmail.com")
@@ -58,21 +68,29 @@ def _email_wrap(body: str) -> str:
 </body></html>"""
 
 
-# ── Brevo sender ──────────────────────────────────────────────────────────────
+# ── Email sender ──────────────────────────────────────────────────────────────
 
 def send_email(to_email: str, subject: str, html_body: str) -> bool:
     """Send via Brevo first, fall back to SMTP if Brevo fails."""
+    brevo_key = os.environ.get("BREVO_API_KEY") or BREVO_API_KEY
+    sender_email = os.environ.get("BREVO_SENDER_EMAIL") or BREVO_SENDER_EMAIL
+    sender_name = os.environ.get("BREVO_SENDER_NAME") or BREVO_SENDER_NAME
+
+    smtp_host = os.environ.get("EMAIL_HOST") or SMTP_HOST
+    smtp_port = int(os.environ.get("EMAIL_PORT") or SMTP_PORT)
+    smtp_user = os.environ.get("EMAIL_USERNAME") or SMTP_USER
+    smtp_pass = os.environ.get("EMAIL_PASSWORD") or SMTP_PASSWORD
 
     # ── 1. Try Brevo ──────────────────────────────────────────────────────────
-    if BREVO_API_KEY:
+    if brevo_key:
         try:
             import sib_api_v3_sdk
             config = sib_api_v3_sdk.Configuration()
-            config.api_key["api-key"] = BREVO_API_KEY
+            config.api_key["api-key"] = brevo_key
             api = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(config))
             email_obj = sib_api_v3_sdk.SendSmtpEmail(
                 to=[{"email": to_email}],
-                sender={"name": BREVO_SENDER_NAME, "email": BREVO_SENDER_EMAIL},
+                sender={"name": sender_name, "email": sender_email},
                 subject=subject,
                 html_content=html_body,
             )
@@ -81,25 +99,23 @@ def send_email(to_email: str, subject: str, html_body: str) -> bool:
             return True
         except Exception as e:
             print(f"[email:brevo] ✗ Error: {e} — trying SMTP fallback")
-    else:
-        print("[email:brevo] BREVO_API_KEY not set — trying SMTP fallback")
 
     # ── 2. SMTP fallback (Gmail App Password) ─────────────────────────────────
-    if SMTP_PASSWORD:
+    if smtp_pass:
         try:
             import smtplib
             from email.mime.multipart import MIMEMultipart
             from email.mime.text import MIMEText
             msg = MIMEMultipart("alternative")
             msg["Subject"] = subject
-            msg["From"]    = f"{BREVO_SENDER_NAME} <{SMTP_USER}>"
+            msg["From"]    = f"{sender_name} <{smtp_user}>"
             msg["To"]      = to_email
             msg.attach(MIMEText(html_body, "html"))
-            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
                 server.ehlo()
                 server.starttls()
-                server.login(SMTP_USER, SMTP_PASSWORD)
-                server.sendmail(SMTP_USER, to_email, msg.as_string())
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, to_email, msg.as_string())
             print(f"[email:smtp] ✓ Sent '{subject}' to {to_email}")
             return True
         except Exception as e:
