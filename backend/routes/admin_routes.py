@@ -107,7 +107,7 @@ async def list_products(request: Request):
     _verify(request)
     try:
         products = db_select("products")
-        return products if products else FALLBACK_PRODUCTS
+        return products
     except Exception as e:
         print(f"[products] Supabase error: {e}")
         return FALLBACK_PRODUCTS
@@ -216,7 +216,7 @@ async def list_categories(request: Request):
     _verify(request)
     try:
         cats = db_select("categories")
-        return cats if cats else FALLBACK_CATEGORIES
+        return cats
     except Exception as e:
         print(f"[categories] Supabase error: {e}")
         return FALLBACK_CATEGORIES
@@ -274,7 +274,7 @@ async def list_orders(request: Request):
     try:
         filters = {"status": status_f} if status_f else None
         orders = db_select("orders", filters, order="created_at")
-        return orders if orders else FALLBACK_ORDERS
+        return orders
     except Exception as e:
         print(f"[list_orders] Supabase error: {e}")
         return FALLBACK_ORDERS
@@ -343,7 +343,7 @@ async def list_customers(request: Request):
     _verify(request)
     try:
         custs = db_select("customers")
-        return custs if custs else FALLBACK_CUSTOMERS
+        return custs
     except Exception as e:
         print(f"[customers] Supabase error: {e}")
         return FALLBACK_CUSTOMERS

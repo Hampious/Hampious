@@ -147,7 +147,7 @@ def get_products(category: Optional[str] = None, featured: Optional[bool] = None
         if feat_val is not None:
             filters["is_featured"] = feat_val
         products = db_select("products", filters if filters else None)
-        if not products:
+        if products is None:
             products = FALLBACK_PRODUCTS
             if category:
                 products = [p for p in products if p.get("category", "").lower() == category.lower() or p.get("category_id", "").lower() == category.lower()]
