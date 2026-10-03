@@ -13,6 +13,8 @@ import {
 } from '../components/ui/select';
 
 
+import { DEFAULT_PRODUCTS } from '../data/defaultProducts';
+
 const DEFAULT_CATEGORIES = [
   { id: 'period',   name: 'Period Care' },
   { id: 'love',     name: 'I Love You' },
@@ -24,12 +26,19 @@ const DEFAULT_CATEGORIES = [
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
-  // Init from cache immediately — no skeleton flash on revisit
-  const cachedProducts = (() => { try { return JSON.parse(localStorage.getItem('hamp_products') || '[]'); } catch { return []; } })();
+  // Init from cache immediately — fallback to DEFAULT_PRODUCTS for new users
+  const cachedProducts = (() => {
+    try {
+      const local = JSON.parse(localStorage.getItem('hamp_products') || '[]');
+      return local.length > 0 ? local : DEFAULT_PRODUCTS;
+    } catch {
+      return DEFAULT_PRODUCTS;
+    }
+  })();
   const [allProducts, setAllProducts]   = useState(cachedProducts);
   const [products, setProducts]         = useState(cachedProducts);
   const [categories, setCategories]     = useState([]);
-  const [loading, setLoading]           = useState(cachedProducts.length === 0); // only show skeleton on first ever visit
+  const [loading, setLoading]           = useState(cachedProducts.length === 0);
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [sortBy, setSortBy]             = useState('created_at');
 
@@ -42,11 +51,16 @@ export default function Products() {
   // Filter + sort instantly in memory whenever category/sort changes
   useEffect(() => {
     applyFilterSort(allProducts, selectedCategory, sortBy);
-  }, [selectedCategory, sortBy, allProducts]);
+  }, [selectedCategory, sortBy, allProducts, searchParams]);
 
   const applyFilterSort = (data, category, sort) => {
     let filtered = [...data];
-    if (category !== 'all') {
+    const isFeaturedQuery = searchParams.get('featured') === 'true' || category === 'featured' || category === 'true';
+
+    if (isFeaturedQuery) {
+      const featuredItems = filtered.filter(p => p.is_featured === true || p.featured === true || String(p.is_featured) === 'true' || String(p.featured) === 'true');
+      filtered = featuredItems.length > 0 ? featuredItems : filtered;
+    } else if (category !== 'all') {
       filtered = filtered.filter(p =>
         p.category_id == category ||
         p.category === category ||
@@ -75,25 +89,16 @@ export default function Products() {
   };
 
   const fetchAllProducts = async () => {
-    // Show cached immediately
-    try {
-      const cached = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-      if (cached.length > 0) {
-        setAllProducts(cached);
-        setLoading(false);
-      }
-    } catch {}
-
     try {
       const response = await API.get('/products');
-      let data = Array.isArray(response.data) ? response.data : [];
-      if (data.length > 0) {
-        try { localStorage.setItem('hamp_products', JSON.stringify(data)); } catch {}
-        setAllProducts(data);
-      }
+      let data = Array.isArray(response.data) && response.data.length > 0 ? response.data : DEFAULT_PRODUCTS;
+      try { localStorage.setItem('hamp_products', JSON.stringify(data)); } catch {}
+      setAllProducts(data);
     } catch {
       const local = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-      if (local.length > 0) setAllProducts(local);
+      const fallback = local.length > 0 ? local : DEFAULT_PRODUCTS;
+      try { localStorage.setItem('hamp_products', JSON.stringify(fallback)); } catch {}
+      setAllProducts(fallback);
     } finally {
       setLoading(false);
     }
