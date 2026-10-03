@@ -456,22 +456,14 @@ export default function ProductsManagement() {
       const res = await adminGet('/products');
       if (handleUnauth(res, navigate)) return;
       if (!res.ok) {
-        const stored = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-        const fallback = stored.length > 0 ? stored : DEFAULT_PRODUCTS;
-        setProducts(fallback);
-        try { localStorage.setItem('hamp_products', JSON.stringify(fallback)); } catch {}
-        return;
+        throw new Error('Failed to fetch');
       }
       const data = await res.json();
       const list = Array.isArray(data) ? data : (data.products || []);
-      const finalProducts = list.length > 0 ? list : DEFAULT_PRODUCTS;
-      setProducts(finalProducts);
-      try { localStorage.setItem('hamp_products', JSON.stringify(finalProducts)); } catch {}
+      setProducts(list);
     } catch (e) {
-      const stored = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-      const fallback = stored.length > 0 ? stored : DEFAULT_PRODUCTS;
-      setProducts(fallback);
-      try { localStorage.setItem('hamp_products', JSON.stringify(fallback)); } catch {}
+      console.error(e);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -479,19 +471,15 @@ export default function ProductsManagement() {
 
   const handleDelete = async (id) => {
     try {
-      let useLocal = false;
-      try {
-        const res = await adminDelete(`/products/${id}`);
-        if (handleUnauth(res, navigate)) return;
-        if (!res.ok) useLocal = true;
-      } catch { useLocal = true; }
-      if (useLocal) {
-        const stored = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-        localStorage.setItem('hamp_products', JSON.stringify(stored.filter(p => p.id !== id)));
-      }
+      const res = await adminDelete(`/products/${id}`);
+      if (handleUnauth(res, navigate)) return;
+      if (!res.ok) throw new Error('Failed to delete product');
       setDeleteId(null);
       fetchProducts();
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+      console.error(e);
+      alert('Failed to delete product.');
+    }
   };
 
   const handleToggleFeatured = async (product) => {
