@@ -1,4 +1,12 @@
-const API_BASE = `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api'}/admin`;
+const getBaseURL = () => {
+  if (process.env.REACT_APP_BACKEND_URL) return process.env.REACT_APP_BACKEND_URL;
+  if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+    return "http://localhost:8000/api";
+  }
+  return "https://hampious.onrender.com/api";
+};
+
+const API_BASE = `${getBaseURL()}/admin`;
 
 export function getToken() {
   return localStorage.getItem('admin_token') || '';

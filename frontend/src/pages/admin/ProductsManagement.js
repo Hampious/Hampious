@@ -131,7 +131,7 @@ function ProductModal({ product, onClose, onSave }) {
     setSaving(true);
     try {
       const token = localStorage.getItem('admin_token') || '';
-      const API = `${process.env.REACT_APP_BACKEND_URL || `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api'}`}/admin`;
+      const API = `${process.env.REACT_APP_BACKEND_URL || `${process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8000/api' : 'https://hampious.onrender.com/api')}`}/admin`;
 
       const payload = {
         name: form.name,

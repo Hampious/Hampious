@@ -420,7 +420,7 @@ const OrderCard = ({ order, onRefresh }) => {
   const handleCancelOrder = async () => {
     setCancelling(true);
     try {
-      const res = await fetch(`${(process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000/api')}/orders/${order.id}/cancel`, {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:8000/api' : 'https://hampious.onrender.com/api')}/orders/${order.id}/cancel`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: cancelReason }),
