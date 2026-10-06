@@ -98,7 +98,7 @@ def send_email(to_email: str, subject: str, html_body: str) -> bool:
             print(f"[email:brevo] ✓ Sent '{subject}' to {to_email}")
             return True
         except Exception as e:
-            print(f"[email:brevo] ✗ Error: {e} — trying SMTP fallback")
+            raise Exception(f"BREVO ERROR: {e}")
 
     # ── 2. SMTP fallback (Gmail App Password) ─────────────────────────────────
     if smtp_pass:

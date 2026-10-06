@@ -264,15 +264,18 @@ def send_otp(request: SendOtpRequest):
             name = rows[0]["name"].split()[0]
     except: pass
 
-    sent = send_email(
-        to_email=email,
-        subject="Your Hampious Login Code",
-        html_body=otp_email(otp, name),
-    )
-    if not sent:
-        # Clean up the OTP if email failed
+    try:
+        sent = send_email(
+            to_email=email,
+            subject="Your Hampious Login Code",
+            html_body=otp_email(otp, name),
+        )
+        if not sent:
+            _delete_otp(email)
+            raise HTTPException(status_code=500, detail="Failed to send OTP email.")
+    except Exception as e:
         _delete_otp(email)
-        raise HTTPException(status_code=500, detail="Failed to send OTP email. Please check your email address or try again later.")
+        raise HTTPException(status_code=500, detail=f"EMAIL_ERROR: {str(e)}")
 
     return {"message": "OTP sent to your email", "email": email}
 
