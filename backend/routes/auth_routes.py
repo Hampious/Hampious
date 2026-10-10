@@ -364,3 +364,9 @@ def get_profile(email: str):
         "email": user.get("email", email),
         "name":  user.get("name", "")
     }
+
+@router.get("/debug-key")
+def debug_key():
+    import os
+    k = os.environ.get("BREVO_API_KEY", "")
+    return {"prefix": k[:15], "length": len(k), "is_correct": k.startswith("xkeysib-cc23c4")}
