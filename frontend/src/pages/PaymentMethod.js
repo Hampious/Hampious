@@ -114,9 +114,21 @@ export default function PaymentMethod() {
     let rzpAmount  = Math.round(finalTotal * 100);
     try {
       const res = await API.post('/payment/create-razorpay-order', { amount: finalTotal });
-      if (res.data?.id) { rzpOrderId = res.data.id; rzpAmount = res.data.amount; }
-    } catch {}
+      if (res.data?.id) { 
+        rzpOrderId = res.data.id; 
+        rzpAmount = res.data.amount; 
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to create payment order on server.');
+      setLoading(false);
+      return;
+    }
 
+    if (!rzpOrderId) {
+      toast.error('Could not generate Order ID. Please try again.');
+      setLoading(false);
+      return;
+    }
     const options = {
       key:         RAZORPAY_KEY_ID,
       amount:      rzpAmount,
