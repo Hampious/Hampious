@@ -369,4 +369,10 @@ def get_profile(email: str):
 def debug_key():
     import os
     k = os.environ.get("BREVO_API_KEY", "")
-    return {"prefix": k[:15], "length": len(k), "is_correct": k.startswith("xkeysib-cc23c4")}
+    rzp_id = os.environ.get("RAZORPAY_KEY_ID", "MISSING")
+    return {
+        "prefix": k[:15], 
+        "length": len(k), 
+        "is_correct": k.startswith("xkeysib-cc23c4"),
+        "razorpay_id": rzp_id
+    }
