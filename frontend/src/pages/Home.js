@@ -83,10 +83,9 @@ function TopRatedSection({ navigate }) {
   const cachedProds = (() => {
     try {
       const local = JSON.parse(localStorage.getItem('hamp_products') || '[]');
-      const source = local.length > 0 ? local : DEFAULT_PRODUCTS;
-      return source.filter(p => Number(p.stock ?? 1) > 0).slice(0, 4);
+      return local.filter(p => Number(p.stock ?? 1) > 0).slice(0, 4);
     } catch {
-      return DEFAULT_PRODUCTS.slice(0, 4);
+      return [];
     }
   })();
   const [products, setProducts] = useState(cachedProds);
@@ -96,13 +95,13 @@ function TopRatedSection({ navigate }) {
     const load = async () => {
       try {
         const r   = await API.get('/products');
-        const all = Array.isArray(r.data) && r.data.length > 0 ? r.data : DEFAULT_PRODUCTS;
+        const all = Array.isArray(r.data) ? r.data : [];
         const top = all.filter(p => Number(p.stock ?? 1) > 0).slice(0, 4);
         const result = top.length ? top : all.slice(0, 4);
         try { localStorage.setItem('hamp_products', JSON.stringify(all)); } catch {}
-        setProducts(result.length ? result : DEFAULT_PRODUCTS.slice(0, 4));
+        setProducts(result);
       } catch {
-        setProducts(DEFAULT_PRODUCTS.slice(0, 4));
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -316,10 +315,7 @@ export default function Home() {
     setLoadingFeatured(true);
     try {
       const r = await API.get('/products');
-      const apiData = Array.isArray(r.data) && r.data.length > 0 ? r.data : null;
-      const all = apiData || (JSON.parse(localStorage.getItem('hamp_products') || '[]').length > 0
-        ? JSON.parse(localStorage.getItem('hamp_products') || '[]')
-        : DEFAULT_PRODUCTS);
+      const all = Array.isArray(r.data) ? r.data : [];
 
       if (all.length > 0) {
         try { localStorage.setItem('hamp_products', JSON.stringify(all)); } catch {}
@@ -328,9 +324,7 @@ export default function Home() {
       const featured = all.filter(p => p.is_active !== false && (p.is_featured === true || p.featured === true || String(p.is_featured) === 'true' || String(p.featured) === 'true'));
       setFeaturedProducts(featured.length > 0 ? featured.slice(0, 6) : all.slice(0, 6));
     } catch {
-      const fallback = DEFAULT_PRODUCTS;
-      try { localStorage.setItem('hamp_products', JSON.stringify(fallback)); } catch {}
-      setFeaturedProducts(fallback.slice(0, 6));
+      setFeaturedProducts([]);
     }
     finally  { setLoadingFeatured(false); }
   };
