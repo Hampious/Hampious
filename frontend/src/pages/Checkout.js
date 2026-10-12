@@ -8,7 +8,7 @@ import { Label } from '../components/ui/label';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
-import { MapPin, Tag, Package, Loader2, User, CreditCard, Check, ShieldCheck, ArrowRight } from 'lucide-react';
+import { MapPin, Tag, Package, Loader2, User, CreditCard, Check, ShieldCheck, ArrowRight, Eye, X } from 'lucide-react';
 
 const RAZORPAY_KEY_ID = process.env.REACT_APP_RAZORPAY_KEY_ID || '';
 
@@ -118,6 +118,163 @@ const itemVariants = {
   }
 };
 
+function GreetingCardView({ giftMessage = '', spotifyLink = '', qrCode = '', isModal = false }) {
+  const qrUrl = qrCode || (spotifyLink ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=1A0F15&bgcolor=FFF8FA&data=${encodeURIComponent(spotifyLink)}` : null);
+
+  return (
+    <div
+      style={{
+        background: 'linear-gradient(145deg, #FFFFFF 0%, #FFF5F8 100%)',
+        borderRadius: '18px',
+        border: '1.5px solid #F0D0DC',
+        boxShadow: isModal 
+          ? '0 25px 60px -15px rgba(184, 78, 120, 0.35), 0 0 0 1px rgba(212, 120, 154, 0.25)' 
+          : '0 8px 24px -6px rgba(184, 78, 120, 0.1)',
+        padding: isModal ? '32px 28px' : '22px 20px',
+        position: 'relative',
+        overflow: 'hidden',
+        fontFamily: 'Jost, sans-serif',
+      }}
+    >
+      {/* Top decorative gradient bar */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: 'linear-gradient(90deg, #D4789A, #B84E78, #D4789A)' }} />
+
+      {/* Card Header */}
+      <div style={{ textAlign: 'center', marginBottom: 16, borderBottom: '1px dashed rgba(212, 120, 154, 0.35)', paddingBottom: 12 }}>
+        <p style={{
+          fontFamily: "'Garamond', 'Georgia', serif",
+          fontSize: '18px',
+          letterSpacing: '0.22em',
+          fontWeight: 700,
+          color: '#B84E78',
+          margin: 0,
+          textTransform: 'uppercase',
+        }}>
+          ✦ Hampious ✦
+        </p>
+        <p style={{ fontSize: '10px', letterSpacing: '0.18em', color: '#8A5870', margin: '4px 0 0', textTransform: 'uppercase', fontWeight: 600 }}>
+          Luxury Keepsake Greeting Card
+        </p>
+      </div>
+
+      {/* Card Message Body */}
+      <div style={{
+        background: '#FFFFFF',
+        borderRadius: '12px',
+        border: '1px solid rgba(212, 120, 154, 0.25)',
+        padding: '16px 18px',
+        marginBottom: 16,
+        minHeight: '75px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+      }}>
+        {giftMessage.trim() ? (
+          <p style={{
+            fontFamily: "'Cormorant Garamond', 'Georgia', serif",
+            fontSize: isModal ? '19px' : '16px',
+            fontStyle: 'italic',
+            lineHeight: 1.6,
+            color: '#1A0F15',
+            margin: 0,
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+          }}>
+            “{giftMessage}”
+          </p>
+        ) : (
+          <p style={{
+            fontFamily: "'Cormorant Garamond', 'Georgia', serif",
+            fontSize: '15px',
+            fontStyle: 'italic',
+            color: '#a0728a',
+            margin: 0,
+          }}>
+            “Your personal message will be printed here in elegant calligraphy...”
+          </p>
+        )}
+      </div>
+
+      {/* QR Code Dedication Section */}
+      <div style={{
+        background: 'rgba(255, 245, 248, 0.85)',
+        borderRadius: '12px',
+        border: '1px dashed rgba(212, 120, 154, 0.35)',
+        padding: '12px 14px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '14px',
+      }}>
+        {qrUrl ? (
+          <div style={{ background: '#fff', padding: '5px', borderRadius: '10px', border: '1px solid #f3d0dd', flexShrink: 0 }}>
+            <img
+              src={qrUrl}
+              alt="Dedication QR Code"
+              style={{ width: isModal ? 76 : 64, height: isModal ? 76 : 64, display: 'block', borderRadius: 4, objectFit: 'contain' }}
+            />
+          </div>
+        ) : (
+          <div style={{
+            width: isModal ? 76 : 64,
+            height: isModal ? 76 : 64,
+            background: '#fff',
+            borderRadius: '10px',
+            border: '1px dashed #f3d0dd',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#D4789A',
+            fontSize: 22,
+            flexShrink: 0,
+          }}>
+            🎵
+          </div>
+        )}
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {qrCode ? (
+            <>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#1A0F15', margin: 0 }}>
+                📱 Custom Dedicated QR
+              </p>
+              <p style={{ fontSize: 11, color: '#7c5a6a', margin: '3px 0 0', lineHeight: 1.4 }}>
+                Scannable with any phone camera to view your custom QR link!
+              </p>
+            </>
+          ) : spotifyLink ? (
+            <>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#1DB954', color: '#fff', padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 700, marginBottom: 4 }}>
+                <span>●</span> Spotify Soundtrack
+              </div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#1A0F15', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Scan to play on Spotify
+              </p>
+              <p style={{ fontSize: 11, color: '#7c5a6a', margin: '2px 0 0', lineHeight: 1.3 }}>
+                Scannable with phone camera or Spotify app 🎶
+              </p>
+            </>
+          ) : (
+            <>
+              <p style={{ fontSize: 12, fontWeight: 600, color: '#8A5870', margin: 0 }}>
+                Musical or Custom QR Dedication
+              </p>
+              <p style={{ fontSize: 11, color: '#a0728a', margin: '3px 0 0', lineHeight: 1.4 }}>
+                Add a Spotify song link or custom QR above to include a scannable QR on this card.
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Footer Note */}
+      <p style={{ fontSize: 10, textAlign: 'center', color: '#a0728a', margin: '12px 0 0', letterSpacing: '0.04em' }}>
+        ✨ Printed on 350 GSM luxury textured cardstock • Included complimentary
+      </p>
+    </div>
+  );
+}
+
 export default function Checkout() {
   const navigate = useNavigate();
   const { cart, clearCart, getCartTotal } = useCart();
@@ -150,6 +307,7 @@ export default function Checkout() {
   const [spotifyLink,   setSpotifyLink]   = useState('');
   const [qrCode,        setQrCode]        = useState('');  // base64 data URL
   const [qrUploading,   setQrUploading]   = useState(false);
+  const [showCardModal, setShowCardModal] = useState(false);
 
   const handleQrUpload = (file) => {
     if (!file) return;
@@ -593,14 +751,40 @@ export default function Checkout() {
 
             {/* ── Personalise Your Gift ─────────────────────────────────── */}
             <motion.div variants={itemVariants} className="checkout-card">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="checkout-step-indicator" style={{ background: 'linear-gradient(135deg,#D4789A,#B84E78)' }}>
-                  <span style={{ fontSize: 18 }}>🎁</span>
+              <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+                <div className="flex items-center gap-4">
+                  <div className="checkout-step-indicator" style={{ background: 'linear-gradient(135deg,#D4789A,#B84E78)' }}>
+                    <span style={{ fontSize: 18 }}>🎁</span>
+                  </div>
+                  <div>
+                    <h2 className="font-heading text-xl font-semibold text-foreground">Personalise Your Gift</h2>
+                    <p className="text-sm text-muted-foreground">Optional — add a special touch</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="font-heading text-xl font-semibold text-foreground">Personalise Your Gift</h2>
-                  <p className="text-sm text-muted-foreground">Optional — add a special touch</p>
-                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowCardModal(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'rgba(212, 120, 154, 0.12)',
+                    border: '1.5px solid rgba(212, 120, 154, 0.4)',
+                    color: '#B84E78',
+                    borderRadius: '20px',
+                    padding: '8px 16px',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    transition: 'all 0.25s ease',
+                    letterSpacing: '0.02em',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#B84E78'; e.currentTarget.style.color = '#fff'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(212, 120, 154, 0.12)'; e.currentTarget.style.color = '#B84E78'; }}
+                >
+                  <Eye size={14} /> Preview Card & QR
+                </button>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -627,14 +811,14 @@ export default function Checkout() {
                   </label>
                   <input
                     type="url"
-                    placeholder="https://open.spotify.com/playlist/..."
+                    placeholder="https://open.spotify.com/playlist/... or https://open.spotify.com/track/..."
                     value={spotifyLink}
                     onChange={e => setSpotifyLink(e.target.value)}
                     className="mt-1 input-premium"
                     style={{ width: '100%', padding: '10px 14px', borderRadius: 12, border: '1px solid #f3d0dd', fontFamily: 'Jost, sans-serif', fontSize: 14, color: '#1A0F15', background: '#FFF5F8', outline: 'none', boxSizing: 'border-box' }}
                   />
                   {spotifyLink && (
-                    <p style={{ fontSize: 11, color: '#1DB954', marginTop: 4 }}>✓ Spotify link added — a QR will be printed on your gift</p>
+                    <p style={{ fontSize: 11, color: '#1DB954', marginTop: 4, fontWeight: 600 }}>✓ Spotify link added — a scannable Spotify QR will be printed on your card</p>
                   )}
                 </div>
 
@@ -669,6 +853,24 @@ export default function Checkout() {
                       </div>
                     </label>
                   )}
+                </div>
+
+                {/* ── Live Card Preview Section ───────────────────────────── */}
+                <div style={{ marginTop: 10, paddingTop: 18, borderTop: '1px dashed #f3d0dd' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#1A0F15', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>💌</span> Live Card Preview
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowCardModal(true)}
+                      style={{ fontSize: 12, color: '#B84E78', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                    >
+                      <Eye size={13} /> Fullscreen Mockup ↗
+                    </button>
+                  </div>
+
+                  <GreetingCardView giftMessage={giftMessage} spotifyLink={spotifyLink} qrCode={qrCode} />
                 </div>
               </div>
             </motion.div>
@@ -769,6 +971,59 @@ export default function Checkout() {
           </div>
         </div>
       </motion.div>
+
+      {/* ── Fullscreen Greeting Card Modal ───────────────────────── */}
+      {showCardModal && (
+        <div
+          onClick={() => setShowCardModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(26, 15, 21, 0.72)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              position: 'relative',
+              maxWidth: '520px',
+              width: '100%',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setShowCardModal(false)}
+              aria-label="Close Preview"
+              style={{
+                position: 'absolute',
+                top: -14,
+                right: -14,
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                background: '#fff',
+                border: '1px solid #f3d0dd',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.18)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#1A0F15',
+                zIndex: 10,
+              }}
+            >
+              <X size={18} />
+            </button>
+            <GreetingCardView giftMessage={giftMessage} spotifyLink={spotifyLink} qrCode={qrCode} isModal={true} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
