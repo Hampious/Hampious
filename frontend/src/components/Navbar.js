@@ -92,10 +92,11 @@ export const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group" data-testid="navbar-logo">
             <motion.img
-              src="/logo.jpg"
+              src="/logo.png"
               alt="Hampious"
               onError={e => { e.currentTarget.style.display = 'none'; }}
               className="h-8 w-8 object-contain"
+              style={{ mixBlendMode: 'multiply' }}
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
             />

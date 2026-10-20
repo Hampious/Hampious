@@ -55,7 +55,7 @@ export default function AdminLogin() {
     <div className="admin-login-container">
       <div className="admin-login-card">
         <div className="logo-section">
-          <img src="/logo.jpg" alt="Hampious" className="login-logo" />
+          <img src="/logo.png" alt="Hampious" className="login-logo" style={{ mixBlendMode: 'multiply' }} />
         </div>
         <h1>Hampious Admin</h1>
         <p className="subtitle">Management System</p>

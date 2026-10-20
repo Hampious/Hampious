@@ -570,7 +570,7 @@ const DEFAULT_SHIPMENT_ORDERS = [
                             onClick={() => setOpenBookId(isOpen ? null : order.id)}
                             style={{ background: isOpen ? '#fff' : ROSE, color: isOpen ? '#7c5a6a' : '#fff', border: `1px solid ${isOpen ? '#f3d0dd' : ROSE}`, borderRadius: 10, padding: '9px 18px', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'Jost, sans-serif', whiteSpace: 'nowrap' }}
                           >
-                            {isOpen ? 'Cancel' : '🚀 Ship via Shiprocket'}
+                            {isOpen ? 'Cancel' : '🚀 Ship via Shadowfax'}
                           </button>
                         </div>
                       </div>

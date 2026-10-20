@@ -135,7 +135,7 @@ export default function PaymentMethod() {
       currency:    'INR',
       name:        'Hampious',
       description: 'Premium Gift Hamper',
-      image:       `${window.location.origin}/logo.jpg`,
+      image:       `${window.location.origin}/logo.png`,
       prefill: {
         name:    orderData.customer_name    || '',
         email:   orderData.customer_email   || '',

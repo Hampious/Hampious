@@ -367,9 +367,9 @@ function OrderDrawer({ order, onClose, onUpdated }) {
           {/* Shiprocket shipping */}
           {(form.status === 'pending' || form.status === 'processing') && !shipResult && (
             <div style={{ border: '1px solid #c4b5fd', borderRadius: 12, padding: 16, background: '#F5F3FF' }}>
-              <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: '#5B21B6' }}>🚚 Ship via Shiprocket</p>
+              <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: '#5B21B6' }}>🚚 Ship via Shadowfax</p>
               <p style={{ margin: '0 0 12px', fontSize: 12, color: '#7C3AED', lineHeight: 1.6 }}>
-                Automatically create a Shiprocket order, assign AWB, request pickup, and email the customer their tracking details.
+                Automatically create a Shadowfax order, assign AWB, request pickup, and email the customer their tracking details.
               </p>
               <button
                 onClick={handleShipViaShiprocket}
@@ -381,12 +381,12 @@ function OrderDrawer({ order, onClose, onUpdated }) {
                   cursor: shipping ? 'not-allowed' : 'pointer',
                 }}
               >
-                {shipping ? '⏳ Creating Shipment...' : '🚀 Ship via Shiprocket'}
+                {shipping ? '⏳ Creating Shipment...' : '🚀 Ship via Shadowfax'}
               </button>
             </div>
           )}
 
-          {/* Shiprocket success result */}
+          {/* Shadowfax success result */}
           {shipResult && (
             <div style={{ border: '1px solid #6ee7b7', borderRadius: 12, padding: 16, background: '#ECFDF5' }}>
               <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700, color: '#065F46' }}>✅ Shipment Created!</p>

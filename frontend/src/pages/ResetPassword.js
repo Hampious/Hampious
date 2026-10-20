@@ -70,7 +70,7 @@ export default function ResetPassword() {
         {/* Header */}
         <div style={{ background: '#1A0F15', padding: '1.75rem 2rem', textAlign: 'center' }}>
           <img
-            src="/logo.jpg" alt="Hampious"
+            src="/logo.png" alt="Hampious"
             onError={e => { e.currentTarget.style.display = 'none'; }}
             style={{ height: 48, width: 'auto', objectFit: 'contain', display: 'block', margin: '0 auto 8px' }}
           />

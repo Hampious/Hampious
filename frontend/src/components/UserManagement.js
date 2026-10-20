@@ -58,7 +58,7 @@ export default function UserManagement() {
     <div className="admin-dashboard">
       <div className="admin-sidebar">
         <div className="sidebar-header">
-          <img src="/logo.jpg" alt="Hampious" className="sidebar-logo" />
+          <img src="/logo.png" alt="Hampious" className="sidebar-logo" />
           <h2>Hampious</h2>
           <p>Admin Panel</p>
         </div>
