@@ -72,7 +72,7 @@ export default function ResetPassword() {
           <img
             src="/logo.png" alt="Hampious"
             onError={e => { e.currentTarget.style.display = 'none'; }}
-            style={{ height: 56, width: 56, borderRadius: '50%', objectFit: 'contain', display: 'block', margin: '0 auto 10px' }}
+            style={{ height: 72, width: 72, borderRadius: '50%', objectFit: 'contain', display: 'block', margin: '0 auto 12px' }}
           />
           <span style={{ color: PINK, fontFamily: "'Cormorant', Georgia, serif", fontSize: '1.6rem', letterSpacing: '0.16em' }}>
             HAMPIOUS

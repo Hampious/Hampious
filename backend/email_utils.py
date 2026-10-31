@@ -36,7 +36,7 @@ def _email_header() -> str:
     <div style="background:#1A0F15;padding:1.5rem 2rem;text-align:center;">
       <a href="{FRONTEND_URL}" style="text-decoration:none;">
         <img src="{LOGO_URL}" alt="Hampious"
-             style="height:60px;width:60px;border-radius:50%;object-fit:contain;display:inline-block;vertical-align:middle;"
+             style="height:80px;width:80px;border-radius:50%;object-fit:contain;display:inline-block;vertical-align:middle;"
              onerror="this.style.display='none'" />
         <span style="display:block;color:#D4789A;font-size:1.6rem;font-family:'Georgia',serif;
                      letter-spacing:0.16em;margin-top:6px;">HAMPIOUS</span>

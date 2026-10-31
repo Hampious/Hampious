@@ -76,8 +76,8 @@ export default function AdminLogin() {
             src="/logo.png"
             alt="Hampious"
             style={{
-              width: 72, height: 72, borderRadius: '50%',
-              margin: '0 auto 1.25rem', display: 'block',
+              width: 92, height: 92, borderRadius: '50%',
+              margin: '0 auto 1.5rem', display: 'block',
               boxShadow: '0 8px 32px rgba(212,120,154,0.3)',
               objectFit: 'contain',
             }}

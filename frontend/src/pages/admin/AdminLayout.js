@@ -52,7 +52,7 @@ export default function AdminLayout() {
           <img
             src="/logo.png"
             alt="Hampious"
-            style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'contain', flexShrink: 0 }}
+            style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'contain', flexShrink: 0 }}
           />
           {!collapsed && (
             <div>

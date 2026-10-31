@@ -201,13 +201,13 @@ function AuthForm() {
           transition={{ duration: 0.6, type: "spring" }}
         >
           <motion.div
-            className="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center shadow-lg overflow-hidden"
-            whileHover={{ scale: 1.08 }}
+            className="w-28 h-28 sm:w-32 sm:h-32 rounded-full mx-auto mb-5 flex items-center justify-center shadow-xl overflow-hidden"
+            whileHover={{ scale: 1.06 }}
             transition={{ duration: 0.3 }}
           >
             <img src="/logo.png" alt="Hampious" className="w-full h-full object-contain" />
           </motion.div>
-          <h1 className="font-heading text-3xl font-semibold" style={{ color: '#5C1233' }}>Hampious</h1>
+          <h1 className="font-heading text-3xl sm:text-4xl font-semibold" style={{ color: '#6A1340' }}>Hampious</h1>
           <p className="text-sm text-muted-foreground mt-2">Premium Gift Hampers</p>
         </motion.div>
 

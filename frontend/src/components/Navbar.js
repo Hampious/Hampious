@@ -87,30 +87,30 @@ export const Navbar = () => {
       }}
     >
       <div className="px-4 sm:px-6 md:px-12 lg:px-20">
-        <div className="flex items-center justify-between h-[74px] sm:h-[80px]">
+        <div className="flex items-center justify-between h-[82px] sm:h-[90px]">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3.5 group" data-testid="navbar-logo">
+          <Link to="/" className="flex items-center gap-3.5 sm:gap-4 group" data-testid="navbar-logo">
             <motion.img
               src="/logo.png"
               srcSet="/logo192.png 1x, /logo.png 2x"
               alt="Hampious"
               onError={e => { e.currentTarget.style.display = 'none'; }}
-              className="h-12 w-12 sm:h-14 sm:w-14 md:h-15 md:w-15 object-contain rounded-full"
+              className="h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 object-contain rounded-full"
               style={{
-                filter: 'drop-shadow(0 2px 8px rgba(92,18,51,0.22))',
+                filter: 'drop-shadow(0 3px 10px rgba(106,19,64,0.22))',
                 flexShrink: 0,
               }}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.06 }}
               transition={{ duration: 0.3 }}
             />
             <span
               style={{
                 fontFamily: "'Cormorant', 'Georgia', serif",
                 fontWeight: 700,
-                fontSize: '1.75rem',
-                letterSpacing: '0.14em',
-                color: '#5C1233',
+                fontSize: '1.9rem',
+                letterSpacing: '0.12em',
+                color: '#6A1340',
                 lineHeight: 1,
               }}
             >

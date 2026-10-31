@@ -310,8 +310,8 @@ export default function ProductDetails() {
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-pink-50/60 p-8">
-                  <img src="/logo.png" alt="Hampious" style={{ width: 88, height: 88, objectFit: 'contain', opacity: 0.9 }} />
-                  <span style={{ fontSize: 13, color: '#5C1233', marginTop: 12, fontFamily: 'Jost,sans-serif', letterSpacing: '0.12em', fontWeight: 600 }}>HAMPIOUS</span>
+                  <img src="/logo.png" alt="Hampious" style={{ width: 110, height: 110, objectFit: 'contain' }} />
+                  <span style={{ fontSize: 14, color: '#6A1340', marginTop: 14, fontFamily: 'Jost,sans-serif', letterSpacing: '0.12em', fontWeight: 600 }}>HAMPIOUS</span>
                 </div>
               )}
               {hasDiscount && <div className="absolute top-5 left-5 badge-discount">{discountPercent}% OFF</div>}
