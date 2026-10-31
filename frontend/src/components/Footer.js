@@ -33,8 +33,8 @@ export const Footer = () => (
 
         {/* Brand */}
         <motion.div variants={col} transition={{ duration: 0.7 }}>
-          <Link to="/" className="inline-flex items-center gap-3 mb-5 group">
-            <img src="/logo.png" alt="Hampious" className="w-10 h-10 object-contain rounded-full shadow-sm group-hover:scale-105 transition-transform duration-300" />
+          <Link to="/" className="inline-flex items-center gap-3.5 mb-5 group">
+            <img src="/logo.png" alt="Hampious" className="w-12 h-12 object-contain rounded-full shadow-md group-hover:scale-105 transition-transform duration-300" />
             <span className="font-heading font-light text-2xl tracking-[0.12em]" style={{ color: '#C8A96E' }}>
               HAMPIOUS
             </span>

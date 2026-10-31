@@ -207,7 +207,7 @@ function AuthForm() {
           >
             <img src="/logo.png" alt="Hampious" className="w-full h-full object-contain" />
           </motion.div>
-          <h1 className="font-heading text-3xl font-semibold text-primary">Hampious</h1>
+          <h1 className="font-heading text-3xl font-semibold" style={{ color: '#5C1233' }}>Hampious</h1>
           <p className="text-sm text-muted-foreground mt-2">Premium Gift Hampers</p>
         </motion.div>
 

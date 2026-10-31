@@ -86,29 +86,32 @@ export const Navbar = () => {
         transition: 'box-shadow 0.4s ease',
       }}
     >
-      <div className="px-6 md:px-12 lg:px-20">
-        <div className="flex items-center justify-between h-[68px]">
+      <div className="px-4 sm:px-6 md:px-12 lg:px-20">
+        <div className="flex items-center justify-between h-[74px] sm:h-[80px]">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group" data-testid="navbar-logo">
+          <Link to="/" className="flex items-center gap-3.5 group" data-testid="navbar-logo">
             <motion.img
               src="/logo.png"
+              srcSet="/logo192.png 1x, /logo.png 2x"
               alt="Hampious"
               onError={e => { e.currentTarget.style.display = 'none'; }}
-              className="h-10 w-10 object-contain rounded-full shadow-sm"
+              className="h-12 w-12 sm:h-14 sm:w-14 md:h-15 md:w-15 object-contain rounded-full"
+              style={{
+                filter: 'drop-shadow(0 2px 8px rgba(92,18,51,0.22))',
+                flexShrink: 0,
+              }}
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
             />
             <span
               style={{
-                fontFamily: "'Garamond', 'Georgia', serif",
+                fontFamily: "'Cormorant', 'Georgia', serif",
                 fontWeight: 700,
-                fontSize: '1.55rem',
-                letterSpacing: '0.18em',
-                background: 'linear-gradient(135deg, #A67C2A 0%, #D4A843 40%, #A67C2A 70%, #7A5518 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                fontSize: '1.75rem',
+                letterSpacing: '0.14em',
+                color: '#5C1233',
+                lineHeight: 1,
               }}
             >
               HAMPIOUS

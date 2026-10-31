@@ -29,7 +29,7 @@ This comprehensive audit was conducted across frontend, backend, security config
 | Location | Previous State | Updated State | Status |
 | :--- | :--- | :--- | :---: |
 | **Favicon & Web App Icons** | Uncompressed 1024px single image | Multi-resolution ICO (16, 32, 48, 64px) + 192px + 512px PNGs | **VERIFIED** |
-| **Main Header / Navbar** | 32px badge with `mix-blend-mode: multiply` | 40px (`h-10 w-10`) crisp circular badge with soft drop shadow | **VERIFIED** |
+| **Main Header / Navbar** | 40px badge with mismatched gold text | 56–60px (`h-12 w-12 sm:h-14 sm:w-14 md:h-15 md:w-15`) circular badge with drop shadow + 'HAMPIOUS' brand typography in exact logo burgundy (`#5C1233`) | **VERIFIED** |
 | **Footer Brand Block** | Text only (`HAMPIOUS`) | Brand seal + typography link with smooth hover scale | **VERIFIED** |
 | **Customer Auth / Login** | Lucide `Gift` icon in pink box | High-resolution circular Hampious seal | **VERIFIED** |
 | **Password Reset Header** | Variable aspect ratio image | Fixed circular 48px logo seal | **VERIFIED** |

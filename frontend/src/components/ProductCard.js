@@ -138,8 +138,8 @@ export const ProductCard = ({ product }) => {
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
               background: 'linear-gradient(135deg,#FFF5F8,#FCEAF1)',
             }}>
-              <img src="/logo.png" alt="Hampious" style={{ width: 44, height: 44, objectFit: 'contain', opacity: 0.85 }} />
-              <span style={{ fontSize: 11, color: PINK, fontFamily: 'Jost,sans-serif', letterSpacing: '0.1em' }}>HAMPIOUS</span>
+              <img src="/logo.png" alt="Hampious" style={{ width: 50, height: 50, objectFit: 'contain' }} />
+              <span style={{ fontSize: 11, color: '#5C1233', fontFamily: 'Jost,sans-serif', letterSpacing: '0.12em', fontWeight: 600 }}>HAMPIOUS</span>
             </div>
           )}
         </div>
