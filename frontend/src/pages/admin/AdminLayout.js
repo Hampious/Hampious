@@ -49,12 +49,11 @@ export default function AdminLayout() {
           display: 'flex', alignItems: 'center', gap: 12,
           justifyContent: collapsed ? 'center' : 'flex-start',
         }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-            background: 'linear-gradient(135deg, #D4789A, #B84E78)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1rem',
-          }}>🎁</div>
+          <img
+            src="/logo.png"
+            alt="Hampious"
+            style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'contain', flexShrink: 0 }}
+          />
           {!collapsed && (
             <div>
               <p style={{ margin: 0, fontFamily: "'Cormorant Garamond','Georgia',serif", color: PINK, fontSize: '1.1rem', letterSpacing: '0.12em', fontWeight: 600 }}>HAMPIOUS</p>

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import threading
 
 from database import db_select, db_insert, db_update, db_delete, db_upsert, get_db
@@ -220,3 +220,92 @@ def cancel_order(order_id: str, body: dict = {}):
     except Exception as e:
         print(f"[cancel_order] error: {e}")
         raise HTTPException(status_code=500, detail="Failed to cancel order")
+
+
+@router.get("/{order_id}/return-eligibility")
+def check_return_eligibility(order_id: str, request: Request):
+    try:
+        rows = db_select("orders", {"id": order_id})
+        if not rows:
+            raise HTTPException(status_code=404, detail="Order not found")
+        order = rows[0]
+
+        if order.get("status") != "delivered":
+            return {"eligible": False, "reason": "Order not yet delivered"}
+
+        return_status = order.get("return_status")
+        if return_status and return_status != "none":
+            return {"eligible": False, "reason": f"Return already {return_status}"}
+
+        delivered_at = order.get("delivered_at")
+        if delivered_at:
+            try:
+                delivered_date = datetime.fromisoformat(delivered_at.replace("Z", "+00:00"))
+                expiry_date = delivered_date + timedelta(days=3)
+                now = datetime.now(timezone.utc)
+                if now > expiry_date:
+                    return {"eligible": False, "reason": "Return window expired (3 days from delivery)"}
+                remaining_hours = max(0, int((expiry_date - now).total_seconds() / 3600))
+                return {"eligible": True, "expiry_date": expiry_date.isoformat(), "remaining_hours": remaining_hours}
+            except Exception:
+                pass
+
+        return {"eligible": True, "reason": "Eligible for return", "remaining_hours": 72}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[check_return_eligibility] error: {e}")
+        return {"eligible": False, "reason": "Could not verify return eligibility"}
+
+
+@router.post("/{order_id}/request-return")
+async def request_return(order_id: str, request: Request):
+    try:
+        rows = db_select("orders", {"id": order_id})
+        if not rows:
+            raise HTTPException(status_code=404, detail="Order not found")
+        order = rows[0]
+
+        if order.get("status") != "delivered":
+            raise HTTPException(status_code=400, detail="Can only return delivered orders")
+
+        return_status = order.get("return_status")
+        if return_status and return_status != "none":
+            raise HTTPException(status_code=400, detail="Return already requested for this order")
+
+        body = await request.json()
+        reason = body.get("reason", "").strip()
+        images = body.get("images", [])
+
+        if not reason:
+            raise HTTPException(status_code=400, detail="Return reason is required")
+
+        now = datetime.utcnow().isoformat()
+        updates = {
+            "return_status": "requested",
+            "return_requested_at": now,
+            "return_reason": reason,
+            "return_images": images,
+            "updated_at": now,
+        }
+        db_update("orders", "id", order_id, updates)
+
+        # Notify admin via email in background
+        def _notify_return():
+            try:
+                send_email(
+                    ADMIN_EMAIL,
+                    f"📦 Return Requested for Order #{order_id.upper()}",
+                    f"<p>Customer requested return for Order #{order_id.upper()}.</p><p>Reason: {reason}</p>"
+                )
+            except Exception as ex:
+                print(f"[request_return] email error: {ex}")
+
+        threading.Thread(target=_notify_return, daemon=True).start()
+
+        return {"message": "Return request submitted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[request_return] error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to submit return request")

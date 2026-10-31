@@ -28,6 +28,7 @@ from routes.cart_routes import router as cart_router
 from routes.payment_routes import router as payment_router
 from routes.shiprocket_routes import router as shiprocket_router
 from routes.coupon_routes import router as coupon_router
+from routes.wishlist_routes import router as wishlist_router
 
 app = FastAPI()
 
@@ -53,10 +54,18 @@ app.include_router(product_router, prefix="/api/products")
 app.include_router(order_router, prefix="/api/orders")
 app.include_router(admin_router, prefix="/api/admin")
 app.include_router(cart_router, prefix="/api")
+app.include_router(wishlist_router, prefix="/api")
 app.include_router(payment_router, prefix="/api")
 app.include_router(shiprocket_router, prefix="/api")
 app.include_router(coupon_router, prefix="/api")
 app.include_router(expresbee_router)
+
+
+@app.get("/api/categories")
+def get_categories_alias():
+    from routes.product_routes import get_categories
+    return get_categories()
+
 
 @app.get("/")
 def root():

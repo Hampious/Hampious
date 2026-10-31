@@ -72,13 +72,16 @@ export default function AdminLogin() {
       }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{
-            width: 64, height: 64, borderRadius: '50%',
-            background: 'linear-gradient(135deg, #D4789A, #B84E78)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 1rem', fontSize: '1.8rem',
-            boxShadow: '0 8px 32px rgba(212,120,154,0.4)',
-          }}>🎁</div>
+          <img
+            src="/logo.png"
+            alt="Hampious"
+            style={{
+              width: 72, height: 72, borderRadius: '50%',
+              margin: '0 auto 1.25rem', display: 'block',
+              boxShadow: '0 8px 32px rgba(212,120,154,0.3)',
+              objectFit: 'contain',
+            }}
+          />
           <h1 style={{ fontFamily: "'Cormorant Garamond', 'Georgia', serif", fontSize: '1.8rem', color: '#D4789A', margin: '0 0 0.25rem', letterSpacing: '0.15em' }}>
             HAMPIOUS
           </h1>

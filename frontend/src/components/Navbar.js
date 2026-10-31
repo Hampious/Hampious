@@ -95,8 +95,7 @@ export const Navbar = () => {
               src="/logo.png"
               alt="Hampious"
               onError={e => { e.currentTarget.style.display = 'none'; }}
-              className="h-8 w-8 object-contain"
-              style={{ mixBlendMode: 'multiply' }}
+              className="h-10 w-10 object-contain rounded-full shadow-sm"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
             />

@@ -80,7 +80,7 @@ function printShipmentSlip(order, awbCode, courierName, shipmentId) {
   '<button onclick="window.close()" style="background:#f3d0dd;color:#1A0F15;border:none;padding:9px 18px;border-radius:6px;font-size:14px;cursor:pointer">Close</button>' +
   '</div>' +
   '<div class="wrap">' +
-  '<div class="hdr"><div class="logo">HAMPIOUS</div><div class="tag">Premium Gift Hampers</div></div>' +
+  '<div class="hdr"><img src="' + window.location.origin + '/logo.png" style="width:44px;height:44px;border-radius:50%;margin-bottom:6px;display:inline-block" alt="Hampious"><div class="logo">HAMPIOUS</div><div class="tag">Premium Gift Hampers</div></div>' +
   '<div class="awb"><div class="awb-l">AWB / Tracking Number</div>' +
   '<div class="awb-n">' + (awbCode || shipmentId || '---') + '</div>' +
   '<div style="font-size:10px;color:#7c5a6a;margin-top:3px">via ' + (courierName || 'Shiprocket') + '</div></div>' +

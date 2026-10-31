@@ -114,3 +114,6 @@ frontend/node_modules/.cache/default-development/2.pack
 # Environment files
 *.env
 *.env.*
+*.log
+.claude/
+fix_urls.py

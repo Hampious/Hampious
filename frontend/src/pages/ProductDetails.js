@@ -309,9 +309,9 @@ export default function ProductDetails() {
                   onError={e => { e.currentTarget.style.display = 'none'; }}
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-pink-50">
-                  <svg width="80" height="80" viewBox="0 0 80 80" fill="none"><rect width="80" height="80" rx="20" fill="#F9DDE8"/><path d="M18 56l16-22 10 14 8-10 14 18H18z" fill="#D4789A" fillOpacity=".4"/><circle cx="56" cy="28" r="6" fill="#D4789A" fillOpacity=".6"/></svg>
-                  <span style={{ fontSize: 12, color: '#D4789A', marginTop: 10, fontFamily: 'Jost,sans-serif', letterSpacing: '0.1em' }}>HAMPIOUS</span>
+                <div className="w-full h-full flex flex-col items-center justify-center bg-pink-50/60 p-8">
+                  <img src="/logo.png" alt="Hampious" style={{ width: 88, height: 88, objectFit: 'contain', opacity: 0.9 }} />
+                  <span style={{ fontSize: 13, color: '#D4789A', marginTop: 12, fontFamily: 'Jost,sans-serif', letterSpacing: '0.12em', fontWeight: 500 }}>HAMPIOUS</span>
                 </div>
               )}
               {hasDiscount && <div className="absolute top-5 left-5 badge-discount">{discountPercent}% OFF</div>}
